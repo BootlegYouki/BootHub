@@ -1,23 +1,22 @@
 # Graph Report - BootHub  (2026-06-04)
 
 ## Corpus Check
-- 38 files · ~40,803 words
+- 38 files · ~40,574 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 248 nodes · 387 edges · 21 communities (18 shown, 3 thin omitted)
+- 249 nodes · 388 edges · 20 communities (17 shown, 3 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `82b5cdfb`
+- Built from commit: `734f9944`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - [[_COMMUNITY_Community 0|Community 0]]
 - [[_COMMUNITY_Community 1|Community 1]]
-- [[_COMMUNITY_Community 2|Community 2]]
 - [[_COMMUNITY_Community 3|Community 3]]
 - [[_COMMUNITY_Community 4|Community 4]]
 - [[_COMMUNITY_Community 5|Community 5]]
@@ -55,7 +54,7 @@
 - `PhotoPickerSheet()` --calls--> `useTheme()`  [EXTRACTED]
   src/components/photo-picker-sheet.tsx → src/theme/theme-provider.tsx
 
-## Communities (21 total, 3 thin omitted)
+## Communities (20 total, 3 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.09
@@ -64,10 +63,6 @@ Nodes (14): DumpItem, DumpType, mockItems, styles, TabButtonProps, BannerSvg(), 
 ### Community 1 - "Community 1"
 Cohesion: 0.09
 Nodes (22): backgroundColor, foregroundImage, adaptiveIcon, predictiveBackGestureEnabled, expo, android, icon, ios (+14 more)
-
-### Community 2 - "Community 2"
-Cohesion: 0.33
-Nodes (5): MONTHS, styles, TuiCalendar(), TuiCalendarProps, WEEKDAYS
 
 ### Community 3 - "Community 3"
 Cohesion: 0.09
@@ -86,12 +81,12 @@ Cohesion: 0.15
 Nodes (11): 1. Rename the Project, 2. Install Dependencies, 3. Launch Development Server, 📦 Automated iOS Release Pipeline, 🛠 Available Scripts, 🎨 Brutalist Design System (TUI), Core Components (`src/components/`), 🚀 Getting Started (+3 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.08
-Nodes (34): MainApp(), TabButton(), styles, TuiButton(), TuiButtonProps, ChartItem, MeterSegment, styles (+26 more)
+Cohesion: 0.06
+Nodes (46): MainApp(), TabButton(), styles, TuiButton(), TuiButtonProps, MONTHS, styles, TuiCalendar() (+38 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.12
-Nodes (16): PhotoPickerSheet(), PhotoPickerSheetProps, styles, { width: screenWidth, height: screenHeight }, styles, TuiContainer(), TuiContainerProps, styles (+8 more)
+Cohesion: 0.18
+Nodes (10): PhotoPickerSheet(), PhotoPickerSheetProps, styles, { width: screenWidth }, { width: screenWidth, height: screenHeight }, styles, TuiContainer(), TuiContainerProps (+2 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.47
@@ -106,19 +101,19 @@ Cohesion: 0.20
 Nodes (5): LinkPreview(), LinkPreviewProps, previewCache, PreviewData, styles
 
 ## Knowledge Gaps
-- **131 isolated node(s):** `name`, `slug`, `version`, `orientation`, `icon` (+126 more)
+- **132 isolated node(s):** `name`, `slug`, `version`, `orientation`, `icon` (+127 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `useTheme()` connect `Community 7` to `Community 0`, `Community 2`, `Community 5`, `Community 8`, `Community 21`?**
-  _High betweenness centrality (0.048) - this node is a cross-community bridge._
+- **Why does `useTheme()` connect `Community 7` to `Community 0`, `Community 8`, `Community 5`, `Community 21`?**
+  _High betweenness centrality (0.049) - this node is a cross-community bridge._
 - **Why does `dependencies` connect `Community 3` to `Community 4`?**
-  _High betweenness centrality (0.026) - this node is a cross-community bridge._
+  _High betweenness centrality (0.025) - this node is a cross-community bridge._
 - **What connects `name`, `slug`, `version` to the rest of the system?**
-  _131 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _132 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.08831908831908832 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**

@@ -9,38 +9,28 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-} from 'react-native-reanimated';
 import * as MediaLibrary from 'expo-media-library';
 import * as ImagePicker from 'expo-image-picker';
-import { X, FolderOpen, Image as ImageIcon, ShieldAlert } from 'lucide-react-native';
+import { FolderOpen, ShieldAlert, Search } from 'lucide-react-native';
 
 import { useTheme } from '../theme/theme-provider';
 import { TuiText } from './tui-text';
-import { TuiContainer } from './tui-container';
 
 interface PhotoPickerSheetProps {
-  isOpen: boolean;
   onClose: () => void;
   onAddPhotos: (uris: string[]) => void;
 }
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const SHEET_HEIGHT = 480;
+const { width: screenWidth } = Dimensions.get('window');
 const COLUMN_MARGIN = 2;
 const NUM_COLUMNS = 3;
 const IMAGE_SIZE = (screenWidth - COLUMN_MARGIN * (NUM_COLUMNS + 1)) / NUM_COLUMNS;
 
 export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
-  isOpen,
   onClose,
   onAddPhotos,
 }) => {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   // Permissions state
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -55,20 +45,9 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
   // Selection state
   const [selectedUris, setSelectedUris] = useState<string[]>([]);
 
-  // Animation values
-  const translateY = useSharedValue(SHEET_HEIGHT);
-
   useEffect(() => {
-    if (isOpen) {
-      // Slide up
-      translateY.value = withSpring(0, { damping: 15, stiffness: 100 });
-      checkPermission(false);
-    } else {
-      // Slide down
-      translateY.value = withSpring(SHEET_HEIGHT);
-      setSelectedUris([]);
-    }
-  }, [isOpen]);
+    checkPermission(false);
+  }, []);
 
   const checkPermission = async (request = false) => {
     try {
@@ -160,17 +139,12 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
     if (Platform.OS === 'ios') {
       try {
         await MediaLibrary.presentPermissionsPickerAsync();
-        // Refresh the lists
         loadPhotos(true);
       } catch (e) {
         console.warn('Failed to present permissions picker:', e);
       }
     }
   };
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-  }));
 
   const renderPhotoCell = ({ item }: { item: MediaLibrary.Asset }) => {
     const isSelected = selectedUris.includes(item.uri);
@@ -198,44 +172,36 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
   };
 
   return (
-    <Animated.View
-      style={[
-        styles.sheetContainer,
-        animatedStyle,
-        {
-          backgroundColor: colors.background,
-          borderColor: colors.primary,
-          borderTopColor: colors.primary,
-        },
-      ]}
-    >
-      {/* HEADER SECTION */}
-      <View style={[styles.header, { borderBottomColor: colors.primary + '20' }]}>
-        <View style={styles.dragIndicator} />
-        <View style={styles.headerRow}>
-          <ImageIcon size={18} color={colors.primary} style={{ marginRight: 8 }} />
-          <TuiText weight="bold" size="md" style={{ color: colors.foreground }}>
-            Select Photos
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      {/* MESSENGER-STYLE SUB-HEADER */}
+      <View style={[styles.subHeader, { borderBottomColor: colors.primary + '20' }]}>
+        <Search size={16} color={colors.mutedForeground} />
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <TuiText weight="bold" size="sm" style={{ color: colors.foreground }}>
+            Recents ▾
           </TuiText>
-          <View style={{ flex: 1 }} />
-          <Pressable onPress={onClose} style={styles.closeBtn}>
-            <X size={18} color={colors.foreground} />
-          </Pressable>
         </View>
+        {isLimited ? (
+          <Pressable onPress={handleManageAccess}>
+            <TuiText weight="bold" size="xs" style={{ color: colors.primary }}>
+              Manage
+            </TuiText>
+          </Pressable>
+        ) : (
+          <Pressable onPress={handleOpenSystemGallery}>
+            <FolderOpen size={16} color={colors.primary} />
+          </Pressable>
+        )}
       </View>
 
       {/* CONTENT AREA */}
       <View style={styles.contentContainer}>
         {hasPermission === false ? (
           <View style={styles.permissionContainer}>
-            <ShieldAlert size={48} color={colors.primary} style={{ marginBottom: 12 }} />
-            <TuiText weight="bold" size="md" style={styles.centerText}>
-              Photo Library Permission Required
+            <ShieldAlert size={36} color={colors.primary} style={{ marginBottom: 8 }} />
+            <TuiText weight="bold" size="sm" style={styles.centerText}>
+              Permission Required
             </TuiText>
-            <TuiText size="sm" style={[styles.centerText, { color: colors.mutedForeground }]}>
-              Allow BootHub to access your photo library in settings, or use the fallback system file picker.
-            </TuiText>
-
             <Pressable
               onPress={() => checkPermission(true)}
               style={[
@@ -243,138 +209,72 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
                 { backgroundColor: colors.primary, borderColor: colors.primary },
               ]}
             >
-              <TuiText weight="bold" style={{ color: '#000000' }}>
+              <TuiText weight="bold" size="xs" style={{ color: '#000000' }}>
                 Grant Permission
               </TuiText>
             </Pressable>
-
             <Pressable
               onPress={handleOpenSystemGallery}
               style={[styles.fallbackBtn, { borderColor: colors.primary }]}
             >
-              <FolderOpen size={16} color={colors.primary} style={{ marginRight: 8 }} />
-              <TuiText weight="bold" style={{ color: colors.primary }}>
+              <TuiText weight="bold" size="xs" style={{ color: colors.primary }}>
                 Open System Gallery
               </TuiText>
             </Pressable>
           </View>
         ) : hasPermission === null ? (
           <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
+            <ActivityIndicator size="small" color={colors.primary} />
           </View>
         ) : (
-          <FlatList
-            data={photos}
-            renderItem={renderPhotoCell}
-            keyExtractor={(item) => item.id}
-            numColumns={NUM_COLUMNS}
-            onEndReached={() => loadPhotos(false)}
-            onEndReachedThreshold={0.5}
-            contentContainerStyle={styles.gridContent}
-            ListFooterComponent={
-              isLoading ? (
-                <View style={styles.gridFooterLoader}>
-                  <ActivityIndicator size="small" color={colors.primary} />
-                </View>
-              ) : null
-            }
-          />
-        )}
-      </View>
+          <View style={{ flex: 1 }}>
+            <FlatList
+              data={photos}
+              renderItem={renderPhotoCell}
+              keyExtractor={(item) => item.id}
+              numColumns={NUM_COLUMNS}
+              onEndReached={() => loadPhotos(false)}
+              onEndReachedThreshold={0.5}
+              contentContainerStyle={styles.gridContent}
+              ListFooterComponent={
+                isLoading ? (
+                  <View style={styles.gridFooterLoader}>
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  </View>
+                ) : null
+              }
+            />
 
-      {/* BOTTOM ACTION BAR */}
-      <View
-        style={[
-          styles.sheetFooter,
-          {
-            backgroundColor: colors.background,
-            borderTopColor: colors.primary + '30',
-            paddingBottom: Platform.OS === 'ios' ? 24 : 12,
-          },
-        ]}
-      >
-        {selectedUris.length > 0 ? (
-          <Pressable
-            onPress={handleConfirmSelection}
-            style={[styles.confirmBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]}
-          >
-            <TuiText weight="bold" style={styles.confirmBtnText}>
-              ADD {selectedUris.length} {selectedUris.length === 1 ? 'PHOTO' : 'PHOTOS'}
-            </TuiText>
-          </Pressable>
-        ) : (
-          <View style={styles.footerRow}>
-            {isLimited && (
-              <Pressable
-                onPress={handleManageAccess}
-                style={[styles.secondaryBtn, { borderColor: colors.primary, marginRight: 8 }]}
-              >
-                <TuiText weight="bold" size="sm" style={{ color: colors.primary }}>
-                  Manage Access
-                </TuiText>
-              </Pressable>
+            {/* FLOATING ACTION BUTTON (like the Send button in Messenger) */}
+            {selectedUris.length > 0 && (
+              <View style={styles.floatingButtonContainer}>
+                <Pressable
+                  onPress={handleConfirmSelection}
+                  style={[styles.confirmBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]}
+                >
+                  <TuiText weight="bold" style={styles.confirmBtnText}>
+                    ADD {selectedUris.length} {selectedUris.length === 1 ? 'PHOTO' : 'PHOTOS'}
+                  </TuiText>
+                </Pressable>
+              </View>
             )}
-            <Pressable
-              onPress={handleOpenSystemGallery}
-              style={[styles.secondaryBtn, { borderColor: colors.primary, flex: 1 }]}
-            >
-              <FolderOpen size={16} color={colors.primary} style={{ marginRight: 6 }} />
-              <TuiText weight="bold" size="sm" style={{ color: colors.primary }}>
-                Open System Gallery
-              </TuiText>
-            </Pressable>
           </View>
         )}
       </View>
-    </Animated.View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  sheetContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: SHEET_HEIGHT,
-    borderTopWidth: 1.5,
-    borderLeftWidth: 1.5,
-    borderRightWidth: 1.5,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    zIndex: 1000,
-    elevation: 12,
-    shadowColor: '#000000',
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: -4 },
+  container: {
+    flex: 1,
   },
-  header: {
-    height: 48,
+  subHeader: {
+    height: 40,
     borderBottomWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-  },
-  dragIndicator: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#88888840',
-    marginTop: 6,
-    marginBottom: 4,
-  },
-  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    width: '100%',
-  },
-  closeBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 16,
   },
   contentContainer: {
     flex: 1,
@@ -386,38 +286,37 @@ const styles = StyleSheet.create({
   },
   permissionContainer: {
     flex: 1,
-    padding: 24,
+    padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   centerText: {
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   primaryActionBtn: {
     borderWidth: 1.5,
-    height: 40,
-    paddingHorizontal: 20,
+    height: 36,
+    paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 16,
+    marginTop: 8,
     width: '80%',
   },
   fallbackBtn: {
     borderWidth: 1.5,
-    height: 40,
+    height: 36,
     backgroundColor: 'transparent',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 12,
-    flexDirection: 'row',
+    marginTop: 8,
     width: '80%',
   },
   gridContent: {
     paddingHorizontal: COLUMN_MARGIN,
     paddingTop: COLUMN_MARGIN,
-    paddingBottom: 72, // Space to scroll past sticky footer
+    paddingBottom: 64, // Space to clear the floating button
   },
   gridImage: {
     width: '100%',
@@ -431,30 +330,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   numberBadge: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     borderWidth: 2,
     borderColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000000',
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 },
   },
   badgeText: {
     color: '#000000',
-    fontSize: 14,
-    lineHeight: 14,
+    fontSize: 12,
+    lineHeight: 12,
   },
   unselectedBadge: {
     position: 'absolute',
     top: 6,
     right: 6,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     borderWidth: 1.5,
     borderColor: '#FFFFFFB0',
     backgroundColor: 'rgba(0, 0, 0, 0.15)',
@@ -463,38 +358,28 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
   },
-  sheetFooter: {
+  floatingButtonContainer: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    borderTopWidth: 1.5,
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    bottom: 12,
+    left: 16,
+    right: 16,
+    zIndex: 10,
   },
   confirmBtn: {
     borderWidth: 1.5,
-    height: 44,
+    height: 40,
+    borderRadius: 20, // Circular border like Messenger's floating button
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
+    shadowColor: '#000000',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
   confirmBtnText: {
     color: '#000000',
-    fontSize: 14,
-    letterSpacing: 1,
-  },
-  footerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-  },
-  secondaryBtn: {
-    borderWidth: 1.5,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    backgroundColor: 'transparent',
+    fontSize: 13,
+    letterSpacing: 0.5,
   },
 });

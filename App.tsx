@@ -15,6 +15,8 @@ import Animated, {
   useAnimatedKeyboard,
   useAnimatedStyle,
   interpolate,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -114,20 +116,34 @@ function MainApp() {
   const [isSelectionMode, setIsSelectionMode] = useState<boolean>(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPhotoSheetOpen, setIsPhotoSheetOpen] = useState<boolean>(false);
+  const photoSheetHeight = useSharedValue(0);
+
+  useEffect(() => {
+    if (isPhotoSheetOpen) {
+      photoSheetHeight.value = withTiming(300, { duration: 250 });
+    } else {
+      photoSheetHeight.value = withTiming(0, { duration: 200 });
+    }
+  }, [isPhotoSheetOpen]);
 
   // Per-frame keyboard height — updated every native animation frame via JSI.
   // This is the "fake spacer" approach: the Animated.View at the bottom of the
   // screen grows to match the keyboard height, squeezing SafeAreaView upward
   // in perfect sync with the keyboard animation.
   const keyboard = useAnimatedKeyboard();
-  const keyboardSpacerStyle = useAnimatedStyle(() => ({
-    height: keyboard.height.value,
-  }));
+
+  const bottomSpacerStyle = useAnimatedStyle(() => {
+    const height = Math.max(keyboard.height.value, photoSheetHeight.value);
+    return {
+      height: height,
+    };
+  });
 
   const animatedBottomBarStyle = useAnimatedStyle(() => {
     const targetPadding = insets.bottom > 0 ? insets.bottom : 12;
+    const totalHeight = Math.max(keyboard.height.value, photoSheetHeight.value);
     const padding = interpolate(
-      keyboard.height.value,
+      totalHeight,
       [0, 50],
       [targetPadding, 12],
       'clamp'
@@ -222,8 +238,12 @@ function MainApp() {
   const [inputText, setInputText] = useState<string>('');
 
   const handlePickImage = () => {
-    Keyboard.dismiss();
-    setIsPhotoSheetOpen(true);
+    if (isPhotoSheetOpen) {
+      setIsPhotoSheetOpen(false);
+    } else {
+      Keyboard.dismiss();
+      setIsPhotoSheetOpen(true);
+    }
   };
 
   const handleAddMultiplePhotos = async (uris: string[]) => {
@@ -468,6 +488,7 @@ function MainApp() {
                 placeholder="Dump link, text, or select photo..."
                 placeholderTextColor={colors.mutedForeground}
                 autoCapitalize="none"
+                onFocus={() => setIsPhotoSheetOpen(false)}
               />
 
               <Pressable
@@ -486,28 +507,16 @@ function MainApp() {
           )}
         </Animated.View>
       </SafeAreaView>
-      {/* Keyboard spacer: grows from 0 → keyboard height every frame, squeezing
-          the SafeAreaView (flex:1) upward — no KAV, no JS timing delay. */}
-      <Animated.View style={keyboardSpacerStyle} />
-
-      {/* Backdrop overlay for photo sheet */}
-      {isPhotoSheetOpen && (
-        <Pressable
-          style={{
-            ...StyleSheet.absoluteFillObject,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            zIndex: 999,
-          }}
-          onPress={() => setIsPhotoSheetOpen(false)}
-        />
-      )}
-
-      {/* Custom Sliding Photo Picker Sheet */}
-      <PhotoPickerSheet
-        isOpen={isPhotoSheetOpen}
-        onClose={() => setIsPhotoSheetOpen(false)}
-        onAddPhotos={handleAddMultiplePhotos}
-      />
+      {/* Combined bottom spacer (acts like a keyboard spacer, but loads the custom
+          photo picker inside when the photo sheet is active) */}
+      <Animated.View style={[bottomSpacerStyle, { backgroundColor: colors.background, overflow: 'hidden' }]}>
+        {isPhotoSheetOpen && (
+          <PhotoPickerSheet
+            onClose={() => setIsPhotoSheetOpen(false)}
+            onAddPhotos={handleAddMultiplePhotos}
+          />
+        )}
+      </Animated.View>
     </View>
   );
 }
