@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
-  Image,
   Pressable,
   FlatList,
   Dimensions,
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { Image } from 'expo-image';
 import * as MediaLibrary from 'expo-media-library';
 import * as ImagePicker from 'expo-image-picker';
 import { FolderOpen, ShieldAlert } from 'lucide-react-native';
@@ -155,7 +155,7 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
         onPress={() => handleToggleSelect(item.uri)}
         style={{ width: IMAGE_SIZE, height: IMAGE_SIZE, margin: COLUMN_MARGIN }}
       >
-        <Image source={{ uri: item.uri }} style={styles.gridImage} />
+        <Image source={{ uri: item.uri }} style={styles.gridImage} contentFit="cover" transition={0} />
         {isSelected ? (
           <View style={styles.selectedOverlay}>
             <View style={[styles.numberBadge, { backgroundColor: colors.primary }]}>

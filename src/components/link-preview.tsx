@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Image, Animated } from 'react-native';
+import { StyleSheet, View, Animated } from 'react-native';
+import { Image } from 'expo-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../theme/theme-provider';
 import { TuiText } from './tui-text';
@@ -265,7 +266,8 @@ export const LinkPreview: React.FC<LinkPreviewProps> = ({ url }) => {
           <Image
             source={{ uri: data.image }}
             style={styles.image}
-            resizeMode="cover"
+            contentFit="cover"
+            transition={200}
           />
         </View>
       )}

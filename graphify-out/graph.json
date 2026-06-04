@@ -216,23 +216,23 @@
       "source_file": "App.tsx",
       "source_location": "L1",
       "id": "app_tsx",
-      "community": 0,
+      "community": 5,
       "norm_label": "app.tsx"
     },
     {
       "label": "TabButtonProps",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L59",
+      "source_location": "L67",
       "id": "boothub_app_tabbuttonprops",
-      "community": 0,
+      "community": 5,
       "norm_label": "tabbuttonprops"
     },
     {
       "label": "TabButton()",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L66",
+      "source_location": "L74",
       "id": "boothub_app_tabbutton",
       "community": 7,
       "norm_label": "tabbutton()"
@@ -241,27 +241,27 @@
       "label": "MainApp()",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L110",
+      "source_location": "L118",
       "id": "boothub_app_mainapp",
-      "community": 7,
+      "community": 5,
       "norm_label": "mainapp()"
     },
     {
       "label": "App()",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L540",
+      "source_location": "L1089",
       "id": "boothub_app_app",
-      "community": 0,
+      "community": 5,
       "norm_label": "app()"
     },
     {
       "label": "styles",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L552",
+      "source_location": "L1101",
       "id": "boothub_app_styles",
-      "community": 0,
+      "community": 5,
       "norm_label": "styles"
     },
     {
@@ -279,7 +279,7 @@
       "source_file": "index.ts",
       "source_location": "L1",
       "id": "index_ts",
-      "community": 0,
+      "community": 5,
       "norm_label": "index.ts"
     },
     {
@@ -499,10 +499,19 @@
       "norm_label": "expo-font"
     },
     {
-      "label": "expo-image-picker",
+      "label": "expo-image",
       "file_type": "code",
       "source_file": "package.json",
       "source_location": "L26",
+      "id": "boothub_package_dependencies_expo_image",
+      "community": 3,
+      "norm_label": "expo-image"
+    },
+    {
+      "label": "expo-image-picker",
+      "file_type": "code",
+      "source_file": "package.json",
+      "source_location": "L27",
       "id": "boothub_package_dependencies_expo_image_picker",
       "community": 3,
       "norm_label": "expo-image-picker"
@@ -511,7 +520,7 @@
       "label": "expo-media-library",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L27",
+      "source_location": "L28",
       "id": "boothub_package_dependencies_expo_media_library",
       "community": 3,
       "norm_label": "expo-media-library"
@@ -520,7 +529,7 @@
       "label": "expo-sharing",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L28",
+      "source_location": "L29",
       "id": "boothub_package_dependencies_expo_sharing",
       "community": 3,
       "norm_label": "expo-sharing"
@@ -529,7 +538,7 @@
       "label": "expo-status-bar",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L29",
+      "source_location": "L30",
       "id": "boothub_package_dependencies_expo_status_bar",
       "community": 3,
       "norm_label": "expo-status-bar"
@@ -538,7 +547,7 @@
       "label": "lucide-react-native",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L30",
+      "source_location": "L31",
       "id": "boothub_package_dependencies_lucide_react_native",
       "community": 3,
       "norm_label": "lucide-react-native"
@@ -547,7 +556,7 @@
       "label": "react",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L31",
+      "source_location": "L32",
       "id": "boothub_package_dependencies_react",
       "community": 3,
       "norm_label": "react"
@@ -556,7 +565,7 @@
       "label": "react-dom",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L32",
+      "source_location": "L33",
       "id": "boothub_package_dependencies_react_dom",
       "community": 3,
       "norm_label": "react-dom"
@@ -565,7 +574,7 @@
       "label": "react-native",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L33",
+      "source_location": "L34",
       "id": "boothub_package_dependencies_react_native",
       "community": 3,
       "norm_label": "react-native"
@@ -574,7 +583,7 @@
       "label": "react-native-reanimated",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L34",
+      "source_location": "L35",
       "id": "boothub_package_dependencies_react_native_reanimated",
       "community": 3,
       "norm_label": "react-native-reanimated"
@@ -583,7 +592,7 @@
       "label": "react-native-safe-area-context",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L35",
+      "source_location": "L36",
       "id": "boothub_package_dependencies_react_native_safe_area_context",
       "community": 3,
       "norm_label": "react-native-safe-area-context"
@@ -592,7 +601,7 @@
       "label": "react-native-svg",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L36",
+      "source_location": "L37",
       "id": "boothub_package_dependencies_react_native_svg",
       "community": 3,
       "norm_label": "react-native-svg"
@@ -601,7 +610,7 @@
       "label": "react-native-web",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L37",
+      "source_location": "L38",
       "id": "boothub_package_dependencies_react_native_web",
       "community": 3,
       "norm_label": "react-native-web"
@@ -610,7 +619,7 @@
       "label": "devDependencies",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L39",
+      "source_location": "L40",
       "id": "boothub_package_devdependencies",
       "community": 4,
       "norm_label": "devdependencies"
@@ -619,7 +628,7 @@
       "label": "@eslint/js",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L40",
+      "source_location": "L41",
       "id": "boothub_package_devdependencies_eslint_js",
       "community": 4,
       "norm_label": "@eslint/js"
@@ -628,7 +637,7 @@
       "label": "@types/node",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L41",
+      "source_location": "L42",
       "id": "boothub_package_devdependencies_types_node",
       "community": 4,
       "norm_label": "@types/node"
@@ -637,7 +646,7 @@
       "label": "@types/react",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L42",
+      "source_location": "L43",
       "id": "boothub_package_devdependencies_types_react",
       "community": 4,
       "norm_label": "@types/react"
@@ -646,7 +655,7 @@
       "label": "eslint",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L43",
+      "source_location": "L44",
       "id": "boothub_package_devdependencies_eslint",
       "community": 4,
       "norm_label": "eslint"
@@ -655,7 +664,7 @@
       "label": "eslint-plugin-react-hooks",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L44",
+      "source_location": "L45",
       "id": "boothub_package_devdependencies_eslint_plugin_react_hooks",
       "community": 4,
       "norm_label": "eslint-plugin-react-hooks"
@@ -664,7 +673,7 @@
       "label": "eslint-plugin-react-refresh",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L45",
+      "source_location": "L46",
       "id": "boothub_package_devdependencies_eslint_plugin_react_refresh",
       "community": 4,
       "norm_label": "eslint-plugin-react-refresh"
@@ -673,7 +682,7 @@
       "label": "globals",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L46",
+      "source_location": "L47",
       "id": "boothub_package_devdependencies_globals",
       "community": 4,
       "norm_label": "globals"
@@ -682,7 +691,7 @@
       "label": "prettier",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L47",
+      "source_location": "L48",
       "id": "boothub_package_devdependencies_prettier",
       "community": 4,
       "norm_label": "prettier"
@@ -691,7 +700,7 @@
       "label": "typescript",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L48",
+      "source_location": "L49",
       "id": "boothub_package_devdependencies_typescript",
       "community": 4,
       "norm_label": "typescript"
@@ -700,7 +709,7 @@
       "label": "typescript-eslint",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L49",
+      "source_location": "L50",
       "id": "boothub_package_devdependencies_typescript_eslint",
       "community": 4,
       "norm_label": "typescript-eslint"
@@ -882,7 +891,7 @@
       "source_file": "src/components/banner-svg.tsx",
       "source_location": "L1",
       "id": "src_components_banner_svg_tsx",
-      "community": 0,
+      "community": 5,
       "norm_label": "banner-svg.tsx"
     },
     {
@@ -891,7 +900,7 @@
       "source_file": "src/components/banner-svg.tsx",
       "source_location": "L4",
       "id": "components_banner_svg_bannersvg",
-      "community": 0,
+      "community": 5,
       "norm_label": "bannersvg()"
     },
     {
@@ -925,7 +934,7 @@
       "label": "PreviewData",
       "file_type": "code",
       "source_file": "src/components/link-preview.tsx",
-      "source_location": "L7",
+      "source_location": "L8",
       "id": "components_link_preview_previewdata",
       "community": 21,
       "norm_label": "previewdata"
@@ -934,7 +943,7 @@
       "label": "LinkPreviewProps",
       "file_type": "code",
       "source_file": "src/components/link-preview.tsx",
-      "source_location": "L13",
+      "source_location": "L14",
       "id": "components_link_preview_linkpreviewprops",
       "community": 21,
       "norm_label": "linkpreviewprops"
@@ -943,7 +952,7 @@
       "label": "previewCache",
       "file_type": "code",
       "source_file": "src/components/link-preview.tsx",
-      "source_location": "L18",
+      "source_location": "L19",
       "id": "components_link_preview_previewcache",
       "community": 21,
       "norm_label": "previewcache"
@@ -952,7 +961,7 @@
       "label": "getStorageKeyForUrl()",
       "file_type": "code",
       "source_file": "src/components/link-preview.tsx",
-      "source_location": "L20",
+      "source_location": "L21",
       "id": "components_link_preview_getstoragekeyforurl",
       "community": 21,
       "norm_label": "getstoragekeyforurl()"
@@ -961,7 +970,7 @@
       "label": "decodeHtmlEntities()",
       "file_type": "code",
       "source_file": "src/components/link-preview.tsx",
-      "source_location": "L25",
+      "source_location": "L26",
       "id": "components_link_preview_decodehtmlentities",
       "community": 21,
       "norm_label": "decodehtmlentities()"
@@ -970,7 +979,7 @@
       "label": "extractMetaTags()",
       "file_type": "code",
       "source_file": "src/components/link-preview.tsx",
-      "source_location": "L39",
+      "source_location": "L40",
       "id": "components_link_preview_extractmetatags",
       "community": 21,
       "norm_label": "extractmetatags()"
@@ -979,7 +988,7 @@
       "label": "isDirectImageUrl()",
       "file_type": "code",
       "source_file": "src/components/link-preview.tsx",
-      "source_location": "L60",
+      "source_location": "L61",
       "id": "components_link_preview_isdirectimageurl",
       "community": 21,
       "norm_label": "isdirectimageurl()"
@@ -988,16 +997,16 @@
       "label": "LinkPreview()",
       "file_type": "code",
       "source_file": "src/components/link-preview.tsx",
-      "source_location": "L64",
+      "source_location": "L65",
       "id": "components_link_preview_linkpreview",
-      "community": 21,
+      "community": 5,
       "norm_label": "linkpreview()"
     },
     {
       "label": "styles",
       "file_type": "code",
       "source_file": "src/components/link-preview.tsx",
-      "source_location": "L290",
+      "source_location": "L292",
       "id": "components_link_preview_styles",
       "community": 21,
       "norm_label": "styles"
@@ -1026,7 +1035,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L1",
       "id": "src_components_photo_picker_sheet_tsx",
-      "community": 8,
+      "community": 7,
       "norm_label": "photo-picker-sheet.tsx"
     },
     {
@@ -1035,7 +1044,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L19",
       "id": "components_photo_picker_sheet_photopickersheetprops",
-      "community": 8,
+      "community": 7,
       "norm_label": "photopickersheetprops"
     },
     {
@@ -1044,7 +1053,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L24",
       "id": "components_photo_picker_sheet_width_screenwidth",
-      "community": 8,
+      "community": 7,
       "norm_label": "{ width: screenwidth }"
     },
     {
@@ -1053,7 +1062,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L29",
       "id": "components_photo_picker_sheet_photopickersheet",
-      "community": 8,
+      "community": 7,
       "norm_label": "photopickersheet()"
     },
     {
@@ -1062,7 +1071,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L247",
       "id": "components_photo_picker_sheet_styles",
-      "community": 8,
+      "community": 7,
       "norm_label": "styles"
     },
     {
@@ -1134,7 +1143,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L1",
       "id": "src_components_tui_calendar_tsx",
-      "community": 7,
+      "community": 2,
       "norm_label": "tui-calendar.tsx"
     },
     {
@@ -1143,7 +1152,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L7",
       "id": "components_tui_calendar_tuicalendarprops",
-      "community": 7,
+      "community": 2,
       "norm_label": "tuicalendarprops"
     },
     {
@@ -1152,7 +1161,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L13",
       "id": "components_tui_calendar_months",
-      "community": 7,
+      "community": 2,
       "norm_label": "months"
     },
     {
@@ -1161,7 +1170,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L19",
       "id": "components_tui_calendar_weekdays",
-      "community": 7,
+      "community": 2,
       "norm_label": "weekdays"
     },
     {
@@ -1170,7 +1179,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L21",
       "id": "components_tui_calendar_tuicalendar",
-      "community": 7,
+      "community": 2,
       "norm_label": "tuicalendar()"
     },
     {
@@ -1179,7 +1188,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L239",
       "id": "components_tui_calendar_styles",
-      "community": 7,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -1314,7 +1323,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L1",
       "id": "src_components_tui_container_tsx",
-      "community": 8,
+      "community": 7,
       "norm_label": "tui-container.tsx"
     },
     {
@@ -1323,7 +1332,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L6",
       "id": "components_tui_container_tuicontainerprops",
-      "community": 8,
+      "community": 7,
       "norm_label": "tuicontainerprops"
     },
     {
@@ -1332,7 +1341,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L19",
       "id": "components_tui_container_tuicontainer",
-      "community": 8,
+      "community": 7,
       "norm_label": "tuicontainer()"
     },
     {
@@ -1341,7 +1350,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L112",
       "id": "components_tui_container_styles",
-      "community": 8,
+      "community": 7,
       "norm_label": "styles"
     },
     {
@@ -1350,7 +1359,7 @@
       "source_file": "src/components/tui-drawer.tsx",
       "source_location": "L1",
       "id": "src_components_tui_drawer_tsx",
-      "community": 7,
+      "community": 8,
       "norm_label": "tui-drawer.tsx"
     },
     {
@@ -1359,7 +1368,7 @@
       "source_file": "src/components/tui-drawer.tsx",
       "source_location": "L8",
       "id": "components_tui_drawer_spring_config_open",
-      "community": 7,
+      "community": 8,
       "norm_label": "spring_config_open"
     },
     {
@@ -1368,7 +1377,7 @@
       "source_file": "src/components/tui-drawer.tsx",
       "source_location": "L15",
       "id": "components_tui_drawer_tuidrawerprops",
-      "community": 7,
+      "community": 8,
       "norm_label": "tuidrawerprops"
     },
     {
@@ -1377,7 +1386,7 @@
       "source_file": "src/components/tui-drawer.tsx",
       "source_location": "L23",
       "id": "components_tui_drawer_tuidrawer",
-      "community": 7,
+      "community": 8,
       "norm_label": "tuidrawer()"
     },
     {
@@ -1386,7 +1395,7 @@
       "source_file": "src/components/tui-drawer.tsx",
       "source_location": "L152",
       "id": "components_tui_drawer_styles",
-      "community": 7,
+      "community": 8,
       "norm_label": "styles"
     },
     {
@@ -1467,7 +1476,7 @@
       "source_file": "src/components/tui-nav.tsx",
       "source_location": "L1",
       "id": "src_components_tui_nav_tsx",
-      "community": 0,
+      "community": 5,
       "norm_label": "tui-nav.tsx"
     },
     {
@@ -1476,7 +1485,7 @@
       "source_file": "src/components/tui-nav.tsx",
       "source_location": "L8",
       "id": "components_tui_nav_screentype",
-      "community": 0,
+      "community": 5,
       "norm_label": "screentype"
     },
     {
@@ -1485,7 +1494,7 @@
       "source_file": "src/components/tui-nav.tsx",
       "source_location": "L10",
       "id": "components_tui_nav_tuitabbarprops",
-      "community": 0,
+      "community": 5,
       "norm_label": "tuitabbarprops"
     },
     {
@@ -1494,7 +1503,7 @@
       "source_file": "src/components/tui-nav.tsx",
       "source_location": "L19",
       "id": "components_tui_nav_tuitabbar",
-      "community": 0,
+      "community": 5,
       "norm_label": "tuitabbar()"
     },
     {
@@ -1503,7 +1512,7 @@
       "source_file": "src/components/tui-nav.tsx",
       "source_location": "L274",
       "id": "components_tui_nav_styles",
-      "community": 0,
+      "community": 5,
       "norm_label": "styles"
     },
     {
@@ -1512,7 +1521,7 @@
       "source_file": "src/components/tui-skeleton.tsx",
       "source_location": "L1",
       "id": "src_components_tui_skeleton_tsx",
-      "community": 8,
+      "community": 7,
       "norm_label": "tui-skeleton.tsx"
     },
     {
@@ -1521,7 +1530,7 @@
       "source_file": "src/components/tui-skeleton.tsx",
       "source_location": "L9",
       "id": "components_tui_skeleton_tuiskeletonloader",
-      "community": 8,
+      "community": 7,
       "norm_label": "tuiskeletonloader()"
     },
     {
@@ -1530,7 +1539,7 @@
       "source_file": "src/components/tui-skeleton.tsx",
       "source_location": "L284",
       "id": "components_tui_skeleton_styles",
-      "community": 8,
+      "community": 7,
       "norm_label": "styles"
     },
     {
@@ -1642,10 +1651,19 @@
       "norm_label": "photosscreen.tsx"
     },
     {
+      "label": "PhotoLayout",
+      "file_type": "code",
+      "source_file": "src/screens/PhotosScreen.tsx",
+      "source_location": "L11",
+      "id": "screens_photosscreen_photolayout",
+      "community": 5,
+      "norm_label": "photolayout"
+    },
+    {
       "label": "PhotosScreenProps",
       "file_type": "code",
       "source_file": "src/screens/PhotosScreen.tsx",
-      "source_location": "L10",
+      "source_location": "L18",
       "id": "screens_photosscreen_photosscreenprops",
       "community": 5,
       "norm_label": "photosscreenprops"
@@ -1654,7 +1672,7 @@
       "label": "PhotosScreen()",
       "file_type": "code",
       "source_file": "src/screens/PhotosScreen.tsx",
-      "source_location": "L17",
+      "source_location": "L30",
       "id": "screens_photosscreen_photosscreen",
       "community": 5,
       "norm_label": "photosscreen()"
@@ -1663,7 +1681,7 @@
       "label": "styles",
       "file_type": "code",
       "source_file": "src/screens/PhotosScreen.tsx",
-      "source_location": "L64",
+      "source_location": "L136",
       "id": "screens_photosscreen_styles",
       "community": 5,
       "norm_label": "styles"
@@ -1674,7 +1692,7 @@
       "source_file": "src/screens/TextsScreen.tsx",
       "source_location": "L1",
       "id": "src_screens_textsscreen_tsx",
-      "community": 5,
+      "community": 7,
       "norm_label": "textsscreen.tsx"
     },
     {
@@ -1692,7 +1710,7 @@
       "source_file": "src/screens/TextsScreen.tsx",
       "source_location": "L16",
       "id": "screens_textsscreen_textsscreen",
-      "community": 5,
+      "community": 7,
       "norm_label": "textsscreen()"
     },
     {
@@ -1701,7 +1719,7 @@
       "source_file": "src/screens/TextsScreen.tsx",
       "source_location": "L61",
       "id": "screens_textsscreen_styles",
-      "community": 5,
+      "community": 7,
       "norm_label": "styles"
     },
     {
@@ -2078,7 +2096,7 @@
       "file_type": "code",
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L32",
-      "community": 8,
+      "community": 7,
       "norm_label": "{ width: screenwidth, height: screenheight }",
       "id": "components_photo_picker_sheet_width_screenwidth_height_screenheight"
     },
@@ -2087,7 +2105,7 @@
       "file_type": "code",
       "source_file": "App.tsx",
       "source_location": "L84",
-      "community": 0,
+      "community": 5,
       "norm_label": "formatbreakall()",
       "id": "boothub_app_formatbreakall"
     },
@@ -2096,7 +2114,7 @@
       "file_type": "code",
       "source_file": "App.tsx",
       "source_location": "L89",
-      "community": 0,
+      "community": 5,
       "norm_label": "handleopenurl()",
       "id": "boothub_app_handleopenurl"
     },
@@ -2105,7 +2123,7 @@
       "file_type": "code",
       "source_file": "App.tsx",
       "source_location": "L100",
-      "community": 0,
+      "community": 5,
       "norm_label": "ensurefileuri()",
       "id": "boothub_app_ensurefileuri"
     },
@@ -2114,7 +2132,7 @@
       "file_type": "code",
       "source_file": "App.tsx",
       "source_location": "L109",
-      "community": 0,
+      "community": 5,
       "norm_label": "getactualtype()",
       "id": "boothub_app_getactualtype"
     },
@@ -2141,7 +2159,7 @@
       "file_type": "code",
       "source_file": "App.tsx",
       "source_location": "L19",
-      "community": 0,
+      "community": 5,
       "norm_label": "dumptype",
       "id": "boothub_app_dumptype"
     },
@@ -2150,7 +2168,7 @@
       "file_type": "code",
       "source_file": "App.tsx",
       "source_location": "L21",
-      "community": 0,
+      "community": 5,
       "norm_label": "dumpitem",
       "id": "boothub_app_dumpitem"
     },
@@ -2159,7 +2177,7 @@
       "file_type": "code",
       "source_file": "App.tsx",
       "source_location": "L28",
-      "community": 0,
+      "community": 5,
       "norm_label": "mockitems",
       "id": "boothub_app_mockitems"
     },
@@ -2168,7 +2186,7 @@
       "file_type": "code",
       "source_file": "App.tsx",
       "source_location": "L133",
-      "community": 0,
+      "community": 5,
       "norm_label": "getdomainname()",
       "id": "boothub_app_getdomainname"
     },
@@ -2177,7 +2195,7 @@
       "file_type": "code",
       "source_file": "App.tsx",
       "source_location": "L5",
-      "community": 0,
+      "community": 5,
       "norm_label": "app()",
       "id": "tui_template_native_app_app"
     },
@@ -2186,7 +2204,7 @@
       "file_type": "code",
       "source_file": "App.tsx",
       "source_location": "L13",
-      "community": 0,
+      "community": 5,
       "norm_label": "styles",
       "id": "tui_template_native_app_styles"
     },
@@ -2788,6 +2806,17 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "App.tsx",
+      "source_location": "L61",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_tsx",
+      "target": "screens_photosscreen_photolayout"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "App.tsx",
       "source_location": "L52",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -3210,6 +3239,17 @@
       "target": "theme_theme_provider_usetheme"
     },
     {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "App.tsx",
+      "source_location": "L477",
+      "weight": 1.0,
+      "source": "boothub_app_mainapp",
+      "target": "utils_helpers_ensurefileuri"
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
@@ -3438,6 +3478,16 @@
       "confidence_score": 1.0,
       "source": "boothub_package_dependencies",
       "target": "boothub_package_dependencies_expo_google_fonts_jetbrains_mono"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "package.json",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "boothub_package_dependencies",
+      "target": "boothub_package_dependencies_expo_image",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -5622,6 +5672,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/screens/PhotosScreen.tsx",
+      "source_location": "L10",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_screens_photosscreen_tsx",
+      "target": "screens_photosscreen_photolayout"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/screens/PhotosScreen.tsx",
       "source_location": "L17",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -6304,5 +6364,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "0b1dd9646aa23ffc6779f9ec1080f0cfe5729da7"
+  "built_at_commit": "5f0c23a65edcf37bf38b285ab449b300353b243e"
 }

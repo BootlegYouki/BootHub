@@ -1,22 +1,23 @@
 # Graph Report - BootHub  (2026-06-04)
 
 ## Corpus Check
-- 38 files · ~40,512 words
+- 38 files · ~42,356 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 249 nodes · 388 edges · 20 communities (17 shown, 3 thin omitted)
+- 251 nodes · 392 edges · 21 communities (18 shown, 3 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0b1dd964`
+- Built from commit: `5f0c23a6`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - [[_COMMUNITY_Community 0|Community 0]]
 - [[_COMMUNITY_Community 1|Community 1]]
+- [[_COMMUNITY_Community 2|Community 2]]
 - [[_COMMUNITY_Community 3|Community 3]]
 - [[_COMMUNITY_Community 4|Community 4]]
 - [[_COMMUNITY_Community 5|Community 5]]
@@ -49,32 +50,36 @@
   App.tsx → src/theme/theme-provider.tsx
 - `MainApp()` --calls--> `useTheme()`  [EXTRACTED]
   App.tsx → src/theme/theme-provider.tsx
+- `MainApp()` --calls--> `ensureFileUri()`  [EXTRACTED]
+  App.tsx → src/utils/helpers.ts
 - `LinkPreview()` --calls--> `useTheme()`  [EXTRACTED]
   src/components/link-preview.tsx → src/theme/theme-provider.tsx
-- `PhotoPickerSheet()` --calls--> `useTheme()`  [EXTRACTED]
-  src/components/photo-picker-sheet.tsx → src/theme/theme-provider.tsx
 
-## Communities (20 total, 3 thin omitted)
+## Communities (21 total, 3 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.09
-Nodes (14): DumpItem, DumpType, mockItems, styles, TabButtonProps, BannerSvg(), IconSvg(), SplashIcon() (+6 more)
+Cohesion: 0.50
+Nodes (3): IconSvg(), SplashIcon(), SplashIconProps
 
 ### Community 1 - "Community 1"
 Cohesion: 0.09
 Nodes (22): backgroundColor, foregroundImage, adaptiveIcon, predictiveBackGestureEnabled, expo, android, icon, ios (+14 more)
 
+### Community 2 - "Community 2"
+Cohesion: 0.33
+Nodes (5): MONTHS, styles, TuiCalendar(), TuiCalendarProps, WEEKDAYS
+
 ### Community 3 - "Community 3"
 Cohesion: 0.09
-Nodes (22): dependencies, expo, expo-dev-client, expo-document-picker, expo-file-system, expo-font, @expo-google-fonts/jetbrains-mono, expo-image-picker (+14 more)
+Nodes (23): dependencies, expo, expo-dev-client, expo-document-picker, expo-file-system, expo-font, @expo-google-fonts/jetbrains-mono, expo-image (+15 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.07
 Nodes (26): author, devDependencies, eslint, @eslint/js, eslint-plugin-react-hooks, eslint-plugin-react-refresh, globals, prettier (+18 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.14
-Nodes (21): LinksScreen(), LinksScreenProps, styles, PhotosScreen(), PhotosScreenProps, styles, styles, TextsScreen() (+13 more)
+Cohesion: 0.07
+Nodes (33): DumpItem, DumpType, MainApp(), mockItems, styles, TabButtonProps, BannerSvg(), LinkPreview() (+25 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.15
@@ -82,11 +87,11 @@ Nodes (11): 1. Rename the Project, 2. Install Dependencies, 3. Launch Developmen
 
 ### Community 7 - "Community 7"
 Cohesion: 0.06
-Nodes (46): MainApp(), TabButton(), styles, TuiButton(), TuiButtonProps, MONTHS, styles, TuiCalendar() (+38 more)
+Nodes (48): TabButton(), PhotoPickerSheet(), PhotoPickerSheetProps, styles, { width: screenWidth }, { width: screenWidth, height: screenHeight }, styles, TuiButton() (+40 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.18
-Nodes (10): PhotoPickerSheet(), PhotoPickerSheetProps, styles, { width: screenWidth }, { width: screenWidth, height: screenHeight }, styles, TuiContainer(), TuiContainerProps (+2 more)
+Cohesion: 0.40
+Nodes (4): SPRING_CONFIG_OPEN, styles, TuiDrawer(), TuiDrawerProps
 
 ### Community 9 - "Community 9"
 Cohesion: 0.47
@@ -97,28 +102,28 @@ Cohesion: 0.20
 Nodes (7): appJsonPath, fs, packageJsonPath, path, rootDir, slug, workflowPath
 
 ### Community 21 - "Community 21"
-Cohesion: 0.20
-Nodes (5): LinkPreview(), LinkPreviewProps, previewCache, PreviewData, styles
+Cohesion: 0.22
+Nodes (4): LinkPreviewProps, previewCache, PreviewData, styles
 
 ## Knowledge Gaps
-- **132 isolated node(s):** `name`, `slug`, `version`, `orientation`, `icon` (+127 more)
+- **133 isolated node(s):** `name`, `slug`, `version`, `orientation`, `icon` (+128 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `useTheme()` connect `Community 7` to `Community 0`, `Community 8`, `Community 5`, `Community 21`?**
-  _High betweenness centrality (0.049) - this node is a cross-community bridge._
+- **Why does `useTheme()` connect `Community 7` to `Community 8`, `Community 2`, `Community 21`, `Community 5`?**
+  _High betweenness centrality (0.048) - this node is a cross-community bridge._
 - **Why does `dependencies` connect `Community 3` to `Community 4`?**
-  _High betweenness centrality (0.025) - this node is a cross-community bridge._
+  _High betweenness centrality (0.027) - this node is a cross-community bridge._
 - **What connects `name`, `slug`, `version` to the rest of the system?**
-  _132 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.08831908831908832 - nodes in this community are weakly interconnected._
+  _133 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**
-  _Cohesion score 0.09090909090909091 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._
 - **Should `Community 4` be split into smaller, more focused modules?**
   _Cohesion score 0.07407407407407407 - nodes in this community are weakly interconnected._
+- **Should `Community 5` be split into smaller, more focused modules?**
+  _Cohesion score 0.07358156028368794 - nodes in this community are weakly interconnected._
