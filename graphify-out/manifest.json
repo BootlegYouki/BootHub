@@ -1,0 +1,362 @@
+{
+  "E:\\Github\\tui-template-native\\app.json": {
+    "mtime": 1780528123.1162648,
+    "ast_hash": "5b9b38db39274b6e0a7cfdf74fcb6cf0",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\App.tsx": {
+    "mtime": 1780528131.0273848,
+    "ast_hash": "53616ede6fda07821a6aba34eeb4a4a8",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\eslint.config.js": {
+    "mtime": 1780294703.8075628,
+    "ast_hash": "75a0286de267d5393020e4439ed72f6a",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\index.ts": {
+    "mtime": 1780294907.5125284,
+    "ast_hash": "33caa6d28d87fc7e637c033d0d7124b1",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\package.json": {
+    "mtime": 1780528123.1173005,
+    "ast_hash": "b975b5bdac6759a8314276716f136396",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\tsconfig.json": {
+    "mtime": 1780295633.934095,
+    "ast_hash": "2c386194f6052068913c5f10cc5f10ea",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\src\\components\\tui-button.tsx": {
+    "mtime": 1780298119.0245266,
+    "ast_hash": "30fb64ebe6fcda002a651de98c6717e2",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\src\\components\\tui-calendar.tsx": {
+    "mtime": 1780448123.9457328,
+    "ast_hash": "ce4c34821fa10b8bb232fcc434a25906",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\src\\components\\tui-chart.tsx": {
+    "mtime": 1780448828.0988848,
+    "ast_hash": "8d4ae91daec1a057e830710968243ca2",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\src\\components\\tui-checkbox.tsx": {
+    "mtime": 1780449691.604215,
+    "ast_hash": "b046a287f155d943b271804ef529e1f6",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\src\\components\\tui-container.tsx": {
+    "mtime": 1780444981.9942832,
+    "ast_hash": "6ab002fc531a258afacf17f108a020f6",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\src\\components\\tui-drawer.tsx": {
+    "mtime": 1780381653.038579,
+    "ast_hash": "c38e8dfa6c1bee8e6bbc5c2018e11904",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\src\\components\\tui-input.tsx": {
+    "mtime": 1780410101.7364728,
+    "ast_hash": "e34b0e2996a1d51bc105cbfe076994b4",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\src\\components\\tui-nav.tsx": {
+    "mtime": 1780450137.7293346,
+    "ast_hash": "05ae7db178c9f0e65a4117cebe013ef0",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\src\\components\\tui-skeleton.tsx": {
+    "mtime": 1780381480.6272278,
+    "ast_hash": "23cd345cacabbaac0981ec32e02931dc",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\src\\components\\tui-switch.tsx": {
+    "mtime": 1780449700.6967587,
+    "ast_hash": "6f46ff4941a11c6d0cf5059856f6c01d",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\src\\components\\tui-text.tsx": {
+    "mtime": 1780295820.0656812,
+    "ast_hash": "655dca3a1413f6b5eabf4bcdd03af3a4",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\src\\theme\\theme-provider.tsx": {
+    "mtime": 1780445130.4452431,
+    "ast_hash": "d6558279038cb6791e14cbb977ccd11a",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\src\\types\\index.ts": {
+    "mtime": 1780448748.1137347,
+    "ast_hash": "9442b55454b7900dc6912156cb620c8f",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\.agents\\rules\\graphify.md": {
+    "mtime": 1780294703.804244,
+    "ast_hash": "a0e4d192b9e2e17256124dbfc8e24e6a",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\.agents\\workflows\\graphify.md": {
+    "mtime": 1780294703.8052404,
+    "ast_hash": "637776aa6f7496d069afe7520c845c8a",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\.github\\workflows\\build-ios-ipa.yml": {
+    "mtime": 1780528123.1322792,
+    "ast_hash": "3a5644494d1d2f974d736404e6e53aeb",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\assets\\darkmode.svg": {
+    "mtime": 1780377015.5445201,
+    "ast_hash": "d69e440f2fdf0c5c77302ad97836266c",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\assets\\icon.png": {
+    "mtime": 1780448726.4712076,
+    "ast_hash": "fb994e4003011fffaccb9de53425828c",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\assets\\lightmode.svg": {
+    "mtime": 1780377015.54089,
+    "ast_hash": "d69e440f2fdf0c5c77302ad97836266c",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\.expo\\devices.json": {
+    "mtime": 1780449149.0593877,
+    "ast_hash": "e5f6eb13c875f326cfd5915d3364614f",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\scripts\\rename-project.js": {
+    "mtime": 1780448925.272751,
+    "ast_hash": "0b400f42b896f8f17aa8fc1daebd61ba",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\README.md": {
+    "mtime": 1780450090.8731244,
+    "ast_hash": "c73ba00f5e40acf125cf5710f6361618",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\.expo\\README.md": {
+    "mtime": 1780449149.047126,
+    "ast_hash": "2d3a37a405a8f9ffb72ff12bdd3b0adf",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\.expo\\web\\cache\\production\\images\\favicon\\favicon-07d170506bbe0631d7a279f0110a7d637d613a1a4e34c095456ffc1e7a4b14eb-contain-transparent\\favicon-48.png": {
+    "mtime": 1780449170.9678078,
+    "ast_hash": "e50cb0e9ef30854f3b59141c1c01299c",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\src\\components\\splash-icon.tsx": {
+    "mtime": 1780449967.315622,
+    "ast_hash": "7ab9e9087cd224fc29b5927844f84e99",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\tui-template-native\\src\\components\\tui-header.tsx": {
+    "mtime": 1780450065.8134549,
+    "ast_hash": "5353ccf32ee28bfc75035f1951998efa",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\app.json": {
+    "mtime": 1780533369.9405382,
+    "ast_hash": "592cab558328312d2c1e2097797434da",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\App.tsx": {
+    "mtime": 1780534629.217807,
+    "ast_hash": "c0a9998435fe5484b2cf30a4a878a7f6",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\eslint.config.js": {
+    "mtime": 1780294703.8075628,
+    "ast_hash": "75a0286de267d5393020e4439ed72f6a",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\index.ts": {
+    "mtime": 1780294907.5125284,
+    "ast_hash": "33caa6d28d87fc7e637c033d0d7124b1",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\package.json": {
+    "mtime": 1780533732.5921924,
+    "ast_hash": "003fcdc79c7601012b87514562a5dd78",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\tsconfig.json": {
+    "mtime": 1780295633.934095,
+    "ast_hash": "2c386194f6052068913c5f10cc5f10ea",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\scripts\\rename-project.js": {
+    "mtime": 1780448925.272751,
+    "ast_hash": "0b400f42b896f8f17aa8fc1daebd61ba",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\splash-icon.tsx": {
+    "mtime": 1780530060.2647188,
+    "ast_hash": "22c3dbacac97c3a23e3b888923e02ddb",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\tui-button.tsx": {
+    "mtime": 1780298119.0245266,
+    "ast_hash": "30fb64ebe6fcda002a651de98c6717e2",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\tui-calendar.tsx": {
+    "mtime": 1780448123.9457328,
+    "ast_hash": "ce4c34821fa10b8bb232fcc434a25906",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\tui-chart.tsx": {
+    "mtime": 1780448828.0988848,
+    "ast_hash": "8d4ae91daec1a057e830710968243ca2",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\tui-checkbox.tsx": {
+    "mtime": 1780449691.604215,
+    "ast_hash": "b046a287f155d943b271804ef529e1f6",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\tui-container.tsx": {
+    "mtime": 1780534621.6426728,
+    "ast_hash": "3be47261fa0775c10d94626053b76db1",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\tui-drawer.tsx": {
+    "mtime": 1780381653.038579,
+    "ast_hash": "c38e8dfa6c1bee8e6bbc5c2018e11904",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\tui-header.tsx": {
+    "mtime": 1780450065.8134549,
+    "ast_hash": "5353ccf32ee28bfc75035f1951998efa",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\tui-input.tsx": {
+    "mtime": 1780410101.7364728,
+    "ast_hash": "e34b0e2996a1d51bc105cbfe076994b4",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\tui-nav.tsx": {
+    "mtime": 1780450137.7293346,
+    "ast_hash": "05ae7db178c9f0e65a4117cebe013ef0",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\tui-skeleton.tsx": {
+    "mtime": 1780381480.6272278,
+    "ast_hash": "23cd345cacabbaac0981ec32e02931dc",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\tui-switch.tsx": {
+    "mtime": 1780449700.6967587,
+    "ast_hash": "6f46ff4941a11c6d0cf5059856f6c01d",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\tui-text.tsx": {
+    "mtime": 1780295820.0656812,
+    "ast_hash": "655dca3a1413f6b5eabf4bcdd03af3a4",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\theme\\theme-provider.tsx": {
+    "mtime": 1780445130.4452431,
+    "ast_hash": "d6558279038cb6791e14cbb977ccd11a",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\types\\index.ts": {
+    "mtime": 1780448748.1137347,
+    "ast_hash": "9442b55454b7900dc6912156cb620c8f",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\README.md": {
+    "mtime": 1780450090.8731244,
+    "ast_hash": "c73ba00f5e40acf125cf5710f6361618",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\.agents\\rules\\graphify.md": {
+    "mtime": 1780294703.804244,
+    "ast_hash": "a0e4d192b9e2e17256124dbfc8e24e6a",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\.agents\\workflows\\graphify.md": {
+    "mtime": 1780294703.8052404,
+    "ast_hash": "637776aa6f7496d069afe7520c845c8a",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\.github\\workflows\\build-ios-ipa.yml": {
+    "mtime": 1780528123.1322792,
+    "ast_hash": "3a5644494d1d2f974d736404e6e53aeb",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\assets\\icon.png": {
+    "mtime": 1780530524.407573,
+    "ast_hash": "7d018e78ed7e95f6c0417fcdcf88881e",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\.expo\\devices.json": {
+    "mtime": 1780528370.2822132,
+    "ast_hash": "e5f6eb13c875f326cfd5915d3364614f",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\scripts\\convert-png-to-svg.py": {
+    "mtime": 1780530005.2041457,
+    "ast_hash": "2370f61e1519dabc5dcc453e364a9ccf",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\banner-svg.tsx": {
+    "mtime": 1780529550.026408,
+    "ast_hash": "6ee1c4c6dd663c8d7c9159c9ae8bcd4e",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\icon-svg.tsx": {
+    "mtime": 1780530012.716833,
+    "ast_hash": "f24a77bb4f3f3ff1a858dd56706d47ae",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\logo-svg.tsx": {
+    "mtime": 1780529458.662159,
+    "ast_hash": "1cdc9a77feb634b83e34e4e36e13b9a0",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\.expo\\README.md": {
+    "mtime": 1780528370.2654667,
+    "ast_hash": "2d3a37a405a8f9ffb72ff12bdd3b0adf",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\.expo\\web\\cache\\production\\images\\favicon\\favicon-88231efdecb598f4afd20cb497a5f0ec6fc7180ee8882548acd572ca96d90c26-contain-transparent\\favicon-48.png": {
+    "mtime": 1780530328.9304018,
+    "ast_hash": "4a0be6c9a34011327dc1d11df38f3e01",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\assets\\banner.svg": {
+    "mtime": 1780529550.024407,
+    "ast_hash": "43dba8b80e31ea1e6d88e4e64c5d6c3d",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\assets\\darkmode.png": {
+    "mtime": 1780529104.9340444,
+    "ast_hash": "2b16629e3779aa27ff074bee872c3d04",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\assets\\lightmode.png": {
+    "mtime": 1780529108.233636,
+    "ast_hash": "00c3a3f29dd64ce03322600e66d820ef",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\link-preview.tsx": {
+    "mtime": 1780535212.7356784,
+    "ast_hash": "57457728a957d683ef259fb428c625f0",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\.expo\\web\\cache\\production\\images\\favicon\\favicon-199cee9f49a5c61203e164c69dcb619e810715ec705b310c4ff18514ea26b008-contain-transparent\\favicon-48.png": {
+    "mtime": 1780531466.7580194,
+    "ast_hash": "99fa128088db973c4d04d7ebfe7fb35b",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\utils\\storage.ts": {
+    "mtime": 1780531829.6953914,
+    "ast_hash": "8167e7453b96adcdbd0586477130446b",
+    "semantic_hash": ""
+  }
+}

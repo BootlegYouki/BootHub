@@ -1,0 +1,42 @@
+import { Linking, Platform } from 'react-native';
+import { DumpType } from './storage';
+
+export const formatBreakAll = (text: string) => {
+  if (!text) return '';
+  return text.split('').join('\u200b');
+};
+
+export const handleOpenUrl = async (url: string) => {
+  try {
+    const supported = await Linking.canOpenURL(url);
+    if (supported) {
+      await Linking.openURL(url);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+};
+
+export const ensureFileUri = (uri: string) => {
+  if (Platform.OS === 'ios') {
+    if (!uri.startsWith('file://')) {
+      return uri.startsWith('/') ? `file://${uri}` : `file:///${uri}`;
+    }
+  }
+  return uri;
+};
+
+export const getActualType = (value: string, fallbackType: DumpType): DumpType => {
+  const trimmed = value.trim();
+  const isPhoto =
+    /^data:image\//i.test(trimmed) ||
+    /^file:\/\//i.test(trimmed) ||
+    /\.(png|jpe?g|gif|webp|heic)$/i.test(trimmed) ||
+    trimmed.includes('Containers/Data/Application') ||
+    trimmed.includes('ExponentExperienceData') ||
+    trimmed.includes('ImagePicker');
+
+  if (isPhoto) return 'photo';
+  if (/^https?:\/\//i.test(trimmed)) return 'link';
+  return fallbackType;
+};

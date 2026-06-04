@@ -1,0 +1,15 @@
+# .cursorrules — Workspace Rules & Workflows
+
+## Node.js Environment
+- You MUST always use `pnpm` for all node package and script executions.
+- Use `pnpm run build` or `pnpm run typecheck` to verify changes before completing your turn.
+
+## Graphify Knowledge Graph Rules
+This workspace utilizes **Graphify** to convert codebase architecture and documentation into an ingestion-ready knowledge graph.
+
+- **Check Graph First**: Never perform recursive, high-token directory scans or excessive `grep` queries. Instead, parse the structured knowledge graph stored in `graphify-out/graph.json` or consult `graphify-out/GRAPH_REPORT.md` to understand relationships and boundaries.
+- **Workflow**:
+  - Run `graphify .` to re-initialize the knowledge graph.
+  - Run `graphify . --update` to incrementally sync modifications to components or layouts.
+  - Use `graphify . --watch` for real-time synchronization.
+- **Output Reference**: Refer to the interactive dependency graph in `graphify-out/graph.html` to visualize component couplings.
