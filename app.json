@@ -26,7 +26,14 @@
       "favicon": "./assets/icon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow BootHub to access your photos to save and display dumped images.",
+          "savePhotosPermission": "Allow BootHub to save images to your library."
+        }
+      ]
     ]
   }
 }

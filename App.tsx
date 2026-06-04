@@ -45,11 +45,12 @@ import { TuiHeader } from './src/components/tui-header';
 import { TuiText } from './src/components/tui-text';
 import { TuiContainer } from './src/components/tui-container';
 import { BannerSvg } from './src/components/banner-svg';
-import { getItems, deleteItem, addItem, DumpItem, DumpType } from './src/utils/storage';
+import { getItems, deleteItem, addItem, addMultiplePhotos, DumpItem, DumpType } from './src/utils/storage';
 import { ensureFileUri, getActualType } from './src/utils/helpers';
 import { LinksScreen } from './src/screens/LinksScreen';
 import { TextsScreen } from './src/screens/TextsScreen';
 import { PhotosScreen } from './src/screens/PhotosScreen';
+import { PhotoPickerSheet } from './src/components/photo-picker-sheet';
 
 // ─── Tab Button ──────────────────────────────────────────────────────────────
 
@@ -112,6 +113,7 @@ function MainApp() {
   const [sortAscending, setSortAscending] = useState<boolean>(false);
   const [isSelectionMode, setIsSelectionMode] = useState<boolean>(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isPhotoSheetOpen, setIsPhotoSheetOpen] = useState<boolean>(false);
 
   // Per-frame keyboard height — updated every native animation frame via JSI.
   // This is the "fake spacer" approach: the Animated.View at the bottom of the
@@ -219,21 +221,18 @@ function MainApp() {
 
   const [inputText, setInputText] = useState<string>('');
 
-  const handlePickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsEditing: false,
-        quality: 1,
-      });
+  const handlePickImage = () => {
+    Keyboard.dismiss();
+    setIsPhotoSheetOpen(true);
+  };
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        const updated = await addItem('photo', result.assets[0].uri);
-        setItems(updated);
-        setActiveTab('photo');
-      }
+  const handleAddMultiplePhotos = async (uris: string[]) => {
+    try {
+      const updated = await addMultiplePhotos(uris);
+      setItems(updated);
+      setActiveTab('photo');
     } catch (e) {
-      console.warn('Failed to pick photo:', e);
+      console.error('Failed to add multiple photos:', e);
     }
   };
 
@@ -490,6 +489,25 @@ function MainApp() {
       {/* Keyboard spacer: grows from 0 → keyboard height every frame, squeezing
           the SafeAreaView (flex:1) upward — no KAV, no JS timing delay. */}
       <Animated.View style={keyboardSpacerStyle} />
+
+      {/* Backdrop overlay for photo sheet */}
+      {isPhotoSheetOpen && (
+        <Pressable
+          style={{
+            ...StyleSheet.absoluteFillObject,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            zIndex: 999,
+          }}
+          onPress={() => setIsPhotoSheetOpen(false)}
+        />
+      )}
+
+      {/* Custom Sliding Photo Picker Sheet */}
+      <PhotoPickerSheet
+        isOpen={isPhotoSheetOpen}
+        onClose={() => setIsPhotoSheetOpen(false)}
+        onAddPhotos={handleAddMultiplePhotos}
+      />
     </View>
   );
 }

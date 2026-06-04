@@ -19,6 +19,9 @@ export const handleOpenUrl = async (url: string) => {
 
 export const ensureFileUri = (uri: string) => {
   if (Platform.OS === 'ios') {
+    if (uri.startsWith('ph://') || uri.startsWith('assets-library://')) {
+      return uri;
+    }
     if (!uri.startsWith('file://')) {
       return uri.startsWith('/') ? `file://${uri}` : `file:///${uri}`;
     }
@@ -29,6 +32,8 @@ export const ensureFileUri = (uri: string) => {
 export const getActualType = (value: string, fallbackType: DumpType): DumpType => {
   const trimmed = value.trim();
   const isPhoto =
+    /^ph:\/\//i.test(trimmed) ||
+    /^assets-library:\/\//i.test(trimmed) ||
     /^data:image\//i.test(trimmed) ||
     /^file:\/\//i.test(trimmed) ||
     /\.(png|jpe?g|gif|webp|heic)$/i.test(trimmed) ||

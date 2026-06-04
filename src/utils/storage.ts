@@ -117,3 +117,29 @@ export const deleteItem = async (id: string): Promise<DumpItem[]> => {
     return [];
   }
 };
+
+export const addMultiplePhotos = async (uris: string[]): Promise<DumpItem[]> => {
+  try {
+    const currentItems = await getItems();
+    
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const dateStr = `${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${now.getFullYear()}`;
+    const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const label = `${dateStr} @ ${timeStr}`;
+
+    const newItems: DumpItem[] = uris.map((uri, index) => ({
+      id: `${Date.now()}_${index}`,
+      type: 'photo',
+      label,
+      value: uri,
+    }));
+
+    const updated = [...newItems, ...currentItems];
+    await saveItems(updated);
+    return updated;
+  } catch (e) {
+    console.error('Failed to add multiple photos:', e);
+    return [];
+  }
+};
