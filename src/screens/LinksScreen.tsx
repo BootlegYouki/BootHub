@@ -15,6 +15,7 @@ interface LinksScreenProps {
   toggleSelect: (id: string) => void;
   onLongPress?: (item: DumpItem, bounds: { x: number; y: number; width: number; height: number }) => void;
   editingItemId: string | null;
+  searchQuery?: string;
 }
 
 interface LinkItemProps {
@@ -91,19 +92,18 @@ export const LinksScreen: React.FC<LinksScreenProps> = ({
   toggleSelect,
   onLongPress,
   editingItemId,
+  searchQuery,
 }) => {
   const { colors } = useTheme();
 
   if (sortedItems.length === 0) {
     return (
-      <TuiContainer label="empty">
-        <TuiText
-          size="sm"
-          style={{ color: colors.mutedForeground, textAlign: 'center', paddingVertical: 12 }}
-        >
-          No links dumped yet.
-        </TuiText>
-      </TuiContainer>
+      <TuiText
+        size="sm"
+        style={{ color: colors.mutedForeground, textAlign: 'center', paddingVertical: 32 }}
+      >
+        {searchQuery ? 'No matching links found.' : 'No links dumped yet.'}
+      </TuiText>
     );
   }
 

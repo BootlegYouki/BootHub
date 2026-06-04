@@ -1,4 +1,4 @@
-import { Linking, Platform } from 'react-native';
+import { Linking, Platform, Alert } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import { DumpType } from './storage';
 
@@ -13,15 +13,133 @@ export const truncateText = (text: string, limit = 100) => {
   return text.slice(0, limit) + '...';
 };
 
-export const handleOpenUrl = async (url: string) => {
+export const getWebsiteName = (url: string): string => {
   try {
-    const supported = await Linking.canOpenURL(url);
-    if (supported) {
-      await Linking.openURL(url);
+    const match = url.match(/^(?:https?:\/\/)?(?:www\.)?([^:\/\n]+)/im);
+    if (!match || !match[1]) return 'Website';
+    const host = match[1].toLowerCase();
+    
+    // Check popular overrides
+    const overrides: { [key: string]: string } = {
+      // Social & Entertainment
+      'github.com': 'GitHub',
+      'google.com': 'Google',
+      'youtube.com': 'YouTube',
+      'facebook.com': 'Facebook',
+      'twitter.com': 'Twitter',
+      'x.com': 'X',
+      'reddit.com': 'Reddit',
+      'wikipedia.org': 'Wikipedia',
+      'linkedin.com': 'LinkedIn',
+      'instagram.com': 'Instagram',
+      'spotify.com': 'Spotify',
+      'apple.com': 'Apple',
+      'microsoft.com': 'Microsoft',
+      'discord.com': 'Discord',
+      'amazon.com': 'Amazon',
+      'netflix.com': 'Netflix',
+      'twitch.tv': 'Twitch',
+      'pinterest.com': 'Pinterest',
+      'tumblr.com': 'Tumblr',
+      'tiktok.com': 'TikTok',
+      
+      // Development, APIs & Hosting
+      'figma.com': 'Figma',
+      'notion.so': 'Notion',
+      'slack.com': 'Slack',
+      'stackoverflow.com': 'Stack Overflow',
+      'stackexchange.com': 'Stack Exchange',
+      'medium.com': 'Medium',
+      'dev.to': 'DEV Community',
+      'npmtrends.com': 'npm trends',
+      'npmjs.com': 'npm',
+      'yarnpkg.com': 'Yarn',
+      'pnpm.io': 'pnpm',
+      'vercel.com': 'Vercel',
+      'netlify.app': 'Netlify',
+      'heroku.com': 'Heroku',
+      'digitalocean.com': 'DigitalOcean',
+      'gitlab.com': 'GitLab',
+      'bitbucket.org': 'Bitbucket',
+      'openai.com': 'OpenAI',
+      'chatgpt.com': 'ChatGPT',
+      'anthropic.com': 'Anthropic',
+      'claude.ai': 'Claude',
+      'zoom.us': 'Zoom',
+      'teams.microsoft.com': 'Microsoft Teams',
+      'dribbble.com': 'Dribbble',
+      'behance.net': 'Behance',
+      'canva.com': 'Canva',
+      'adobe.com': 'Adobe',
+      'trello.com': 'Trello',
+      'jira.com': 'Jira',
+      'linear.app': 'Linear',
+      'supabase.com': 'Supabase',
+      'firebase.google.com': 'Firebase',
+      'clerk.com': 'Clerk',
+      'auth0.com': 'Auth0',
+      'stripe.com': 'Stripe',
+      'paypal.com': 'PayPal',
+      'gmail.com': 'Gmail',
+      'outlook.com': 'Outlook',
+      'expo.dev': 'Expo',
+      'reactnative.dev': 'React Native',
+      'typescriptlang.org': 'TypeScript',
+      'developer.mozilla.org': 'MDN Web Docs',
+      'w3schools.com': 'W3Schools',
+    };
+
+    for (const [key, value] of Object.entries(overrides)) {
+      if (host === key || host.endsWith('.' + key)) {
+        return value;
+      }
     }
+
+    const parts = host.split('.');
+    if (parts.length === 1) {
+      return parts[0].split(/[-_]+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    }
+    
+    // Identify multi-part TLDs (like co.uk, com.au, net.nz)
+    const secondLast = parts[parts.length - 2];
+    const last = parts[parts.length - 1];
+    const isMultiPartTld = ['co', 'com', 'net', 'org', 'gov', 'edu', 'asn'].includes(secondLast) && last.length === 2;
+    
+    let nameIdx = parts.length - 2;
+    if (isMultiPartTld && parts.length >= 3) {
+      nameIdx = parts.length - 3;
+    }
+    
+    const rawName = parts[nameIdx] || parts[0];
+    return rawName.split(/[-_]+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   } catch (e) {
-    console.error(e);
+    return 'Website';
   }
+};
+
+export const handleOpenUrl = async (url: string) => {
+  const websiteName = getWebsiteName(url);
+
+  Alert.alert(
+    `Redirecting to ${websiteName}`,
+    `Are you sure you want to open this link?`,
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Open',
+        onPress: async () => {
+          try {
+            const supported = await Linking.canOpenURL(url);
+            if (supported) {
+              await Linking.openURL(url);
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        },
+      },
+    ]
+  );
 };
 
 export const ensureFileUri = (uri: string) => {

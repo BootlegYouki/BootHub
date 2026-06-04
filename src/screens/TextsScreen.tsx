@@ -13,6 +13,7 @@ interface TextsScreenProps {
   toggleSelect: (id: string) => void;
   onLongPress?: (item: DumpItem, bounds: { x: number; y: number; width: number; height: number }) => void;
   editingItemId: string | null;
+  searchQuery?: string;
 }
 
 interface TextItemProps {
@@ -74,19 +75,18 @@ export const TextsScreen: React.FC<TextsScreenProps> = ({
   toggleSelect,
   onLongPress,
   editingItemId,
+  searchQuery,
 }) => {
   const { colors } = useTheme();
 
   if (sortedItems.length === 0) {
     return (
-      <TuiContainer label="empty">
-        <TuiText
-          size="sm"
-          style={{ color: colors.mutedForeground, textAlign: 'center', paddingVertical: 12 }}
-        >
-          No texts dumped yet.
-        </TuiText>
-      </TuiContainer>
+      <TuiText
+        size="sm"
+        style={{ color: colors.mutedForeground, textAlign: 'center', paddingVertical: 32 }}
+      >
+        {searchQuery ? 'No matching texts found.' : 'No texts dumped yet.'}
+      </TuiText>
     );
   }
 

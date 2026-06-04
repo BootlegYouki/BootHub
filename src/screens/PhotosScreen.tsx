@@ -2,7 +2,6 @@ import React, { useRef, useEffect } from 'react';
 import { View, StyleSheet, Pressable, Dimensions } from 'react-native';
 import { Image } from 'expo-image';
 
-import { TuiContainer } from '../components/tui-container';
 import { TuiText } from '../components/tui-text';
 import { DumpItem } from '../utils/storage';
 import { useTheme } from '../theme/theme-provider';
@@ -62,14 +61,12 @@ export const PhotosScreen: React.FC<PhotosScreenProps> = ({
 
   if (sortedItems.length === 0) {
     return (
-      <TuiContainer label="empty">
-        <TuiText
-          size="sm"
-          style={{ color: colors.mutedForeground, textAlign: 'center', paddingVertical: 12 }}
-        >
-          No photos dumped yet.
-        </TuiText>
-      </TuiContainer>
+      <TuiText
+        size="sm"
+        style={{ color: colors.mutedForeground, textAlign: 'center', paddingVertical: 32 }}
+      >
+        No photos dumped yet.
+      </TuiText>
     );
   }
 

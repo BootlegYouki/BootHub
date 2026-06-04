@@ -15,6 +15,7 @@ import {
   Dimensions,
   Image as RNImage,
   RefreshControl,
+  Animated as RNAnimated,
 } from 'react-native';
 import { Image } from 'expo-image';
 import Animated, {
@@ -25,6 +26,9 @@ import Animated, {
   withTiming,
   runOnJS,
   withDelay,
+  LinearTransition,
+  FadeIn,
+  FadeOut,
 } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -49,10 +53,9 @@ import {
   Share2,
   ListChecks,
   ArrowLeft,
-  Copy,
-  Pencil,
   X,
   Paperclip,
+  Search,
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -67,69 +70,53 @@ import { TuiHeader } from './src/components/tui-header';
 import { TuiText } from './src/components/tui-text';
 import { TuiContainer } from './src/components/tui-container';
 import { getItems, deleteItem, addItem, updateItem, addMultiplePhotos, DumpItem, DumpType } from './src/utils/storage';
-import { ensureFileUri, getActualType, formatBytes, extractAudioArtwork } from './src/utils/helpers';
+import { ensureFileUri, getActualType, extractAudioArtwork } from './src/utils/helpers';
 import { LinksScreen } from './src/screens/LinksScreen';
 import { TextsScreen } from './src/screens/TextsScreen';
 import { PhotosScreen, PhotoLayout } from './src/screens/PhotosScreen';
-import { FilesScreen, getFileIcon, getFileTypeLabel } from './src/screens/FilesScreen';
+import { FilesScreen } from './src/screens/FilesScreen';
 import { PhotoPickerSheet } from './src/components/photo-picker-sheet';
-import { LinkPreview, previewCache } from './src/components/link-preview';
+import { TabButton } from './src/components/tab-button';
+import { ContextMenuOverlay } from './src/components/context-menu-overlay';
+import { FullscreenPhotoViewer } from './src/components/fullscreen-photo-viewer';
+import { SplashIcon } from './src/components/splash-icon';
 
-// ─── Tab Button ──────────────────────────────────────────────────────────────
-
-interface TabButtonProps {
-  isActive: boolean;
-  onPress: () => void;
-  label: string;
-  Icon: React.ComponentType<any>;
-}
-
-const TabButton: React.FC<TabButtonProps> = ({ isActive, onPress, label, Icon }) => {
-  const { colors, isDark } = useTheme();
-  const [buttonWidth, setButtonWidth] = useState(0);
-  const [legendWidth, setLegendWidth] = useState(0);
-
-  const borderAccent = colors.primary;
-  const topSegmentWidth = Math.max(0, (buttonWidth - legendWidth) / 2);
-
-  return (
-    <Pressable
-      onPress={onPress}
-      onLayout={(e) => setButtonWidth(e.nativeEvent.layout.width)}
-      style={[
-        styles.tabSquare,
-        { backgroundColor: isActive ? (isDark ? '#27272A' : '#E4E4E7') : colors.card },
-      ]}
-    >
-      <View style={[styles.borderLeft, { backgroundColor: borderAccent }]} />
-      <View style={[styles.borderRight, { backgroundColor: borderAccent }]} />
-      <View style={[styles.borderBottom, { backgroundColor: borderAccent }]} />
-      <View style={[styles.borderTopLeft, { backgroundColor: borderAccent, width: topSegmentWidth }]} />
-      <View style={[styles.borderTopRight, { backgroundColor: borderAccent, width: topSegmentWidth }]} />
-
-      <View
-        onLayout={(e) => setLegendWidth(e.nativeEvent.layout.width)}
-        style={styles.legendWrapper}
-      >
-        <TuiText
-          weight="bold"
-          style={[styles.legendText, { color: isActive ? colors.primary : colors.mutedForeground }]}
-        >
-          {label}
-        </TuiText>
-      </View>
-
-      <View style={styles.tabContent} pointerEvents="none">
-        <Icon size={24} color={isActive ? colors.primary : colors.mutedForeground} />
-      </View>
-    </Pressable>
-  );
-};
+// Bottom bar transition settings (manually customize duration/delay here)
+const BAR_SLIDE_DURATION = 100; // milliseconds
+const BAR_SLIDE_DELAY = 150;    // milliseconds
+const BAR_FADE_DURATION = 250;  // milliseconds
+const BAR_FADE_DELAY = 100;     // milliseconds
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
 function MainApp() {
-  const { colors, isDark, setThemeMode } = useTheme();
+  const { colors, isDark, setThemeMode, themeLoaded } = useTheme();
+  const [fontsLoaded] = useFonts({ JetBrainsMono_400Regular, JetBrainsMono_700Bold });
+
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [isAppReady, setIsAppReady] = useState(false);
+  const [splashVisible, setSplashVisible] = useState(true);
+  const splashOpacity = useRef(new RNAnimated.Value(1)).current;
+
+  useEffect(() => {
+    if (fontsLoaded && dataLoaded && themeLoaded) {
+      setIsAppReady(true);
+    }
+  }, [fontsLoaded, dataLoaded, themeLoaded]);
+
+  useEffect(() => {
+    if (isAppReady) {
+      RNAnimated.timing(splashOpacity, {
+        toValue: 0,
+        duration: 200,
+        delay: 1000,
+        useNativeDriver: true,
+      }).start(() => {
+        setSplashVisible(false);
+      });
+    }
+  }, [isAppReady]);
+
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<DumpType>('link');
   const [items, setItems] = useState<DumpItem[]>([]);
@@ -139,40 +126,26 @@ function MainApp() {
   const [isSelectionMode, setIsSelectionMode] = useState<boolean>(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPhotoSheetOpen, setIsPhotoSheetOpen] = useState<boolean>(false);
-  const [isSwipingDown, setIsSwipingDown] = useState<boolean>(false);
+  const { width: windowWidth } = Dimensions.get('window');
   const [photoSheetState, setPhotoSheetState] = useState({ isAllSelected: false, sortAscending: false });
   const [photoSheetTriggerSelectAll, setPhotoSheetTriggerSelectAll] = useState(0);
   const [photoSheetTriggerSort, setPhotoSheetTriggerSort] = useState(0);
   const photoSheetHeight = useSharedValue(0);
   const [activeFullscreenPhotoIndex, setActiveFullscreenPhotoIndex] = useState<number | null>(null);
+  const [zoomStartBounds, setZoomStartBounds] = useState<PhotoLayout | null>(null);
 
   const [imageSizes, setImageSizes] = useState<Record<string, { width: number; height: number }>>({});
-  const [isZooming, setIsZooming] = useState<'in' | 'out' | null>(null);
-  const startX = useSharedValue(0);
-  const startY = useSharedValue(0);
-  const startWidth = useSharedValue(0);
-  const startHeight = useSharedValue(0);
-
-  const endX = useSharedValue(0);
-  const endY = useSharedValue(0);
-  const endWidth = useSharedValue(0);
-  const endHeight = useSharedValue(0);
-
-  const animationProgress = useSharedValue(0);
-  // 0 = idle/open, 1 = zooming-in, 2 = zooming-out
-  // This is a shared value (UI-thread-synchronous) so useAnimatedStyle never
-  // reads a stale JS-state snapshot on the first frame.
-  const zoomPhase = useSharedValue(0);
-  // Separate opacity for the header/footer controls so they can fade in
-  // independently after the zoom completes, not during it.
-  const controlsOpacity = useSharedValue(0);
-  const isHoldingPhoto = useSharedValue(0);
-  const barBackgroundOpacity = useSharedValue(1);
-  // Tracks whether controls are currently visible (toggled by tapping the photo)
-  const controlsVisible = useRef<boolean>(true);
   const measurePhotoRef = useRef<
     ((id: string, callback: (bounds: PhotoLayout | null) => void) => void) | null
   >(null);
+
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [isSearchFocused, setIsSearchFocused] = useState<boolean>(false);
+  const [isFooterFocused, setIsFooterFocused] = useState<boolean>(false);
+
+  useEffect(() => {
+    setSearchQuery('');
+  }, [activeTab]);
 
   // Pre-fetch image sizes in background
   useEffect(() => {
@@ -195,33 +168,7 @@ function MainApp() {
     });
   }, [items]);
 
-  const calculateFullscreenImageBounds = (item: DumpItem): PhotoLayout => {
-    const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
-    const size = imageSizes[item.id];
-    const r = size ? size.width / size.height : 1.0;
-    const screenAspectRatio = windowWidth / windowHeight;
 
-    let targetWidth, targetHeight, targetLeft, targetTop;
-
-    if (r > screenAspectRatio) {
-      targetWidth = windowWidth;
-      targetHeight = windowWidth / r;
-      targetLeft = 0;
-      targetTop = (windowHeight - targetHeight) / 2;
-    } else {
-      targetHeight = windowHeight;
-      targetWidth = windowHeight * r;
-      targetLeft = (windowWidth - targetWidth) / 2;
-      targetTop = 0;
-    }
-
-    return {
-      x: targetLeft,
-      y: targetTop,
-      width: targetWidth,
-      height: targetHeight,
-    };
-  };
 
   // ─── Per-tab items (each tab filters independently so all tabs stay live) ────
   const TAB_ORDER: DumpType[] = ['link', 'text', 'photo', 'file'];
@@ -237,17 +184,70 @@ function MainApp() {
     .filter((item) => getActualType(item.value, item.type) === 'file')
     .map((item) => item.id === editingItemId ? { ...item, value: editText } : item);
 
-  const sortedLinkItems = sortAscending ? [...linkItems].reverse() : linkItems;
-  const sortedTextItems = sortAscending ? [...textItems].reverse() : textItems;
+  const query = searchQuery.trim().toLowerCase();
+
+  const filteredLinks = query
+    ? linkItems.filter((item) =>
+        item.value.toLowerCase().includes(query) ||
+        (item.label && item.label.toLowerCase().includes(query))
+      )
+    : linkItems;
+
+  const filteredTexts = query
+    ? textItems.filter((item) =>
+        item.value.toLowerCase().includes(query) ||
+        (item.label && item.label.toLowerCase().includes(query))
+      )
+    : textItems;
+
+  const filteredFiles = query
+    ? fileItems.filter((item) => {
+        let fileName = '';
+        try {
+          fileName = JSON.parse(item.value).name || '';
+        } catch (e) {
+          fileName = item.value.split('/').pop() || '';
+        }
+        return (
+          fileName.toLowerCase().includes(query) ||
+          (item.label && item.label.toLowerCase().includes(query))
+        );
+      })
+    : fileItems;
+
+  const sortedLinkItems = sortAscending ? [...filteredLinks].reverse() : filteredLinks;
+  const sortedTextItems = sortAscending ? [...filteredTexts].reverse() : filteredTexts;
   const sortedPhotoItems = sortAscending ? [...photoItems].reverse() : photoItems;
-  const sortedFileItems = sortAscending ? [...fileItems].reverse() : fileItems;
+  const sortedFileItems = sortAscending ? [...filteredFiles].reverse() : filteredFiles;
 
   // Keep legacy `sortedItems` pointing at the active tab so existing downstream
   // code (select-all, section count, etc.) doesn't need to change.
   const filteredItems = items
     .filter((item) => getActualType(item.value, item.type) === activeTab)
     .map((item) => item.id === editingItemId ? { ...item, value: editText } : item);
-  const sortedItems = sortAscending ? [...filteredItems].reverse() : filteredItems;
+
+  const filteredSearchItems = query
+    ? filteredItems.filter((item) => {
+        if (activeTab === 'file') {
+          let fileName = '';
+          try {
+            fileName = JSON.parse(item.value).name || '';
+          } catch (e) {
+            fileName = item.value.split('/').pop() || '';
+          }
+          return (
+            fileName.toLowerCase().includes(query) ||
+            (item.label && item.label.toLowerCase().includes(query))
+          );
+        }
+        return (
+          item.value.toLowerCase().includes(query) ||
+          (item.label && item.label.toLowerCase().includes(query))
+        );
+      })
+    : filteredItems;
+
+  const sortedItems = sortAscending ? [...filteredSearchItems].reverse() : filteredSearchItems;
 
   // ─── Tab pager refs ───────────────────────────────────────────────────────────
   const tabPagerRef = useRef<ScrollView>(null);
@@ -261,7 +261,7 @@ function MainApp() {
 
   const switchTab = (tab: DumpType) => {
     setActiveTab(tab);
-    scrollToTab(tab);
+    scrollToTab(tab, false);
   };
 
 
@@ -299,7 +299,8 @@ function MainApp() {
   const keyboard = useAnimatedKeyboard();
 
   const bottomSpacerStyle = useAnimatedStyle(() => {
-    const height = Math.max(keyboard.height.value, photoSheetHeight.value);
+    const keyboardHeight = isFooterFocused ? keyboard.height.value : 0;
+    const height = Math.max(keyboardHeight, photoSheetHeight.value);
     return {
       height: height,
     };
@@ -307,7 +308,8 @@ function MainApp() {
 
   const animatedBottomBarStyle = useAnimatedStyle(() => {
     const targetPadding = insets.bottom > 0 ? insets.bottom : 12;
-    const totalHeight = Math.max(keyboard.height.value, photoSheetHeight.value);
+    const keyboardHeight = isFooterFocused ? keyboard.height.value : 0;
+    const totalHeight = Math.max(keyboardHeight, photoSheetHeight.value);
     const padding = interpolate(
       totalHeight,
       [0, 50],
@@ -321,12 +323,22 @@ function MainApp() {
   });
 
 
+  useEffect(() => {
+    const subscription = Keyboard.addListener('keyboardDidHide', () => {
+      setIsFooterFocused(false);
+    });
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   // Reset selection when tab changes
   useEffect(() => {
     setIsSelectionMode(false);
     setSelectedIds(new Set());
     setActiveFullscreenPhotoIndex(null);
     setEditingItemId(null);
+    Keyboard.dismiss();
   }, [activeTab]);
 
   // Sync pager position on mount (no animation so it doesn't flash)
@@ -649,309 +661,13 @@ function MainApp() {
     );
   };
 
-  const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
-  const translateY = useSharedValue(0);
-
-  const latestStateRef = useRef({
-    activeFullscreenPhotoIndex,
-    activeFullscreenPhoto,
-    handleCloseFullscreen: () => { },
-  });
-
   const handlePhotoPress = (item: DumpItem, startBounds: PhotoLayout) => {
-    const endBounds = calculateFullscreenImageBounds(item);
-
-    startX.value = startBounds.x;
-    startY.value = startBounds.y;
-    startWidth.value = startBounds.width;
-    startHeight.value = startBounds.height;
-
-    endX.value = endBounds.x;
-    endY.value = endBounds.y;
-    endWidth.value = endBounds.width;
-    endHeight.value = endBounds.height;
-
-    // Reset synchronously on the UI thread — zoomPhase=1 means "zooming in".
-    // This MUST happen before React mounts the overlay so the first frame
-    // never sees zoomPhase=0 (idle) with opacity=1.
-    animationProgress.value = 0;
-    controlsOpacity.value = 0;
-    controlsVisible.current = true;
-    zoomPhase.value = 1;
-    barBackgroundOpacity.value = 1;
-
-    setIsZooming('in');
-    const index = sortedItems.findIndex((x) => x.id === item.id);
+    setZoomStartBounds(startBounds);
+    const index = sortedPhotoItems.findIndex((x) => x.id === item.id);
     if (index !== -1) {
       setActiveFullscreenPhotoIndex(index);
     }
   };
-
-  const handleCloseFullscreen = () => {
-    if (activeFullscreenPhotoIndex === null || !activeFullscreenPhoto) return;
-
-    const item = activeFullscreenPhoto;
-
-    if (measurePhotoRef.current) {
-      measurePhotoRef.current(item.id, (gridBounds) => {
-        const { width: windowWidth, height: windowHeight } = Dimensions.get('window');
-        const fallbackBounds = {
-          x: windowWidth / 2 - 50,
-          y: windowHeight / 2 - 50,
-          width: 100,
-          height: 100,
-        };
-
-        const targetBounds = gridBounds || fallbackBounds;
-        const currentBounds = calculateFullscreenImageBounds(item);
-
-        const currentYOffset = translateY.value;
-        startX.value = targetBounds.x;
-        startY.value = targetBounds.y;
-        startWidth.value = targetBounds.width;
-        startHeight.value = targetBounds.height;
-
-        endX.value = currentBounds.x;
-        endY.value = currentBounds.y + currentYOffset;
-        endWidth.value = currentBounds.width;
-        endHeight.value = currentBounds.height;
-
-        setIsZooming('out');
-        zoomPhase.value = 2;
-        // Snap controls invisible immediately before zoom-out plays
-        controlsOpacity.value = 0;
-        animationProgress.value = 1;
-        animationProgress.value = withTiming(0, { duration: 250 }, () => {
-          // Do NOT reset zoomPhase here — it fires on the UI thread while the
-          // overlay is still mounted. Resetting to 0 would make controls flash
-          // for 1-2 frames before React unmounts the overlay.
-          // zoomPhase resets to 0 in the useEffect below once unmounted.
-          runOnJS(setActiveFullscreenPhotoIndex)(null);
-          runOnJS(setIsZooming)(null);
-          translateY.value = 0;
-        });
-      });
-    } else {
-      setActiveFullscreenPhotoIndex(null);
-      translateY.value = 0;
-    }
-  };
-
-  // Trigger zoom-in animation only after the fullscreen overlay has mounted
-  useEffect(() => {
-    if (isZooming === 'in') {
-      animationProgress.value = 0;
-      controlsOpacity.value = 0;
-      // requestAnimationFrame ensures the native view has rendered and is ready
-      requestAnimationFrame(() => {
-        animationProgress.value = withTiming(1, { duration: 250 }, () => {
-          zoomPhase.value = 0;
-          runOnJS(setIsZooming)(null);
-          // Fade controls in after zoom fully completes
-          controlsOpacity.value = withTiming(1, { duration: 120 });
-        });
-      });
-    }
-  }, [isZooming]);
-
-  // Reset zoomPhase after the overlay has fully unmounted.
-  // This must happen here (JS thread, post-render) not in the animation callback
-  // (UI thread, pre-unmount) to avoid a 1-2 frame controls flash.
-  useEffect(() => {
-    if (activeFullscreenPhotoIndex === null) {
-      zoomPhase.value = 0;
-    }
-  }, [activeFullscreenPhotoIndex]);
-
-  useEffect(() => {
-    latestStateRef.current = {
-      activeFullscreenPhotoIndex,
-      activeFullscreenPhoto,
-      handleCloseFullscreen,
-    };
-  }, [activeFullscreenPhotoIndex, activeFullscreenPhoto, handleCloseFullscreen]);
-
-  const touchInitiallyHorizontalRef = useRef<boolean>(false);
-  const touchInitiallyVerticalRef = useRef<boolean>(false);
-  const currentScrollX = useRef<number>(0);
-  const isScrollingRef = useRef<boolean>(false);
-
-  useEffect(() => {
-    if (activeFullscreenPhotoIndex !== null) {
-      currentScrollX.current = activeFullscreenPhotoIndex * windowWidth;
-    }
-  }, [activeFullscreenPhotoIndex]);
-
-  const shouldSetPanResponder = (gestureState: any) => {
-    // If the flat list is actively scrolling or being dragged horizontally,
-    // lock to horizontal immediately so it doesn't get interrupted.
-    if (isScrollingRef.current) {
-      touchInitiallyHorizontalRef.current = true;
-      touchInitiallyVerticalRef.current = false;
-      return false;
-    }
-
-    const offsetFromPage = currentScrollX.current % windowWidth;
-    const isMidScroll = Math.abs(offsetFromPage) > 2 && Math.abs(offsetFromPage) < windowWidth - 2;
-
-    if (isMidScroll) {
-      touchInitiallyHorizontalRef.current = true;
-      touchInitiallyVerticalRef.current = false;
-      return false;
-    }
-
-    const absX = Math.abs(gestureState.dx);
-    const absY = Math.abs(gestureState.dy);
-
-    // Determine dominant direction:
-    // 1. Eagerly lock to horizontal if we see even a small horizontal drag (5px).
-    // 2. Lock to vertical only if we see a more significant vertical drag (20px).
-    if (!touchInitiallyHorizontalRef.current && !touchInitiallyVerticalRef.current) {
-      if (absX > 5) {
-        touchInitiallyHorizontalRef.current = true;
-      } else if (absY > 20) {
-        touchInitiallyVerticalRef.current = true;
-      }
-    }
-
-    if (touchInitiallyHorizontalRef.current) {
-      return false;
-    }
-
-    if (touchInitiallyVerticalRef.current) {
-      // Capture only if swiping down (to dismiss) with at least 15px downward drag.
-      // If they swipe up, we are still vertically locked (so they can't horizontal page),
-      // but we return false so we don't start the dismiss animation.
-      return gestureState.dy > 15;
-    }
-
-    return false;
-  };
-
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => {
-        touchInitiallyHorizontalRef.current = false;
-        touchInitiallyVerticalRef.current = false;
-        return false;
-      },
-      onStartShouldSetPanResponderCapture: () => {
-        touchInitiallyHorizontalRef.current = false;
-        touchInitiallyVerticalRef.current = false;
-        return false;
-      },
-      onMoveShouldSetPanResponder: (evt, gestureState) => {
-        return shouldSetPanResponder(gestureState);
-      },
-      onMoveShouldSetPanResponderCapture: (evt, gestureState) => {
-        return shouldSetPanResponder(gestureState);
-      },
-      onPanResponderGrant: () => {
-        setIsSwipingDown(true);
-      },
-      onPanResponderMove: (evt, gestureState) => {
-        if (gestureState.dy > 0) {
-          translateY.value = gestureState.dy;
-        }
-      },
-      onPanResponderRelease: (evt, gestureState) => {
-        if (gestureState.dy > 120) {
-          latestStateRef.current.handleCloseFullscreen();
-        } else {
-          translateY.value = withTiming(0, { duration: 200 });
-        }
-        setIsSwipingDown(false);
-        touchInitiallyHorizontalRef.current = false;
-        touchInitiallyVerticalRef.current = false;
-      },
-      onPanResponderTerminate: () => {
-        translateY.value = withTiming(0, { duration: 200 });
-        setIsSwipingDown(false);
-        touchInitiallyHorizontalRef.current = false;
-        touchInitiallyVerticalRef.current = false;
-      },
-    })
-  ).current;
-
-  const containerStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateY: isZooming ? 0 : translateY.value }],
-    };
-  });
-
-  const backdropStyle = useAnimatedStyle(() => {
-    // Use zoomPhase (shared value, UI-thread-synchronous) so the first frame
-    // is never stale. 0 = idle/open, 1 = zooming-in, 2 = zooming-out.
-    if (zoomPhase.value === 2) {
-      return { opacity: 0 };
-    }
-    if (zoomPhase.value === 1) {
-      return { opacity: animationProgress.value };
-    }
-    return {
-      opacity: interpolate(translateY.value, [0, 120], [1, 0], 'clamp'),
-    };
-  });
-
-  const controlsStyle = useAnimatedStyle(() => {
-    // While zooming in or out, keep controls fully hidden
-    if (zoomPhase.value === 1 || zoomPhase.value === 2) {
-      return { opacity: 0 };
-    }
-    // Fully open: fade-in opacity attenuated by drag-dismiss
-    const baseOpacity = interpolate(translateY.value, [0, 100], [1, 0], 'clamp');
-    return {
-      opacity: controlsOpacity.value * baseOpacity,
-    };
-  });
-
-  const barBgStyle = useAnimatedStyle(() => {
-    return {
-      opacity: barBackgroundOpacity.value,
-    };
-  });
-
-  const animatedTransitionStyle = useAnimatedStyle(() => {
-    const left = interpolate(
-      animationProgress.value,
-      [0, 1],
-      [startX.value, endX.value]
-    );
-    const top = interpolate(
-      animationProgress.value,
-      [0, 1],
-      [startY.value, endY.value]
-    );
-    const width = interpolate(
-      animationProgress.value,
-      [0, 1],
-      [startWidth.value, endWidth.value]
-    );
-    const height = interpolate(
-      animationProgress.value,
-      [0, 1],
-      [startHeight.value, endHeight.value]
-    );
-
-    const borderWidth = interpolate(animationProgress.value, [0, 1], [1.5, 0]);
-    const padding = interpolate(animationProgress.value, [0, 1], [6, 0]);
-
-    const opacity = isZooming ? 1 : 0;
-
-    return {
-      position: 'absolute',
-      left,
-      top,
-      width,
-      height,
-      borderWidth,
-      padding,
-      borderColor: colors.primary + (isDark ? '40' : '26'),
-      backgroundColor: 'transparent',
-      overflow: 'hidden',
-      opacity,
-    };
-  });
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -967,8 +683,14 @@ function MainApp() {
 
   useEffect(() => {
     const loadItems = async () => {
-      const data = await getItems();
-      setItems(data);
+      try {
+        const data = await getItems();
+        setItems(data);
+      } catch (e) {
+        console.error('Failed to load items:', e);
+      } finally {
+        setDataLoaded(true);
+      }
     };
     loadItems();
   }, []);
@@ -1149,10 +871,15 @@ function MainApp() {
     }
   };
 
-  const [fontsLoaded] = useFonts({ JetBrainsMono_400Regular, JetBrainsMono_700Bold });
-
-  if (!fontsLoaded) {
-    return <View style={[styles.loaderContainer, { backgroundColor: '#18181B' }]} />;
+  // Render initial dark/light splash screen until the app is ready
+  if (!isAppReady) {
+    const splashBg = isDark ? '#18181B' : '#F4F4F5';
+    const splashIconColor = isDark ? '#FFFFFF' : '#000000';
+    return (
+      <View style={{ flex: 1, backgroundColor: splashBg, justifyContent: 'center', alignItems: 'center' }}>
+        {themeLoaded && <SplashIcon color={splashIconColor} size={160} />}
+      </View>
+    );
   }
 
   const toggleTheme = () => {
@@ -1162,6 +889,50 @@ function MainApp() {
 
   const dynamicSubtitle = activeTab === 'photo' ? 'photos' : activeTab + 's';
   const capitalizedTitle = activeTab.charAt(0).toUpperCase() + activeTab.slice(1) + 's';
+
+  const renderSearchBar = () => {
+    return (
+      <View
+        style={[
+          styles.searchContainer,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.primary,
+          },
+        ]}
+      >
+        <Search size={18} color={isSearchFocused ? colors.primary : colors.mutedForeground} style={styles.searchIcon} />
+        <TextInput
+          placeholder="Search..."
+          placeholderTextColor={colors.mutedForeground}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onFocus={() => {
+            setIsSearchFocused(true);
+            setIsFooterFocused(false);
+          }}
+          onBlur={() => setIsSearchFocused(false)}
+          style={[
+            styles.searchInput,
+            {
+              color: colors.primary,
+            },
+          ]}
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
+        {searchQuery.length > 0 && (
+          <Pressable
+            onPress={() => setSearchQuery('')}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={styles.searchClearBtn}
+          >
+            <X size={16} color={colors.primary} />
+          </Pressable>
+        )}
+      </View>
+    );
+  };
 
   const themeToggle = (
     <Pressable
@@ -1214,9 +985,13 @@ function MainApp() {
 
           {/* Section header row */}
           <View style={styles.sectionHeaderRow}>
-            <TuiText size="lg" weight="bold" style={[styles.sectionTitle, { color: colors.primary }]}>
-              {capitalizedTitle} : {sortedItems.length}
-            </TuiText>
+            {activeTab !== 'photo' ? (
+              renderSearchBar()
+            ) : (
+              <TuiText size="lg" weight="bold" style={[styles.sectionTitle, { color: colors.primary }]}>
+                {capitalizedTitle} : {sortedItems.length}
+              </TuiText>
+            )}
             <View style={styles.headerActions}>
               {isSelectionMode && (
                 <Pressable
@@ -1294,6 +1069,7 @@ function MainApp() {
           pagingEnabled
           showsHorizontalScrollIndicator={false}
           scrollEventThrottle={16}
+          keyboardShouldPersistTaps="handled"
           // Update active tab mid-drag ONLY while user's finger is actively dragging.
           // Guarding with isTabScrollingRef prevents flicker during momentum scrolls
           // and programmatic scrollTo animations triggered by tab button presses.
@@ -1326,6 +1102,7 @@ function MainApp() {
           <ScrollView
             style={{ width: windowWidth }}
             contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -1343,6 +1120,7 @@ function MainApp() {
               toggleSelect={toggleSelect}
               onLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })}
               editingItemId={editingItemId}
+              searchQuery={searchQuery}
             />
           </ScrollView>
 
@@ -1350,6 +1128,7 @@ function MainApp() {
           <ScrollView
             style={{ width: windowWidth }}
             contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -1367,6 +1146,7 @@ function MainApp() {
               toggleSelect={toggleSelect}
               onLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })}
               editingItemId={editingItemId}
+              searchQuery={searchQuery}
             />
           </ScrollView>
 
@@ -1374,6 +1154,7 @@ function MainApp() {
           <ScrollView
             style={{ width: windowWidth }}
             contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -1402,6 +1183,7 @@ function MainApp() {
           <ScrollView
             style={{ width: windowWidth }}
             contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -1419,247 +1201,23 @@ function MainApp() {
               toggleSelect={toggleSelect}
               onLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })}
               editingItemId={editingItemId}
+              searchQuery={searchQuery}
             />
           </ScrollView>
         </ScrollView>
 
         {/* Fullscreen Photo Overlay with native horizontal paging and swipe-down-to-close */}
         {activeFullscreenPhotoIndex !== null && activeFullscreenPhoto && (
-          <Animated.View
-            {...panResponder.panHandlers}
-            style={[
-              {
-                position: 'absolute',
-                top: 0,
-                bottom: 0,
-                left: 0,
-                right: 0,
-                zIndex: 900,
-              },
-              containerStyle,
-            ]}
-          >
-            {/* Dark Backdrop */}
-            <Animated.View
-              style={[
-                StyleSheet.absoluteFillObject,
-                backdropStyle,
-                { backgroundColor: colors.background }
-              ]}
-              pointerEvents="none"
-            />
-
-            {/* Completely transparent background */}
-            {/* FlatList mounted unconditionally inside the overlay to pre-render and load images in background */}
-            <View
-              style={[
-                StyleSheet.absoluteFillObject,
-                { opacity: isZooming ? 0 : 1 }
-              ]}
-              pointerEvents={isZooming ? 'none' : 'auto'}
-            >
-              <FlatList
-                data={sortedItems}
-                horizontal
-                pagingEnabled
-                scrollEnabled={!isSwipingDown}
-                showsHorizontalScrollIndicator={false}
-                keyExtractor={(item) => item.id}
-                initialScrollIndex={activeFullscreenPhotoIndex}
-                getItemLayout={(data, index) => ({
-                  length: windowWidth,
-                  offset: windowWidth * index,
-                  index,
-                })}
-                onScroll={(e) => {
-                  currentScrollX.current = e.nativeEvent.contentOffset.x;
-                }}
-                scrollEventThrottle={16}
-                onScrollBeginDrag={() => {
-                  isScrollingRef.current = true;
-                }}
-                onScrollEndDrag={(e) => {
-                  const velocityX = e.nativeEvent.velocity ? e.nativeEvent.velocity.x : 0;
-                  if (velocityX === 0) {
-                    isScrollingRef.current = false;
-                  }
-                }}
-                onMomentumScrollEnd={(e) => {
-                  isScrollingRef.current = false;
-                  const contentOffset = e.nativeEvent.contentOffset.x;
-                  currentScrollX.current = contentOffset;
-                  const layoutWidth = e.nativeEvent.layoutMeasurement.width;
-                  const index = Math.round(contentOffset / layoutWidth);
-                  if (index >= 0 && index < sortedItems.length) {
-                    setActiveFullscreenPhotoIndex(index);
-                  }
-                }}
-                renderItem={({ item }) => (
-                  <View style={{ width: windowWidth, height: windowHeight, justifyContent: 'center', alignItems: 'center' }}>
-                    <Pressable
-                      onPress={() => {
-                        const next = !controlsVisible.current;
-                        controlsVisible.current = next;
-                        controlsOpacity.value = withTiming(next ? 1 : 0, { duration: 150 });
-                      }}
-                      style={{ width: '100%', height: '100%' }}
-                    >
-                      <Image
-                        source={{ uri: ensureFileUri(item.value) }}
-                        style={{ width: '100%', height: '100%' }}
-                        contentFit="contain"
-                        transition={0}
-                      />
-                    </Pressable>
-                  </View>
-                )}
-                style={{ width: '100%', height: '100%' }}
-              />
-            </View>
-
-            {/* Transition Zoom Image (rendered on top of FlatList during zoom transitions, kept mounted to avoid reload flicker) */}
-            <Animated.View style={animatedTransitionStyle} pointerEvents="none">
-              <Image
-                source={{ uri: ensureFileUri(activeFullscreenPhoto.value) }}
-                style={{ width: '100%', height: '100%' }}
-                contentFit="cover"
-                transition={0}
-              />
-            </Animated.View>
-
-            {/* Top Header Bar Container */}
-            <Animated.View
-              style={[
-                {
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: insets.top > 0 ? insets.top + 56 : 64,
-                  zIndex: 950,
-                  opacity: 0,
-                },
-                controlsStyle,
-              ]}
-            >
-              {/* Dynamic Theme Background */}
-              <Animated.View
-                style={[
-                  StyleSheet.absoluteFillObject,
-                  {
-                    backgroundColor: colors.background,
-                    borderBottomWidth: 1.5,
-                    borderBottomColor: colors.primary + (isDark ? '40' : '26'),
-                  },
-                  barBgStyle,
-                ]}
-              />
-
-              {/* Top Controls Layout */}
-              <View
-                style={{
-                  flex: 1,
-                  paddingTop: insets.top > 0 ? insets.top : 8,
-                  paddingHorizontal: 16,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                {/* Top Left: Back Button */}
-                <Pressable
-                  onPress={handleCloseFullscreen}
-                  style={({ pressed }) => [
-                    styles.headerActionBtn,
-                    {
-                      borderColor: colors.primary,
-                      backgroundColor: pressed ? colors.primary + '25' : colors.card + '80',
-                    },
-                  ]}
-                >
-                  <ArrowLeft size={16} color={colors.primary} />
-                </Pressable>
-
-                {/* Top Middle: Date/Time Stamp */}
-                <View
-                  style={{
-                    backgroundColor: colors.card + '80',
-                    borderWidth: 1.5,
-                    borderColor: colors.primary,
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                  }}
-                >
-                  <TuiText weight="bold" size="sm" style={{ color: colors.primary }}>
-                    {activeFullscreenPhoto.label}
-                  </TuiText>
-                </View>
-
-                {/* Spacer to align center */}
-                <View style={{ width: 40, height: 40 }} />
-              </View>
-            </Animated.View>
-
-            {/* Bottom Footer Bar Container */}
-            <Animated.View
-              style={[
-                {
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: insets.bottom > 0 ? insets.bottom + 64 : 72,
-                  zIndex: 950,
-                  opacity: 0,
-                },
-                controlsStyle,
-              ]}
-            >
-
-              {/* Bottom Controls Layout */}
-              <View
-                style={{
-                  flex: 1,
-                  paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
-                  paddingHorizontal: 16,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  paddingTop: 8,
-                }}
-              >
-                {/* Bottom Left: Share Button */}
-                <Pressable
-                  onPress={handleShareActivePhoto}
-                  hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
-                  style={({ pressed }) => [
-                    styles.iconBtn,
-                    {
-                      borderColor: colors.primary,
-                      backgroundColor: pressed ? colors.primary + '25' : colors.card + '80',
-                    },
-                  ]}
-                >
-                  <Share2 size={16} color={colors.primary} />
-                </Pressable>
-
-                {/* Bottom Right: Delete Button */}
-                <Pressable
-                  onPress={handleDeleteActivePhoto}
-                  hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
-                  style={({ pressed }) => [
-                    styles.iconBtn,
-                    {
-                      borderColor: colors.destructive || '#EF4444',
-                      backgroundColor: pressed ? (colors.destructive || '#EF4444') + '25' : colors.card + '80',
-                    },
-                  ]}
-                >
-                  <Trash2 size={16} color={colors.destructive || '#EF4444'} />
-                </Pressable>
-              </View>
-            </Animated.View>
-          </Animated.View>
+          <FullscreenPhotoViewer
+            activeFullscreenPhotoIndex={activeFullscreenPhotoIndex}
+            setActiveFullscreenPhotoIndex={setActiveFullscreenPhotoIndex}
+            sortedItems={sortedPhotoItems}
+            startBounds={zoomStartBounds}
+            imageSizes={imageSizes}
+            onShare={handleShareActivePhoto}
+            onDelete={handleDeleteActivePhoto}
+            measurePhotoRef={measurePhotoRef}
+          />
         )}
 
         {/* 04: BOTTOM BAR */}
@@ -1752,6 +1310,7 @@ function MainApp() {
                 onFocus={() => {
                   setIsPhotoSheetOpen(false);
                   setActiveFullscreenPhotoIndex(null);
+                  setIsFooterFocused(true);
                 }}
               />
 
@@ -1769,83 +1328,36 @@ function MainApp() {
                 <Check size={16} color={colors.primary} />
               </Pressable>
             </View>
-          ) : (
+) : (
             <View style={styles.bottomBarRow}>
-              <Pressable
-                onPress={handlePickImage}
-                hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
-                style={({ pressed }) => [
-                  styles.iconBtn,
-                  {
-                    borderColor: colors.primary,
-                    backgroundColor: pressed ? colors.primary + '25' : 'transparent',
-                    marginRight: isPhotoSheetOpen ? 0 : 6,
-                  },
-                ]}
-              >
-                <ImageIcon size={16} color={colors.primary} />
-              </Pressable>
-
-              {!isPhotoSheetOpen && (
+              {/* Photo Button - Animation Removed */}
+              <View>
                 <Pressable
-                  onPress={handlePickFile}
+                  onPress={handlePickImage}
                   hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
                   style={({ pressed }) => [
                     styles.iconBtn,
                     {
                       borderColor: colors.primary,
                       backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+                      marginRight: isPhotoSheetOpen ? 0 : 6,
                     },
                   ]}
                 >
-                  <Paperclip size={16} color={colors.primary} />
+                  <ImageIcon size={16} color={colors.primary} />
                 </Pressable>
-              )}
+              </View>
 
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    borderColor: colors.primary,
-                    color: colors.foreground,
-                    backgroundColor: colors.card,
-                  },
-                ]}
-                value={inputText}
-                onChangeText={setInputText}
-                placeholder="Type Something"
-                placeholderTextColor={colors.mutedForeground}
-                autoCapitalize="none"
-                multiline={true}
-                onFocus={() => {
-                  setIsPhotoSheetOpen(false);
-                  setActiveFullscreenPhotoIndex(null);
-                }}
-              />
-
-              {isPhotoSheetOpen ? (
-                <>
+              {/* Attachment / File Picker - Animation Kept */}
+              {!isPhotoSheetOpen && (
+                <Animated.View
+                  layout={LinearTransition.duration(BAR_SLIDE_DURATION).delay(BAR_SLIDE_DELAY)}
+                  entering={FadeIn.duration(BAR_FADE_DURATION).delay(BAR_FADE_DELAY)}
+                  exiting={FadeOut.duration(BAR_FADE_DURATION)}
+                  key="file-picker"
+                >
                   <Pressable
-                    onPress={() => setPhotoSheetTriggerSelectAll((p) => p + 1)}
-                    hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
-                    style={({ pressed }) => [
-                      styles.iconBtn,
-                      {
-                        borderColor: colors.primary,
-                        backgroundColor: photoSheetState.isAllSelected
-                          ? colors.primary + '25'
-                          : pressed
-                            ? colors.primary + '15'
-                            : 'transparent',
-                        marginRight: 8,
-                      },
-                    ]}
-                  >
-                    <ListChecks size={16} color={colors.primary} />
-                  </Pressable>
-
-                  <Pressable
-                    onPress={() => setPhotoSheetTriggerSort((p) => p + 1)}
+                    onPress={handlePickFile}
                     hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
                     style={({ pressed }) => [
                       styles.iconBtn,
@@ -1855,27 +1367,106 @@ function MainApp() {
                       },
                     ]}
                   >
-                    {photoSheetState.sortAscending ? (
-                      <ArrowUp size={16} color={colors.primary} />
-                    ) : (
-                      <ArrowDown size={16} color={colors.primary} />
-                    )}
+                    <Paperclip size={16} color={colors.primary} />
                   </Pressable>
-                </>
-              ) : (
-                <Pressable
-                  onPress={handleSubmit}
-                  hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
-                  style={({ pressed }) => [
-                    styles.iconBtn,
+                </Animated.View>
+              )}
+
+              {/* Text Input - Layout Animation Kept for Smooth Flex Resizing */}
+              <Animated.View
+                layout={LinearTransition.duration(BAR_SLIDE_DURATION).delay(BAR_SLIDE_DELAY)}
+                style={{ flex: 1, marginHorizontal: 10 }}
+              >
+                <TextInput
+                  style={[
+                    styles.input,
                     {
                       borderColor: colors.primary,
-                      backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+                      color: colors.foreground,
+                      backgroundColor: colors.card,
+                      marginHorizontal: 0,
                     },
                   ]}
-                >
-                  <Check size={16} color={colors.primary} />
-                </Pressable>
+                  value={inputText}
+                  onChangeText={setInputText}
+                  placeholder="Type Something"
+                  placeholderTextColor={colors.mutedForeground}
+                  autoCapitalize="none"
+                  multiline={true}
+                  onFocus={() => {
+                    setIsPhotoSheetOpen(false);
+                    setActiveFullscreenPhotoIndex(null);
+                    setIsFooterFocused(true);
+                  }}
+                />
+              </Animated.View>
+
+              {isPhotoSheetOpen ? (
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  {/* Select All Button - Animation Kept */}
+                  <Animated.View
+                    layout={LinearTransition.duration(BAR_SLIDE_DURATION).delay(BAR_SLIDE_DELAY)}
+                    entering={FadeIn.duration(BAR_FADE_DURATION).delay(BAR_FADE_DELAY)}
+                    exiting={FadeOut.duration(BAR_FADE_DURATION)}
+                    key="select-all-btn"
+                  >
+                    <Pressable
+                      onPress={() => setPhotoSheetTriggerSelectAll((p) => p + 1)}
+                      hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+                      style={({ pressed }) => [
+                        styles.iconBtn,
+                        {
+                          borderColor: colors.primary,
+                          backgroundColor: photoSheetState.isAllSelected
+                            ? colors.primary + '25'
+                            : pressed
+                              ? colors.primary + '15'
+                              : 'transparent',
+                        },
+                      ]}
+                    >
+                      <ListChecks size={16} color={colors.primary} />
+                    </Pressable>
+                  </Animated.View>
+
+                  {/* Sort Button - Animation Removed */}
+                  <View>
+                    <Pressable
+                      onPress={() => setPhotoSheetTriggerSort((p) => p + 1)}
+                      hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+                      style={({ pressed }) => [
+                        styles.iconBtn,
+                        {
+                          borderColor: colors.primary,
+                          backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+                        },
+                      ]}
+                    >
+                      {photoSheetState.sortAscending ? (
+                        <ArrowUp size={16} color={colors.primary} />
+                      ) : (
+                        <ArrowDown size={16} color={colors.primary} />
+                      )}
+                    </Pressable>
+                  </View>
+                </View>
+              ) : (
+                /* Submit / Send Button - Animation Removed */
+                <View key="submit-action">
+                  <Pressable
+                    onPress={handleSubmit}
+                    hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+                    style={({ pressed }) => [
+                      styles.iconBtn,
+                      {
+                        borderColor: colors.primary,
+                        backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+                      },
+                    ]}
+                  >
+                    <Check size={16} color={colors.primary} />
+                  </Pressable>
+                </View>
               )}
             </View>
           )}
@@ -1946,447 +1537,29 @@ function MainApp() {
           </TuiContainer>
         </Animated.View>
       )}
-    </View>
-  );
-}
 
-// ─── Context Menu Overlay ──────────────────────────────────────────────────────
-
-interface ContextMenuOverlayProps {
-  contextMenuPhoto: { item: DumpItem; bounds: PhotoLayout };
-  imageSizes: Record<string, { width: number; height: number }>;
-  onClose: () => void;
-  onCopy: () => void;
-  onShare: () => void;
-  onEdit?: () => void;
-  onDelete: () => void;
-}
-
-const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
-  contextMenuPhoto,
-  imageSizes,
-  onClose,
-  onCopy,
-  onShare,
-  onEdit,
-  onDelete,
-}) => {
-  const { colors, isDark } = useTheme();
-  const insets = useSafeAreaInsets();
-  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-  const { item, bounds } = contextMenuPhoto;
-
-  const isPhoto = item.type === 'photo';
-  // Photos: grow in (0.9 → 1.0) — zoom reveal
-  // Links/Texts: press down (1.0 → 0.95) — card squish effect
-  const scale = useSharedValue(isPhoto ? 0.9 : 1.0);
-  const targetScale = isPhoto ? 1.0 : 0.95;
-  const closeScale = isPhoto ? 0.9 : 1.0;
-  const opacity = useSharedValue(0);
-
-  useEffect(() => {
-    scale.value = withTiming(targetScale, { duration: 150 });
-    opacity.value = withTiming(1, { duration: 150 });
-  }, []);
-
-  const isClosingRef = useRef(false);
-
-  const handleAction = (callback: () => void) => {
-    if (isClosingRef.current) return;
-    isClosingRef.current = true;
-
-    scale.value = withTiming(closeScale, { duration: 150 });
-    opacity.value = withTiming(0, { duration: 150 }, (finished) => {
-      if (finished) {
-        runOnJS(callback)();
-      }
-    });
-  };
-
-  const animatedPreviewStyle = useAnimatedStyle(() => {
-    return {
-      opacity: opacity.value,
-      transform: [{ scale: scale.value }],
-    };
-  });
-
-  const animatedBackdropStyle = useAnimatedStyle(() => {
-    return {
-      opacity: opacity.value,
-    };
-  });
-
-  // Calculate preview dimensions
-  const maxPreviewWidth = screenWidth * 0.88;
-  const maxPreviewHeight = screenHeight * 0.55;
-
-  let previewWidth: number;
-  let previewHeight: number;
-  let previewLeft: number;
-
-  if (item.type === 'photo') {
-    const size = imageSizes[item.id];
-    const r = size ? size.width / size.height : 1.0;
-    previewWidth = maxPreviewWidth;
-    previewHeight = maxPreviewWidth / r;
-    if (previewHeight > maxPreviewHeight) {
-      previewHeight = maxPreviewHeight;
-      previewWidth = maxPreviewHeight * r;
-    }
-    // Center on the photo card's horizontal center
-    const cardCenter = bounds.x + bounds.width / 2;
-    previewLeft = cardCenter - previewWidth / 2;
-    if (previewLeft < 16) previewLeft = 16;
-    else if (previewLeft + previewWidth > screenWidth - 16) previewLeft = screenWidth - 16 - previewWidth;
-  } else if (item.type === 'file') {
-    let fileObj: any = {};
-    try {
-      fileObj = JSON.parse(item.value);
-    } catch {}
-    const isImageFile = /\.(png|jpe?g|gif|webp|heic)$/i.test(fileObj.name || '');
-    const hasPhoto = !!(fileObj.artwork || (isImageFile ? fileObj.uri : null));
-
-    previewWidth = bounds.width;
-    previewLeft = bounds.x;
-    if (hasPhoto) {
-      const squareSize = Math.min(bounds.width, maxPreviewHeight - 68);
-      previewHeight = 68 + squareSize;
-    } else {
-      previewHeight = 68;
-    }
-  } else {
-    // Estimate the full text height so the preview displays the entire value (not truncated)
-    // Average character width is ~10.2px for JetBrains Mono at size 14 with styling. Card has 24px horizontal padding.
-    const charsPerLine = Math.max(15, Math.floor((bounds.width - 24) / 10.2));
-    const lines = Math.ceil(item.value.length / charsPerLine);
-
-    let linkOffset = 26;
-    if (item.type === 'link') {
-      if (previewCache.has(item.value)) {
-        const cached = previewCache.get(item.value);
-        if (cached) {
-          if (cached.image) {
-            linkOffset = 284; // URL + Image section + Info tray
-          } else if (cached.title || cached.description) {
-            linkOffset = 65;  // URL + Info tray (no image)
-          } else {
-            linkOffset = 20;  // URL only
-          }
-        } else {
-          linkOffset = 20;    // Fetched but has no preview data (like a broken/custom link)
-        }
-      } else {
-        // Not cached yet (loading) — assume it might have an image to be safe
-        linkOffset = 265;
-      }
-    }
-    const estimatedTextHeight = lines * 22 + linkOffset;
-
-    previewWidth = bounds.width;
-    previewLeft = bounds.x;
-    previewHeight = Math.min(estimatedTextHeight, maxPreviewHeight);
-  }
-
-  // Horizontal position of Menu centered relative to the preview
-  const menuWidth = 240;
-  let menuLeft = previewLeft + (previewWidth - menuWidth) / 2;
-  if (menuLeft < 16) {
-    menuLeft = 16;
-  } else if (menuLeft + menuWidth > screenWidth - 16) {
-    menuLeft = screenWidth - 16 - menuWidth;
-  }
-
-  // Vertical position centered relative to the original card's vertical center
-  const cardVerticalCenter = bounds.y + bounds.height / 2;
-  let previewTop = cardVerticalCenter - previewHeight / 2;
-
-  const menuHeight = isPhoto ? 136 : 180; // photos: 3 rows; link/text: 4 rows (Edit added)
-  const spaceAbove = previewTop - insets.top;
-  const spaceBelow = screenHeight - insets.bottom - (previewTop + previewHeight);
-  const showBelow = spaceBelow > spaceAbove;
-
-  let menuTop = 0;
-  const menuGap = isPhoto
-    ? 16
-    : Math.max(1, Math.round(15 - 0.025 * (previewHeight + menuHeight)));
-  if (showBelow) {
-    menuTop = previewTop + previewHeight + menuGap;
-    // If menu overflows the bottom of the screen, shift both preview and menu up
-    const overflow = (menuTop + menuHeight) - (screenHeight - insets.bottom - 16);
-    if (overflow > 0) {
-      previewTop -= overflow;
-      menuTop -= overflow;
-    }
-  } else {
-    menuTop = previewTop - menuHeight - menuGap;
-    // If menu overflows the top of the screen, shift both preview and menu down
-    const overflow = (insets.top + 16) - menuTop;
-    if (overflow > 0) {
-      previewTop += overflow;
-      menuTop += overflow;
-    }
-  }
-
-  // Final safety checks to make sure the preview itself stays fully on screen
-  if (previewTop < insets.top + 16) {
-    const shift = (insets.top + 16) - previewTop;
-    previewTop += shift;
-    menuTop += shift;
-  } else if (previewTop + previewHeight > screenHeight - insets.bottom - 16) {
-    const shift = (previewTop + previewHeight) - (screenHeight - insets.bottom - 16);
-    previewTop -= shift;
-    menuTop -= shift;
-  }
-
-  return (
-    <View style={[StyleSheet.absoluteFillObject, { zIndex: 1500 }]}>
-      {/* Backdrop */}
-      <Pressable onPress={() => handleAction(onClose)} style={StyleSheet.absoluteFillObject}>
-        <Animated.View
+      {splashVisible && (
+        <RNAnimated.View
           style={[
-            StyleSheet.absoluteFillObject,
-            animatedBackdropStyle,
+            StyleSheet.absoluteFill,
             {
-              backgroundColor: 'rgba(0,0,0,0.6)',
+              backgroundColor: colors.background,
+              justifyContent: 'center',
+              alignItems: 'center',
+              opacity: splashOpacity,
+              zIndex: 99999,
             },
           ]}
-        />
-      </Pressable>
-
-      {/* Lifted Preview — image for photos, text card for links/texts */}
-      <Animated.View
-        style={[
-          animatedPreviewStyle,
-          {
-            position: 'absolute',
-            left: previewLeft,
-            top: previewTop,
-            width: previewWidth,
-            height: previewHeight,
-            zIndex: 1600,
-            shadowColor: '#000000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 10,
-          },
-        ]}
-      >
-        {item.type === 'photo' ? (
-          <Image
-            source={{ uri: ensureFileUri(item.value) }}
-            style={{
-              width: '100%',
-              height: '100%',
-              borderWidth: 1.5,
-              borderColor: colors.primary,
-              borderRadius: 0,
-            }}
-            contentFit="contain"
-            transition={0}
-          />
-        ) : (
-          /* TuiContainer replica — exact card size, no label */
-          <View style={{ width: '100%', height: '100%', backgroundColor: colors.card, overflow: 'hidden' }}>
-            {/* Segmented borders matching TuiContainer — zIndex:5 keeps them above content */}
-            <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 1.5, backgroundColor: colors.primary, zIndex: 5 }} />
-            <View style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 1.5, backgroundColor: colors.primary, zIndex: 5 }} />
-            <View style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 1.5, backgroundColor: colors.primary, zIndex: 5 }} />
-            <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 1.5, backgroundColor: colors.primary, zIndex: 5 }} />
-
-            <ScrollView
-              style={{ flex: 1 }}
-              contentContainerStyle={item.type === 'file' ? undefined : { paddingBottom: 16 }}
-              showsVerticalScrollIndicator={false}
-            >
-              {item.type === 'link' ? (
-                /* Link card — URL text + link preview, matches real card */
-                <>
-                  <View style={{ paddingTop: 12, paddingHorizontal: 12 }}>
-                    <TuiText size="md" weight="bold" style={{ color: colors.primary, textDecorationLine: 'underline', lineHeight: 22 }}>
-                      {item.value}
-                    </TuiText>
-                  </View>
-                  <LinkPreview url={item.value} />
-                </>
-              ) : item.type === 'file' ? (
-                /* File card replica */
-                (() => {
-                  let fileObj: any = { uri: '', name: 'File', size: 0, mimeType: '' };
-                  try {
-                    fileObj = JSON.parse(item.value);
-                  } catch {}
-                  const FileIconComponent = getFileIcon(fileObj.name);
-                  const typeLabel = getFileTypeLabel(fileObj.name);
-                  const isImageFile = /\.(png|jpe?g|gif|webp|heic)$/i.test(fileObj.name);
-                  const artworkUri = fileObj.artwork || (isImageFile ? fileObj.uri : null);
-                  const squareSize = Math.min(bounds.width, maxPreviewHeight - 68);
-                  return (
-                    <View style={{ flex: 1 }}>
-                      {/* Top File info row */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, height: 68 }}>
-                        <View style={{
-                          width: 40,
-                          height: 40,
-                          borderWidth: 1.5,
-                          borderColor: colors.primary,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          marginRight: 12,
-                          overflow: 'hidden',
-                        }}>
-                          {artworkUri ? (
-                            <Image
-                              source={{ uri: ensureFileUri(artworkUri) }}
-                              style={{ width: '100%', height: '100%' }}
-                              contentFit="cover"
-                              transition={100}
-                            />
-                          ) : (
-                            <FileIconComponent size={20} color={colors.primary} />
-                          )}
-                        </View>
-                        <View style={{ flex: 1 }}>
-                          <TuiText size="md" weight="bold" style={{ color: colors.foreground }} numberOfLines={1}>
-                            {fileObj.name}
-                          </TuiText>
-                          <TuiText size="sm" style={{ color: colors.mutedForeground, marginTop: 2 }}>
-                            {typeLabel} {fileObj.size > 0 ? `• ${formatBytes(fileObj.size)}` : ''}
-                          </TuiText>
-                        </View>
-                      </View>
-
-                      {/* Large Square Image Preview section (if file has photo) */}
-                      {artworkUri && (
-                        <>
-                          {/* Divider line matching LinkPreview */}
-                          <View style={{ height: 1.5, backgroundColor: colors.primary + '30' }} />
-                          <View style={{ width: '100%', height: squareSize - 1.5, backgroundColor: '#00000010' }}>
-                            <Image
-                              source={{ uri: ensureFileUri(artworkUri) }}
-                              style={{ width: '100%', height: '100%' }}
-                              contentFit="cover"
-                              transition={200}
-                            />
-                          </View>
-                        </>
-                      )}
-                    </View>
-                  );
-                })()
-              ) : (
-                /* Text card — content padded like TuiContainer */
-                <View style={{ paddingTop: 12, paddingHorizontal: 12 }}>
-                  <TuiText size="md" style={{ color: colors.foreground, lineHeight: 22, textAlign: 'justify' }}>
-                    {item.value}
-                  </TuiText>
-                </View>
-              )}
-            </ScrollView>
-          </View>
-        )}
-
-      </Animated.View>
-
-      {/* Context Menu Container */}
-      <Animated.View
-        style={[
-          animatedPreviewStyle,
-          {
-            position: 'absolute',
-            left: menuLeft,
-            top: menuTop,
-            width: menuWidth,
-            height: menuHeight,
-            zIndex: 1700,
-            borderRadius: 0, // No radius!
-            borderWidth: 1.5,
-            borderColor: colors.primary,
-            backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
-            overflow: 'hidden',
-            shadowColor: '#000000',
-            shadowOffset: { width: 0, height: 6 },
-            shadowOpacity: 0.25,
-            shadowRadius: 10,
-            elevation: 12,
-          },
-        ]}
-      >
-        {/* Copy Row */}
-        <Pressable
-          onPress={() => handleAction(onCopy)}
-          style={({ pressed }) => [
-            styles.menuRow,
-            {
-              backgroundColor: pressed ? colors.primary + '15' : 'transparent',
-              borderBottomWidth: 1,
-              borderBottomColor: colors.primary + '20',
-            },
-          ]}
+          pointerEvents="none"
         >
-          <TuiText size="sm" style={{ color: colors.foreground }}>
-            Copy
-          </TuiText>
-          <Copy size={16} color={colors.foreground} />
-        </Pressable>
-
-        {/* Share Row */}
-        <Pressable
-          onPress={() => handleAction(onShare)}
-          style={({ pressed }) => [
-            styles.menuRow,
-            {
-              backgroundColor: pressed ? colors.primary + '15' : 'transparent',
-              borderBottomWidth: 1,
-              borderBottomColor: colors.primary + '20',
-            },
-          ]}
-        >
-          <TuiText size="sm" style={{ color: colors.foreground }}>
-            Share
-          </TuiText>
-          <Share2 size={16} color={colors.foreground} />
-        </Pressable>
-
-        {/* Edit Row — only for link/text items */}
-        {onEdit && (
-          <Pressable
-            onPress={() => handleAction(onEdit)}
-            style={({ pressed }) => [
-              styles.menuRow,
-              {
-                backgroundColor: pressed ? colors.primary + '15' : 'transparent',
-                borderBottomWidth: 1,
-                borderBottomColor: colors.primary + '20',
-              },
-            ]}
-          >
-            <TuiText size="sm" style={{ color: colors.foreground }}>
-              Edit
-            </TuiText>
-            <Pencil size={16} color={colors.foreground} />
-          </Pressable>
-        )}
-
-        {/* Delete Row */}
-        <Pressable
-          onPress={() => handleAction(onDelete)}
-          style={({ pressed }) => [
-            styles.menuRow,
-            {
-              backgroundColor: pressed ? (colors.destructive || '#EF4444') + '15' : 'transparent',
-            },
-          ]}
-        >
-          <TuiText size="sm" style={{ color: colors.destructive || '#EF4444' }}>
-            Delete
-          </TuiText>
-          <Trash2 size={16} color={colors.destructive || '#EF4444'} />
-        </Pressable>
-      </Animated.View>
+          {themeLoaded && <SplashIcon color={isDark ? '#FFFFFF' : '#000000'} size={160} />}
+        </RNAnimated.View>
+      )}
     </View>
   );
-};
+}
+
+
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
@@ -2405,7 +1578,7 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   loaderContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  scrollContent: { paddingHorizontal: 16, paddingBottom: 90 },
+  scrollContent: { paddingHorizontal: 16, paddingBottom: 10 },
   bottomBar: { paddingHorizontal: 16, paddingVertical: 12 },
   bottomBarRow: { flexDirection: 'row', alignItems: 'flex-end', width: '100%' },
   input: {
@@ -2437,22 +1610,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   navRow: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 6, gap: 12 },
-  tabSquare: { flex: 1, height: 80, alignItems: 'center', justifyContent: 'center', position: 'relative' },
-  borderLeft: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 1.5, zIndex: 5 },
-  borderRight: { position: 'absolute', right: 0, top: 0, bottom: 0, width: 1.5, zIndex: 5 },
-  borderBottom: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 1.5, zIndex: 5 },
-  borderTopLeft: { position: 'absolute', left: 0, top: 0, height: 1.5, zIndex: 5 },
-  borderTopRight: { position: 'absolute', right: 0, top: 0, height: 1.5, zIndex: 5 },
-  legendWrapper: {
-    position: 'absolute',
-    top: -10,
-    alignSelf: 'center',
-    paddingHorizontal: 2,
-    zIndex: 10,
-    backgroundColor: 'transparent',
-  },
-  legendText: { fontSize: 14, letterSpacing: 0.2 },
-  tabContent: { alignItems: 'center', justifyContent: 'center' },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2462,12 +1619,29 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { letterSpacing: 1.5 },
   headerActions: { flexDirection: 'row', alignItems: 'center' },
-  headerActionBtn: { borderWidth: 1.5, width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  menuRow: {
-    height: 44,
+  headerActionBtn: { borderWidth: 1.5, width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  searchContainer: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    borderWidth: 1.5,
+    paddingHorizontal: 12,
+    height: 48,
+    marginRight: 12,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: '100%',
+    fontFamily: 'JetBrainsMono_400Regular',
+    fontSize: 14,
+    paddingVertical: 0,
+  },
+  searchClearBtn: {
+    paddingHorizontal: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
