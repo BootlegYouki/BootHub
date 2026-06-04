@@ -728,6 +728,7 @@ function MainApp() {
   };
 
   const handleSubmit = async () => {
+    Keyboard.dismiss();
     if (!inputText.trim()) return;
 
     const trimmed = inputText.trim();

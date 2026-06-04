@@ -250,7 +250,7 @@
       "label": "ContextMenuOverlayProps",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L1316",
+      "source_location": "L1317",
       "id": "boothub_app_contextmenuoverlayprops",
       "community": 0,
       "norm_label": "contextmenuoverlayprops"
@@ -259,7 +259,7 @@
       "label": "ContextMenuOverlay()",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L1324",
+      "source_location": "L1325",
       "id": "boothub_app_contextmenuoverlay",
       "community": 0,
       "norm_label": "contextmenuoverlay()"
@@ -268,7 +268,7 @@
       "label": "App()",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L1508",
+      "source_location": "L1509",
       "id": "boothub_app_app",
       "community": 0,
       "norm_label": "app()"
@@ -277,7 +277,7 @@
       "label": "styles",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L1520",
+      "source_location": "L1521",
       "id": "boothub_app_styles",
       "community": 0,
       "norm_label": "styles"
@@ -2582,9 +2582,9 @@
       "source_file": "App.tsx",
       "source_location": "L1324",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_tsx",
-      "target": "boothub_app_contextmenuoverlay",
-      "confidence_score": 1.0
+      "target": "boothub_app_contextmenuoverlay"
     },
     {
       "relation": "contains",
@@ -2592,9 +2592,9 @@
       "source_file": "App.tsx",
       "source_location": "L1316",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "app_tsx",
-      "target": "boothub_app_contextmenuoverlayprops",
-      "confidence_score": 1.0
+      "target": "boothub_app_contextmenuoverlayprops"
     },
     {
       "relation": "contains",
@@ -3581,9 +3581,9 @@
       "source_file": "package.json",
       "source_location": "L22",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "boothub_package_dependencies",
-      "target": "boothub_package_dependencies_expo_clipboard",
-      "confidence_score": 1.0
+      "target": "boothub_package_dependencies_expo_clipboard"
     },
     {
       "relation": "contains",
@@ -6550,5 +6550,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "6bf54976141cd83bc73dc1b3ea9d0cc8dc697a31"
+  "built_at_commit": "3c043535309cd5cc283074688c18e4dbc00a296a"
 }

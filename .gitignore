@@ -29,3 +29,8 @@ graphify-out/cache/
 # Local Environment Secrets
 .env
 .env.local
+
+# Expo & Native
+.expo/
+/ios/
+/android/
