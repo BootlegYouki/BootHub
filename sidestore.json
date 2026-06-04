@@ -1,0 +1,18 @@
+{
+  "name": "BootHub",
+  "identifier": "com.bootlegyouki.boothub.source",
+  "apps": [
+    {
+      "name": "BootHub",
+      "bundleIdentifier": "com.bootlegyouki.boothub",
+      "developerName": "BootlegYouki",
+      "version": "1.0.1",
+      "versionDate": "2026-06-04T03:40:28Z",
+      "downloadURL": "https://github.com/BootlegYouki/BootHub/releases/download/v1.0.1/BootHub.ipa",
+      "localizedDescription": "Brutalist template using Native components.",
+      "iconURL": "https://raw.githubusercontent.com/BootlegYouki/BootHub/main/assets/icon.png",
+      "tintColor": "00E5FF",
+      "size": 0
+    }
+  ]
+}
