@@ -1,0 +1,87 @@
+name: Build Dev Client IPA
+
+# Run manually whenever you add a new native module and need to rebuild the dev binary
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Dev Client
+    runs-on: macos-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Expo Prebuild (Generate iOS folder with dev client)
+        run: npx expo prebuild --platform ios --clean
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install
+
+      - name: Build Dev Client (Debug)
+        run: |
+          cd ios
+          xcodebuild -workspace BootHub.xcworkspace \
+            -scheme BootHub \
+            -configuration Debug \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Package into IPA
+        run: |
+          cd ios/build/Build/Products/Debug-iphoneos
+          mkdir Payload
+          mv BootHub.app Payload/
+          zip -qr ../../../../../BootHub-dev.ipa Payload
+
+      - name: Upload dev client IPA as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BootHub-dev-client
+          path: BootHub-dev.ipa
+          retention-days: 30
+
+      - name: Also attach to a pre-release (optional, easy to download)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dev-client-latest
+          name: Dev Client (Latest)
+          body: |
+            ## BootHub Dev Client
+
+            Sideload this IPA to use as a development environment.
+            It has all native modules compiled in (Reanimated, etc).
+
+            ### How to use
+            1. Sideload `BootHub-dev.ipa` via SideStore/Sideloadly/AltStore
+            2. On your computer, run: `npx expo start --dev-client`
+            3. Open the dev client app on your iPhone
+            4. Enter your computer's IP or scan the QR code
+            5. The app loads from your Metro server — full hot reload!
+
+            **Only rebuild this when you add/remove a native module.**
+          files: BootHub-dev.ipa
+          prerelease: true
+          make_latest: false

@@ -11,7 +11,11 @@ import {
   Share,
   Alert,
 } from 'react-native';
-import Animated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, {
+  useAnimatedKeyboard,
+  useAnimatedStyle,
+  interpolate,
+} from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import {
@@ -108,7 +112,6 @@ function MainApp() {
   const [sortAscending, setSortAscending] = useState<boolean>(false);
   const [isSelectionMode, setIsSelectionMode] = useState<boolean>(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
   // Per-frame keyboard height — updated every native animation frame via JSI.
   // This is the "fake spacer" approach: the Animated.View at the bottom of the
@@ -118,6 +121,19 @@ function MainApp() {
   const keyboardSpacerStyle = useAnimatedStyle(() => ({
     height: keyboard.height.value,
   }));
+
+  const animatedBottomBarStyle = useAnimatedStyle(() => {
+    const targetPadding = insets.bottom > 0 ? insets.bottom : 12;
+    const padding = interpolate(
+      keyboard.height.value,
+      [0, 50],
+      [targetPadding, 12],
+      'clamp'
+    );
+    return {
+      paddingBottom: padding,
+    };
+  });
 
 
   // Reset selection when tab changes
@@ -133,7 +149,7 @@ function MainApp() {
     }
   }, [isSelectionMode]);
 
-  // Dismiss keyboard when app backgrounds + track visibility for bottom padding
+  // Dismiss keyboard when app backgrounds
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'background') {
@@ -141,15 +157,8 @@ function MainApp() {
       }
     });
 
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const onShow = Keyboard.addListener(showEvent, () => setIsKeyboardVisible(true));
-    const onHide = Keyboard.addListener(hideEvent, () => setIsKeyboardVisible(false));
-
     return () => {
       subscription.remove();
-      onShow.remove();
-      onHide.remove();
     };
   }, []);
   const toggleSelect = (id: string) => {
@@ -383,18 +392,17 @@ function MainApp() {
         </ScrollView>
 
         {/* 04: BOTTOM BAR */}
-        <View>
-        {isSelectionMode ? (
-          <View
-            style={[
-              styles.bottomBar,
-              {
-                borderTopColor: colors.primary + '30',
-                backgroundColor: colors.background,
-                paddingBottom: isKeyboardVisible ? 12 : (insets.bottom > 0 ? insets.bottom : 12),
-              },
-            ]}
-          >
+        <Animated.View
+          style={[
+            styles.bottomBar,
+            {
+              borderTopColor: colors.primary + '30',
+              backgroundColor: colors.background,
+            },
+            animatedBottomBarStyle,
+          ]}
+        >
+          {isSelectionMode ? (
             <View style={styles.bottomBarRow}>
               <Pressable
                 onPress={handleBulkShare}
@@ -432,18 +440,7 @@ function MainApp() {
                 <Trash2 size={16} color={colors.destructive || '#EF4444'} />
               </Pressable>
             </View>
-          </View>
-        ) : (
-          <View
-            style={[
-              styles.bottomBar,
-              {
-                borderTopColor: colors.primary + '30',
-                backgroundColor: colors.background,
-                paddingBottom: isKeyboardVisible ? 12 : (insets.bottom > 0 ? insets.bottom : 12),
-              },
-            ]}
-          >
+          ) : (
             <View style={styles.bottomBarRow}>
               <Pressable
                 onPress={handlePickImage}
@@ -487,9 +484,8 @@ function MainApp() {
                 <Check size={16} color={colors.primary} />
               </Pressable>
             </View>
-          </View>
-        )}
-        </View>
+          )}
+        </Animated.View>
       </SafeAreaView>
       {/* Keyboard spacer: grows from 0 → keyboard height every frame, squeezing
           the SafeAreaView (flex:1) upward — no KAV, no JS timing delay. */}
