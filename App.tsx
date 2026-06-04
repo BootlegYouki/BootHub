@@ -55,6 +55,7 @@ import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Clipboard from 'expo-clipboard';
 import * as MediaLibrary from 'expo-media-library';
+import RNShare from 'react-native-share';
 
 import { ThemeProvider, useTheme } from './src/theme/theme-provider';
 import { TuiHeader } from './src/components/tui-header';
@@ -313,34 +314,38 @@ function MainApp() {
     });
   };
 
+  const resolveToLocalFileUri = async (uri: string): Promise<string> => {
+    let fileUri = uri;
+    
+    if (fileUri.startsWith('ph://')) {
+      const assetId = fileUri.slice(5);
+      const assetInfo = await MediaLibrary.getAssetInfoAsync(assetId);
+      if (assetInfo && assetInfo.localUri) {
+        fileUri = assetInfo.localUri;
+      } else {
+        throw new Error('Could not resolve local path for photo library asset.');
+      }
+    }
+    
+    if (fileUri.startsWith('http://') || fileUri.startsWith('https://')) {
+      const filename = fileUri.split('/').pop()?.split('?')[0] || 'temp_image.jpg';
+      const tempFileUri = `${FileSystem.cacheDirectory}${Date.now()}_${filename}`;
+      const downloadResult = await FileSystem.downloadAsync(fileUri, tempFileUri);
+      fileUri = downloadResult.uri;
+    }
+    
+    return ensureFileUri(fileUri);
+  };
+
   const handleCopyPhoto = async (item: DumpItem) => {
     try {
-      let fileUri = item.value;
-      
-      if (fileUri.startsWith('ph://')) {
-        const assetId = fileUri.slice(5);
-        const assetInfo = await MediaLibrary.getAssetInfoAsync(assetId);
-        if (assetInfo && assetInfo.localUri) {
-          fileUri = assetInfo.localUri;
-        } else {
-          throw new Error('Could not resolve local path for photo library asset.');
-        }
-      }
-      
-      if (fileUri.startsWith('http://') || fileUri.startsWith('https://')) {
-        const filename = fileUri.split('/').pop()?.split('?')[0] || 'temp_image.jpg';
-        const tempFileUri = `${FileSystem.cacheDirectory}${Date.now()}_${filename}`;
-        const downloadResult = await FileSystem.downloadAsync(fileUri, tempFileUri);
-        fileUri = downloadResult.uri;
-      }
-      
-      const base64 = await FileSystem.readAsStringAsync(ensureFileUri(fileUri), {
+      const resolvedUri = await resolveToLocalFileUri(item.value);
+      const base64 = await FileSystem.readAsStringAsync(resolvedUri, {
         encoding: FileSystem.EncodingType.Base64,
       });
       
       await Clipboard.setImageAsync(base64);
       setContextMenuPhoto(null);
-      Alert.alert('Success', 'Photo copied to clipboard.');
     } catch (e: any) {
       console.error('Failed to copy photo:', e);
       Alert.alert('Copy Error', e?.message || String(e));
@@ -349,9 +354,10 @@ function MainApp() {
 
   const handleSharePhoto = async (item: DumpItem) => {
     try {
+      const resolvedUri = await resolveToLocalFileUri(item.value);
       const isSharingAvailable = await Sharing.isAvailableAsync();
       if (isSharingAvailable) {
-        await Sharing.shareAsync(ensureFileUri(item.value));
+        await Sharing.shareAsync(resolvedUri);
       } else {
         await Share.share({ message: item.value });
       }
@@ -390,17 +396,29 @@ function MainApp() {
     const selectedItems = items.filter((item) => selectedIds.has(item.id));
 
     try {
-      if (selectedItems.length === 1 && selectedItems[0].type === 'photo') {
-        const isSharingAvailable = await Sharing.isAvailableAsync();
-        if (isSharingAvailable) {
-          await Sharing.shareAsync(ensureFileUri(selectedItems[0].value));
-          return;
-        }
+      const photos = selectedItems.filter((item) => item.type === 'photo');
+      
+      if (photos.length > 0) {
+        // Resolve all photo URIs to local files
+        const resolvedUris = await Promise.all(
+          photos.map((photo) => resolveToLocalFileUri(photo.value))
+        );
+        
+        await RNShare.open({
+          urls: resolvedUris,
+          type: 'image/jpeg',
+        });
+        return;
       }
 
+      // Fallback for text/links
       const shareMessage = selectedItems.map((item) => item.value).join('\n');
       await Share.share({ message: shareMessage });
     } catch (e: any) {
+      // User cancelling the share sheet throws an error on iOS, which we can safely ignore
+      if (e?.message && (e.message.includes('User cancelled') || e.message.includes('dismissed'))) {
+        return;
+      }
       console.error('Sharing failed:', e);
       Alert.alert('Share Error', e?.message || String(e));
     }
@@ -913,7 +931,7 @@ function MainApp() {
               toggleSelect={toggleSelect}
               onPhotoPress={handlePhotoPress}
               onPhotoLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })}
-              activePhotoId={activeFullscreenPhoto?.id || contextMenuPhoto?.item.id}
+              activePhotoId={activeFullscreenPhoto?.id}
               registerMeasureFn={(fn) => {
                 measurePhotoRef.current = fn;
               }}
@@ -1146,7 +1164,7 @@ function MainApp() {
             ]}
           >
             {isSelectionMode ? (
-              <View style={[styles.bottomBarRow, { justifyContent: 'space-between' }]}>
+              <View style={[styles.bottomBarRow, { justifyContent: 'space-between', alignItems: 'center' }]}>
                 <Pressable
                   onPress={handleBulkShare}
                   disabled={selectedIds.size === 0}
@@ -1161,6 +1179,14 @@ function MainApp() {
                 >
                   <Share2 size={16} color={colors.primary} />
                 </Pressable>
+
+                <TuiText
+                  size="sm"
+                  weight="bold"
+                  style={{ color: colors.primary, textAlign: 'center' }}
+                >
+                  {selectedIds.size} selected
+                </TuiText>
 
                 <Pressable
                   onPress={handleBulkDelete}
@@ -1302,6 +1328,7 @@ function MainApp() {
       {contextMenuPhoto && (
         <ContextMenuOverlay
           contextMenuPhoto={contextMenuPhoto}
+          imageSizes={imageSizes}
           onClose={() => setContextMenuPhoto(null)}
           onCopy={() => handleCopyPhoto(contextMenuPhoto.item)}
           onShare={() => handleSharePhoto(contextMenuPhoto.item)}
@@ -1316,6 +1343,7 @@ function MainApp() {
 
 interface ContextMenuOverlayProps {
   contextMenuPhoto: { item: DumpItem; bounds: PhotoLayout };
+  imageSizes: Record<string, { width: number; height: number }>;
   onClose: () => void;
   onCopy: () => void;
   onShare: () => void;
@@ -1324,6 +1352,7 @@ interface ContextMenuOverlayProps {
 
 const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
   contextMenuPhoto,
+  imageSizes,
   onClose,
   onCopy,
   onShare,
@@ -1342,6 +1371,20 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
     opacity.value = withTiming(1, { duration: 150 });
   }, []);
 
+  const isClosingRef = useRef(false);
+
+  const handleAction = (callback: () => void) => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
+
+    scale.value = withTiming(0.9, { duration: 150 });
+    opacity.value = withTiming(0, { duration: 150 }, (finished) => {
+      if (finished) {
+        runOnJS(callback)();
+      }
+    });
+  };
+
   const animatedPreviewStyle = useAnimatedStyle(() => {
     return {
       opacity: opacity.value,
@@ -1349,47 +1392,97 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
     };
   });
 
-  // Horizontal position
+  const animatedBackdropStyle = useAnimatedStyle(() => {
+    return {
+      opacity: opacity.value,
+    };
+  });
+
+  // Calculate size to show the WHOLE picture (aspect-ratio fit) but larger
+  const maxPreviewWidth = screenWidth * 0.88;
+  const maxPreviewHeight = screenHeight * 0.55;
+  const size = imageSizes[item.id];
+  const r = size ? size.width / size.height : 1.0;
+
+  let previewWidth = maxPreviewWidth;
+  let previewHeight = maxPreviewWidth / r;
+
+  if (previewHeight > maxPreviewHeight) {
+    previewHeight = maxPreviewHeight;
+    previewWidth = maxPreviewHeight * r;
+  }
+
+  // Centered horizontally relative to the original card's horizontal center
+  const cardCenter = bounds.x + bounds.width / 2;
+  let previewLeft = cardCenter - previewWidth / 2;
+  if (previewLeft < 16) {
+    previewLeft = 16;
+  } else if (previewLeft + previewWidth > screenWidth - 16) {
+    previewLeft = screenWidth - 16 - previewWidth;
+  }
+
+  // Horizontal position of Menu centered relative to the preview
   const menuWidth = 240;
-  let menuLeft = bounds.x + (bounds.width - menuWidth) / 2;
+  let menuLeft = previewLeft + (previewWidth - menuWidth) / 2;
   if (menuLeft < 16) {
     menuLeft = 16;
   } else if (menuLeft + menuWidth > screenWidth - 16) {
     menuLeft = screenWidth - 16 - menuWidth;
   }
 
-  // Vertical position
+  // Vertical position centered relative to the original card's vertical center
+  const cardVerticalCenter = bounds.y + bounds.height / 2;
+  let previewTop = cardVerticalCenter - previewHeight / 2;
+
   const menuHeight = 136; // 3 items of 44px each plus borders/separators
-  const spaceAbove = bounds.y - insets.top;
-  const spaceBelow = screenHeight - insets.bottom - (bounds.y + bounds.height);
+  const spaceAbove = previewTop - insets.top;
+  const spaceBelow = screenHeight - insets.bottom - (previewTop + previewHeight);
   const showBelow = spaceBelow > spaceAbove;
 
   let menuTop = 0;
   if (showBelow) {
-    menuTop = bounds.y + bounds.height + 12;
+    menuTop = previewTop + previewHeight + 12;
+    // If menu overflows the bottom of the screen, shift both preview and menu up
+    const overflow = (menuTop + menuHeight) - (screenHeight - insets.bottom - 16);
+    if (overflow > 0) {
+      previewTop -= overflow;
+      menuTop -= overflow;
+    }
   } else {
-    menuTop = bounds.y - menuHeight - 12;
+    menuTop = previewTop - menuHeight - 12;
+    // If menu overflows the top of the screen, shift both preview and menu down
+    const overflow = (insets.top + 16) - menuTop;
+    if (overflow > 0) {
+      previewTop += overflow;
+      menuTop += overflow;
+    }
   }
 
-  // Fallback bounds
-  if (menuTop < insets.top + 10) {
-    menuTop = insets.top + 10;
-  } else if (menuTop + menuHeight > screenHeight - insets.bottom - 10) {
-    menuTop = screenHeight - insets.bottom - 10 - menuHeight;
+  // Final safety checks to make sure the preview itself stays fully on screen
+  if (previewTop < insets.top + 16) {
+    const shift = (insets.top + 16) - previewTop;
+    previewTop += shift;
+    menuTop += shift;
+  } else if (previewTop + previewHeight > screenHeight - insets.bottom - 16) {
+    const shift = (previewTop + previewHeight) - (screenHeight - insets.bottom - 16);
+    previewTop -= shift;
+    menuTop -= shift;
   }
 
   return (
     <View style={[StyleSheet.absoluteFillObject, { zIndex: 1500 }]}>
       {/* Backdrop */}
-      <Pressable
-        onPress={onClose}
-        style={[
-          StyleSheet.absoluteFillObject,
-          {
-            backgroundColor: 'rgba(0,0,0,0.6)',
-          },
-        ]}
-      />
+      <Pressable onPress={() => handleAction(onClose)} style={StyleSheet.absoluteFillObject}>
+        <Animated.View
+          style={[
+            StyleSheet.absoluteFillObject,
+            animatedBackdropStyle,
+            {
+              backgroundColor: 'rgba(0,0,0,0.6)',
+            },
+          ]}
+        />
+      </Pressable>
 
       {/* Lifted Photo Preview */}
       <Animated.View
@@ -1397,10 +1490,10 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
           animatedPreviewStyle,
           {
             position: 'absolute',
-            left: bounds.x,
-            top: bounds.y,
-            width: bounds.width,
-            height: bounds.height,
+            left: previewLeft,
+            top: previewTop,
+            width: previewWidth,
+            height: previewHeight,
             zIndex: 1600,
             shadowColor: '#000000',
             shadowOffset: { width: 0, height: 4 },
@@ -1417,9 +1510,9 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
             height: '100%',
             borderWidth: 1.5,
             borderColor: colors.primary,
-            borderRadius: 8,
+            borderRadius: 0, // No radius!
           }}
-          contentFit="cover"
+          contentFit="contain" // Contain to show the whole picture
           transition={0}
         />
       </Animated.View>
@@ -1435,7 +1528,7 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
             width: menuWidth,
             height: menuHeight,
             zIndex: 1700,
-            borderRadius: 14,
+            borderRadius: 0, // No radius!
             borderWidth: 1.5,
             borderColor: colors.primary,
             backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
@@ -1450,7 +1543,7 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
       >
         {/* Copy Row */}
         <Pressable
-          onPress={onCopy}
+          onPress={() => handleAction(onCopy)}
           style={({ pressed }) => [
             styles.menuRow,
             {
@@ -1468,7 +1561,7 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
 
         {/* Share Row */}
         <Pressable
-          onPress={onShare}
+          onPress={() => handleAction(onShare)}
           style={({ pressed }) => [
             styles.menuRow,
             {
@@ -1486,7 +1579,7 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
 
         {/* Delete Row */}
         <Pressable
-          onPress={onDelete}
+          onPress={() => handleAction(onDelete)}
           style={({ pressed }) => [
             styles.menuRow,
             {

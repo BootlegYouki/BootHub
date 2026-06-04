@@ -141,6 +141,16 @@ export const PhotosScreen: React.FC<PhotosScreenProps> = ({
                 contentFit="cover"
                 transition={0}
               />
+              {isSelected && (
+                <View
+                  style={[
+                    StyleSheet.absoluteFillObject,
+                    {
+                      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.35)',
+                    },
+                  ]}
+                />
+              )}
             </View>
           </Pressable>
         );

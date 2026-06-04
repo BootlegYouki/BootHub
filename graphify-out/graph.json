@@ -223,7 +223,7 @@
       "label": "TabButtonProps",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L72",
+      "source_location": "L73",
       "id": "boothub_app_tabbuttonprops",
       "community": 0,
       "norm_label": "tabbuttonprops"
@@ -232,7 +232,7 @@
       "label": "TabButton()",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L79",
+      "source_location": "L80",
       "id": "boothub_app_tabbutton",
       "community": 7,
       "norm_label": "tabbutton()"
@@ -241,7 +241,7 @@
       "label": "MainApp()",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L123",
+      "source_location": "L124",
       "id": "boothub_app_mainapp",
       "community": 0,
       "norm_label": "mainapp()"
@@ -250,7 +250,7 @@
       "label": "ContextMenuOverlayProps",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L1317",
+      "source_location": "L1344",
       "id": "boothub_app_contextmenuoverlayprops",
       "community": 0,
       "norm_label": "contextmenuoverlayprops"
@@ -259,7 +259,7 @@
       "label": "ContextMenuOverlay()",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L1325",
+      "source_location": "L1353",
       "id": "boothub_app_contextmenuoverlay",
       "community": 0,
       "norm_label": "contextmenuoverlay()"
@@ -268,7 +268,7 @@
       "label": "App()",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L1509",
+      "source_location": "L1602",
       "id": "boothub_app_app",
       "community": 0,
       "norm_label": "app()"
@@ -277,7 +277,7 @@
       "label": "styles",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L1521",
+      "source_location": "L1614",
       "id": "boothub_app_styles",
       "community": 0,
       "norm_label": "styles"
@@ -625,10 +625,19 @@
       "norm_label": "react-native-safe-area-context"
     },
     {
-      "label": "react-native-svg",
+      "label": "react-native-share",
       "file_type": "code",
       "source_file": "package.json",
       "source_location": "L38",
+      "id": "boothub_package_dependencies_react_native_share",
+      "community": 3,
+      "norm_label": "react-native-share"
+    },
+    {
+      "label": "react-native-svg",
+      "file_type": "code",
+      "source_file": "package.json",
+      "source_location": "L39",
       "id": "boothub_package_dependencies_react_native_svg",
       "community": 3,
       "norm_label": "react-native-svg"
@@ -637,16 +646,25 @@
       "label": "react-native-web",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L39",
+      "source_location": "L40",
       "id": "boothub_package_dependencies_react_native_web",
       "community": 3,
       "norm_label": "react-native-web"
     },
     {
-      "label": "devDependencies",
+      "label": "react-native-worklets",
       "file_type": "code",
       "source_file": "package.json",
       "source_location": "L41",
+      "id": "boothub_package_dependencies_react_native_worklets",
+      "community": 3,
+      "norm_label": "react-native-worklets"
+    },
+    {
+      "label": "devDependencies",
+      "file_type": "code",
+      "source_file": "package.json",
+      "source_location": "L43",
       "id": "boothub_package_devdependencies",
       "community": 4,
       "norm_label": "devdependencies"
@@ -655,7 +673,7 @@
       "label": "@eslint/js",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L42",
+      "source_location": "L44",
       "id": "boothub_package_devdependencies_eslint_js",
       "community": 4,
       "norm_label": "@eslint/js"
@@ -664,7 +682,7 @@
       "label": "@types/node",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L43",
+      "source_location": "L45",
       "id": "boothub_package_devdependencies_types_node",
       "community": 4,
       "norm_label": "@types/node"
@@ -673,7 +691,7 @@
       "label": "@types/react",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L44",
+      "source_location": "L46",
       "id": "boothub_package_devdependencies_types_react",
       "community": 4,
       "norm_label": "@types/react"
@@ -682,7 +700,7 @@
       "label": "eslint",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L45",
+      "source_location": "L47",
       "id": "boothub_package_devdependencies_eslint",
       "community": 4,
       "norm_label": "eslint"
@@ -691,7 +709,7 @@
       "label": "eslint-plugin-react-hooks",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L46",
+      "source_location": "L48",
       "id": "boothub_package_devdependencies_eslint_plugin_react_hooks",
       "community": 4,
       "norm_label": "eslint-plugin-react-hooks"
@@ -700,7 +718,7 @@
       "label": "eslint-plugin-react-refresh",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L47",
+      "source_location": "L49",
       "id": "boothub_package_devdependencies_eslint_plugin_react_refresh",
       "community": 4,
       "norm_label": "eslint-plugin-react-refresh"
@@ -709,7 +727,7 @@
       "label": "globals",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L48",
+      "source_location": "L50",
       "id": "boothub_package_devdependencies_globals",
       "community": 4,
       "norm_label": "globals"
@@ -718,7 +736,7 @@
       "label": "prettier",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L49",
+      "source_location": "L51",
       "id": "boothub_package_devdependencies_prettier",
       "community": 4,
       "norm_label": "prettier"
@@ -727,7 +745,7 @@
       "label": "typescript",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L50",
+      "source_location": "L52",
       "id": "boothub_package_devdependencies_typescript",
       "community": 4,
       "norm_label": "typescript"
@@ -736,7 +754,7 @@
       "label": "typescript-eslint",
       "file_type": "code",
       "source_file": "package.json",
-      "source_location": "L51",
+      "source_location": "L53",
       "id": "boothub_package_devdependencies_typescript_eslint",
       "community": 4,
       "norm_label": "typescript-eslint"
@@ -821,24 +839,6 @@
       "id": "tui_template_native_tsconfig_exclude",
       "community": 9,
       "norm_label": "exclude"
-    },
-    {
-      "label": "devices.json",
-      "file_type": "code",
-      "source_file": ".expo/devices.json",
-      "source_location": "L1",
-      "id": "expo_devices_json",
-      "community": 18,
-      "norm_label": "devices.json"
-    },
-    {
-      "label": "devices",
-      "file_type": "code",
-      "source_file": ".expo/devices.json",
-      "source_location": "L2",
-      "id": "expo_devices_devices",
-      "community": 18,
-      "norm_label": "devices"
     },
     {
       "label": "convert-png-to-svg.py",
@@ -1098,7 +1098,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L1",
       "id": "src_components_photo_picker_sheet_tsx",
-      "community": 7,
+      "community": 2,
       "norm_label": "photo-picker-sheet.tsx"
     },
     {
@@ -1107,7 +1107,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L19",
       "id": "components_photo_picker_sheet_photopickersheetprops",
-      "community": 7,
+      "community": 2,
       "norm_label": "photopickersheetprops"
     },
     {
@@ -1116,7 +1116,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L27",
       "id": "components_photo_picker_sheet_width_screenwidth",
-      "community": 7,
+      "community": 2,
       "norm_label": "{ width: screenwidth }"
     },
     {
@@ -1125,7 +1125,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L32",
       "id": "components_photo_picker_sheet_photopickersheet",
-      "community": 7,
+      "community": 2,
       "norm_label": "photopickersheet()"
     },
     {
@@ -1134,7 +1134,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L307",
       "id": "components_photo_picker_sheet_styles",
-      "community": 7,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -1206,7 +1206,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L1",
       "id": "src_components_tui_calendar_tsx",
-      "community": 0,
+      "community": 7,
       "norm_label": "tui-calendar.tsx"
     },
     {
@@ -1215,7 +1215,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L7",
       "id": "components_tui_calendar_tuicalendarprops",
-      "community": 0,
+      "community": 7,
       "norm_label": "tuicalendarprops"
     },
     {
@@ -1224,7 +1224,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L13",
       "id": "components_tui_calendar_months",
-      "community": 0,
+      "community": 7,
       "norm_label": "months"
     },
     {
@@ -1233,7 +1233,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L19",
       "id": "components_tui_calendar_weekdays",
-      "community": 0,
+      "community": 7,
       "norm_label": "weekdays"
     },
     {
@@ -1242,7 +1242,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L21",
       "id": "components_tui_calendar_tuicalendar",
-      "community": 0,
+      "community": 7,
       "norm_label": "tuicalendar()"
     },
     {
@@ -1251,7 +1251,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L239",
       "id": "components_tui_calendar_styles",
-      "community": 0,
+      "community": 7,
       "norm_label": "styles"
     },
     {
@@ -1260,7 +1260,7 @@
       "source_file": "src/components/tui-chart.tsx",
       "source_location": "L1",
       "id": "src_components_tui_chart_tsx",
-      "community": 15,
+      "community": 7,
       "norm_label": "tui-chart.tsx"
     },
     {
@@ -1269,7 +1269,7 @@
       "source_file": "src/components/tui-chart.tsx",
       "source_location": "L10",
       "id": "components_tui_chart_tuiprogressmeterprops",
-      "community": 15,
+      "community": 7,
       "norm_label": "tuiprogressmeterprops"
     },
     {
@@ -1278,7 +1278,7 @@
       "source_file": "src/components/tui-chart.tsx",
       "source_location": "L19",
       "id": "components_tui_chart_tuiprogressmeter",
-      "community": 15,
+      "community": 7,
       "norm_label": "tuiprogressmeter()"
     },
     {
@@ -1287,7 +1287,7 @@
       "source_file": "src/components/tui-chart.tsx",
       "source_location": "L80",
       "id": "components_tui_chart_metersegment",
-      "community": 15,
+      "community": 7,
       "norm_label": "metersegment"
     },
     {
@@ -1296,7 +1296,7 @@
       "source_file": "src/components/tui-chart.tsx",
       "source_location": "L85",
       "id": "components_tui_chart_tuisegmentedmeterprops",
-      "community": 15,
+      "community": 7,
       "norm_label": "tuisegmentedmeterprops"
     },
     {
@@ -1305,7 +1305,7 @@
       "source_file": "src/components/tui-chart.tsx",
       "source_location": "L99",
       "id": "components_tui_chart_tuisegmentedmeter",
-      "community": 15,
+      "community": 7,
       "norm_label": "tuisegmentedmeter()"
     },
     {
@@ -1314,7 +1314,7 @@
       "source_file": "src/components/tui-chart.tsx",
       "source_location": "L281",
       "id": "components_tui_chart_chartitem",
-      "community": 15,
+      "community": 7,
       "norm_label": "chartitem"
     },
     {
@@ -1323,7 +1323,7 @@
       "source_file": "src/components/tui-chart.tsx",
       "source_location": "L290",
       "id": "components_tui_chart_tuibarchartprops",
-      "community": 15,
+      "community": 7,
       "norm_label": "tuibarchartprops"
     },
     {
@@ -1332,7 +1332,7 @@
       "source_file": "src/components/tui-chart.tsx",
       "source_location": "L295",
       "id": "components_tui_chart_tuibarchart",
-      "community": 15,
+      "community": 7,
       "norm_label": "tuibarchart()"
     },
     {
@@ -1341,7 +1341,7 @@
       "source_file": "src/components/tui-chart.tsx",
       "source_location": "L350",
       "id": "components_tui_chart_styles",
-      "community": 15,
+      "community": 7,
       "norm_label": "styles"
     },
     {
@@ -1386,7 +1386,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L1",
       "id": "src_components_tui_container_tsx",
-      "community": 7,
+      "community": 2,
       "norm_label": "tui-container.tsx"
     },
     {
@@ -1395,7 +1395,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L6",
       "id": "components_tui_container_tuicontainerprops",
-      "community": 7,
+      "community": 2,
       "norm_label": "tuicontainerprops"
     },
     {
@@ -1404,7 +1404,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L19",
       "id": "components_tui_container_tuicontainer",
-      "community": 7,
+      "community": 2,
       "norm_label": "tuicontainer()"
     },
     {
@@ -1413,7 +1413,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L111",
       "id": "components_tui_container_styles",
-      "community": 7,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -1584,7 +1584,7 @@
       "source_file": "src/components/tui-skeleton.tsx",
       "source_location": "L1",
       "id": "src_components_tui_skeleton_tsx",
-      "community": 7,
+      "community": 2,
       "norm_label": "tui-skeleton.tsx"
     },
     {
@@ -1593,7 +1593,7 @@
       "source_file": "src/components/tui-skeleton.tsx",
       "source_location": "L9",
       "id": "components_tui_skeleton_tuiskeletonloader",
-      "community": 7,
+      "community": 2,
       "norm_label": "tuiskeletonloader()"
     },
     {
@@ -1602,7 +1602,7 @@
       "source_file": "src/components/tui-skeleton.tsx",
       "source_location": "L284",
       "id": "components_tui_skeleton_styles",
-      "community": 7,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -1744,7 +1744,7 @@
       "label": "styles",
       "file_type": "code",
       "source_file": "src/screens/PhotosScreen.tsx",
-      "source_location": "L152",
+      "source_location": "L162",
       "id": "screens_photosscreen_styles",
       "community": 5,
       "norm_label": "styles"
@@ -1755,7 +1755,7 @@
       "source_file": "src/screens/TextsScreen.tsx",
       "source_location": "L1",
       "id": "src_screens_textsscreen_tsx",
-      "community": 7,
+      "community": 2,
       "norm_label": "textsscreen.tsx"
     },
     {
@@ -1773,7 +1773,7 @@
       "source_file": "src/screens/TextsScreen.tsx",
       "source_location": "L16",
       "id": "screens_textsscreen_textsscreen",
-      "community": 7,
+      "community": 2,
       "norm_label": "textsscreen()"
     },
     {
@@ -1782,7 +1782,7 @@
       "source_file": "src/screens/TextsScreen.tsx",
       "source_location": "L61",
       "id": "screens_textsscreen_styles",
-      "community": 7,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -2150,9 +2150,9 @@
       "file_type": "document",
       "source_file": "E:/Github/tui-template-native/.expo/README.md",
       "source_location": "L1",
-      "id": "e_github_tui_template_native_expo_readme_md",
       "community": 20,
-      "norm_label": "readme.md"
+      "norm_label": "readme.md",
+      "id": "e_github_tui_template_native_expo_readme_md"
     },
     {
       "label": "BootHubIcon()",
@@ -2168,7 +2168,7 @@
       "file_type": "code",
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L32",
-      "community": 7,
+      "community": 2,
       "norm_label": "{ width: screenwidth, height: screenheight }",
       "id": "components_photo_picker_sheet_width_screenwidth_height_screenheight"
     },
@@ -2216,15 +2216,6 @@
       "community": 3,
       "norm_label": "react-native-keyboard-controller",
       "id": "boothub_package_dependencies_react_native_keyboard_controller"
-    },
-    {
-      "label": "react-native-worklets",
-      "file_type": "code",
-      "source_file": "package.json",
-      "source_location": "L36",
-      "community": 3,
-      "norm_label": "react-native-worklets",
-      "id": "boothub_package_dependencies_react_native_worklets"
     },
     {
       "label": "DumpType",
@@ -3769,6 +3760,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "package.json",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "boothub_package_dependencies",
+      "target": "boothub_package_dependencies_react_native_share",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "package.json",
       "source_location": "L31",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -3994,16 +3995,6 @@
       "confidence_score": 1.0,
       "source": "tsconfig_json",
       "target": "tui_template_native_tsconfig_exclude"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": ".expo/devices.json",
-      "source_location": "L2",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "expo_devices_json",
-      "target": "expo_devices_devices"
     },
     {
       "relation": "contains",
@@ -6550,5 +6541,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "3c043535309cd5cc283074688c18e4dbc00a296a"
+  "built_at_commit": "251de4fdd4a7773a6ad9510faf4f412fdf37e9aa"
 }
