@@ -514,7 +514,7 @@ function MainApp() {
   const controlsStyle = useAnimatedStyle(() => {
     if (isZooming === 'in') {
       return {
-        opacity: interpolate(animationProgress.value, [0.5, 1], [0, 1], 'clamp'),
+        opacity: interpolate(animationProgress.value, [0, 1], [0, 1], 'clamp'),
       };
     }
     if (isZooming === 'out') {
@@ -851,104 +851,100 @@ function MainApp() {
             )}
 
             {/* Top Controls Overlay */}
-            {!isZooming && (
-              <Animated.View
-                pointerEvents="box-none"
-                style={[
+            <Animated.View
+              pointerEvents="box-none"
+              style={[
+                {
+                  position: 'absolute',
+                  top: insets.top > 0 ? insets.top + 8 : 16,
+                  left: 16,
+                  right: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  zIndex: 950,
+                },
+                controlsStyle,
+              ]}
+            >
+              {/* Top Left: Back Button */}
+              <Pressable
+                onPress={handleCloseFullscreen}
+                style={({ pressed }) => [
+                  styles.headerActionBtn,
                   {
-                    position: 'absolute',
-                    top: insets.top > 0 ? insets.top + 8 : 16,
-                    left: 16,
-                    right: 16,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    zIndex: 950,
+                    borderColor: colors.primary,
+                    backgroundColor: pressed ? colors.primary + '25' : colors.card + '80',
                   },
-                  controlsStyle,
                 ]}
               >
-                {/* Top Left: Back Button */}
-                <Pressable
-                  onPress={handleCloseFullscreen}
-                  style={({ pressed }) => [
-                    styles.headerActionBtn,
-                    {
-                      borderColor: colors.primary,
-                      backgroundColor: pressed ? colors.primary + '25' : colors.card + '80',
-                    },
-                  ]}
-                >
-                  <ArrowLeft size={16} color={colors.primary} />
-                </Pressable>
+                <ArrowLeft size={16} color={colors.primary} />
+              </Pressable>
 
-                {/* Top Middle: Date/Time Stamp */}
-                <View
-                  style={{
-                    backgroundColor: colors.card + '80',
-                    borderWidth: 1.5,
-                    borderColor: colors.primary,
-                    paddingHorizontal: 12,
-                    paddingVertical: 6,
-                  }}
-                >
-                  <TuiText weight="bold" size="sm" style={{ color: colors.primary }}>
-                    {activeFullscreenPhoto.label}
-                  </TuiText>
-                </View>
+              {/* Top Middle: Date/Time Stamp */}
+              <View
+                style={{
+                  backgroundColor: colors.card + '80',
+                  borderWidth: 1.5,
+                  borderColor: colors.primary,
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                }}
+              >
+                <TuiText weight="bold" size="sm" style={{ color: colors.primary }}>
+                  {activeFullscreenPhoto.label}
+                </TuiText>
+              </View>
 
-                {/* Spacer to align center */}
-                <View style={{ width: 40, height: 40 }} />
-              </Animated.View>
-            )}
+              {/* Spacer to align center */}
+              <View style={{ width: 40, height: 40 }} />
+            </Animated.View>
 
             {/* Bottom Controls Overlay */}
-            {!isZooming && (
-              <Animated.View
-                pointerEvents="box-none"
-                style={[
+            <Animated.View
+              pointerEvents="box-none"
+              style={[
+                {
+                  position: 'absolute',
+                  bottom: insets.bottom > 0 ? insets.bottom + 8 : 16,
+                  left: 16,
+                  right: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  zIndex: 950,
+                },
+                controlsStyle,
+              ]}
+            >
+              {/* Bottom Left: Share Button */}
+              <Pressable
+                onPress={handleShareActivePhoto}
+                style={({ pressed }) => [
+                  styles.iconBtn,
                   {
-                    position: 'absolute',
-                    bottom: insets.bottom > 0 ? insets.bottom + 8 : 16,
-                    left: 16,
-                    right: 16,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    zIndex: 950,
+                    borderColor: colors.primary,
+                    backgroundColor: pressed ? colors.primary + '25' : colors.card + '80',
                   },
-                  controlsStyle,
                 ]}
               >
-                {/* Bottom Left: Share Button */}
-                <Pressable
-                  onPress={handleShareActivePhoto}
-                  style={({ pressed }) => [
-                    styles.iconBtn,
-                    {
-                      borderColor: colors.primary,
-                      backgroundColor: pressed ? colors.primary + '25' : colors.card + '80',
-                    },
-                  ]}
-                >
-                  <Share2 size={16} color={colors.primary} />
-                </Pressable>
+                <Share2 size={16} color={colors.primary} />
+              </Pressable>
 
-                {/* Bottom Right: Delete Button */}
-                <Pressable
-                  onPress={handleDeleteActivePhoto}
-                  style={({ pressed }) => [
-                    styles.iconBtn,
-                    {
-                      borderColor: colors.destructive || '#EF4444',
-                      backgroundColor: pressed ? (colors.destructive || '#EF4444') + '25' : colors.card + '80',
-                    },
-                  ]}
-                >
-                  <Trash2 size={16} color={colors.destructive || '#EF4444'} />
-                </Pressable>
-              </Animated.View>
-            )}
+              {/* Bottom Right: Delete Button */}
+              <Pressable
+                onPress={handleDeleteActivePhoto}
+                style={({ pressed }) => [
+                  styles.iconBtn,
+                  {
+                    borderColor: colors.destructive || '#EF4444',
+                    backgroundColor: pressed ? (colors.destructive || '#EF4444') + '25' : colors.card + '80',
+                  },
+                ]}
+              >
+                <Trash2 size={16} color={colors.destructive || '#EF4444'} />
+              </Pressable>
+            </Animated.View>
           </Animated.View>
         )}
 
