@@ -160,13 +160,13 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\app.json": {
-    "mtime": 1780538471.0076356,
-    "ast_hash": "10492e2f744339452fdfaf0155e63db7",
+    "mtime": 1780544453.6456373,
+    "ast_hash": "7cd072b4b4ded12d0638fa5c591e0b6e",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\App.tsx": {
-    "mtime": 1780543940.432585,
-    "ast_hash": "ca45b6e55f85bacc59ce17a6960a6ae0",
+    "mtime": 1780544967.9463706,
+    "ast_hash": "fda03f77fefeeaa273aa4da21feaa783",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\eslint.config.js": {
@@ -387,6 +387,11 @@
   "E:\\Github\\BootHub\\src\\components\\photo-picker-sheet.tsx": {
     "mtime": 1780543040.6312287,
     "ast_hash": "87591351189eb9aa03079937a1909979",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\sidestore.json": {
+    "mtime": 1780544453.6461546,
+    "ast_hash": "bcc4c5b4c5af2d07743e8eaa0ce89823",
     "semantic_hash": ""
   }
 }

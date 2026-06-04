@@ -644,15 +644,15 @@ function MainApp() {
   return (
     // No KeyboardAvoidingView — the Animated.View spacer below handles it
     // natively via Reanimated's useAnimatedKeyboard shared value.
-    <View style={{ flex: 1, backgroundColor: (activeFullscreenPhoto || isZooming) ? '#000000' : colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <SafeAreaView 
         style={[
           styles.safeArea, 
-          { backgroundColor: (activeFullscreenPhoto || isZooming) ? '#000000' : colors.background }
+          { backgroundColor: colors.background }
         ]} 
         edges={['top']}
       >
-        <StatusBar style={(activeFullscreenPhoto || isZooming) ? 'light' : (isDark ? 'light' : 'dark')} />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
 
         {/* 01: HEADER */}
         <TuiHeader
@@ -797,25 +797,22 @@ function MainApp() {
               containerStyle,
             ]}
           >
-            {/* Stark black backdrop that fades in/out separately, preventing the image from fading */}
+            {/* Stark theme-based backdrop that fades in/out separately, preventing the image from fading */}
             <Animated.View
               style={[
                 StyleSheet.absoluteFillObject,
-                { backgroundColor: '#000000' },
+                { backgroundColor: colors.background },
                 backdropStyle,
               ]}
             />
-            {isZooming ? (
-              <Animated.View style={animatedTransitionStyle}>
-                <Image
-                  source={{ uri: ensureFileUri(activeFullscreenPhoto.value) }}
-                  style={{ width: '100%', height: '100%' }}
-                  contentFit="cover"
-                  transition={0}
-                />
-              </Animated.View>
-            ) : (
-              /* Horizontal paging FlatList */
+            {/* FlatList mounted unconditionally inside the overlay to pre-render and load images in background */}
+            <View
+              style={[
+                StyleSheet.absoluteFillObject,
+                { opacity: isZooming ? 0 : 1 }
+              ]}
+              pointerEvents={isZooming ? 'none' : 'auto'}
+            >
               <FlatList
                 data={sortedItems}
                 horizontal
@@ -848,6 +845,18 @@ function MainApp() {
                 )}
                 style={{ width: '100%', height: '100%' }}
               />
+            </View>
+
+            {/* Transition Zoom Image (rendered on top of FlatList during zoom transitions) */}
+            {isZooming && (
+              <Animated.View style={animatedTransitionStyle} pointerEvents="none">
+                <Image
+                  source={{ uri: ensureFileUri(activeFullscreenPhoto.value) }}
+                  style={{ width: '100%', height: '100%' }}
+                  contentFit="cover"
+                  transition={0}
+                />
+              </Animated.View>
             )}
 
             {/* Top Controls Overlay */}
