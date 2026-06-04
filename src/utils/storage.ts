@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export type DumpType = 'link' | 'text' | 'photo';
+export type DumpType = 'link' | 'text' | 'photo' | 'file';
 
 export interface DumpItem {
   id: string;
@@ -22,6 +22,17 @@ const defaultSeedItems: DumpItem[] = [
       'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ' +
       'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. ' +
       'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+  },
+  {
+    id: 'mock-file-txt',
+    type: 'file',
+    label: '06-04-2026 @ Mock Data',
+    value: JSON.stringify({
+      uri: 'file:///dummy/path/boothub_readme.txt',
+      name: 'boothub_readme.txt',
+      size: 15360,
+      mimeType: 'text/plain',
+    }),
   },
   {
     id: '1',
@@ -73,6 +84,9 @@ export const getItems = async (): Promise<DumpItem[]> => {
     if (rawData) {
       const parsed = JSON.parse(rawData) as DumpItem[];
       // Seed the mock item if it's missing from existing storage items
+      let updated = [...parsed];
+      let changed = false;
+      
       if (!parsed.some((item) => item.id === 'mock-long-text')) {
         const mockItem: DumpItem = {
           id: 'mock-long-text',
@@ -85,7 +99,27 @@ export const getItems = async (): Promise<DumpItem[]> => {
             'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. ' +
             'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
         };
-        const updated = [mockItem, ...parsed];
+        updated.unshift(mockItem);
+        changed = true;
+      }
+      
+      if (!parsed.some((item) => item.id === 'mock-file-txt')) {
+        const mockFileItem: DumpItem = {
+          id: 'mock-file-txt',
+          type: 'file',
+          label: '06-04-2026 @ Mock Data',
+          value: JSON.stringify({
+            uri: 'file:///dummy/path/boothub_readme.txt',
+            name: 'boothub_readme.txt',
+            size: 15360,
+            mimeType: 'text/plain',
+          }),
+        };
+        updated.unshift(mockFileItem);
+        changed = true;
+      }
+
+      if (changed) {
         await saveItems(updated);
         return updated;
       }
@@ -150,9 +184,21 @@ export const deleteItem = async (id: string): Promise<DumpItem[]> => {
 export const updateItem = async (id: string, value: string): Promise<DumpItem[]> => {
   try {
     const currentItems = await getItems();
-    const updated = currentItems.map((item) =>
-      item.id === id ? { ...item, value } : item
-    );
+    const updated = currentItems.map((item) => {
+      if (item.id === id) {
+        if (item.type === 'file') {
+          try {
+            const fileObj = JSON.parse(item.value);
+            fileObj.name = value;
+            return { ...item, value: JSON.stringify(fileObj) };
+          } catch {
+            return { ...item, value };
+          }
+        }
+        return { ...item, value };
+      }
+      return item;
+    });
     await saveItems(updated);
     return updated;
   } catch (e) {

@@ -52,8 +52,10 @@ import {
   Copy,
   Pencil,
   X,
+  Paperclip,
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Clipboard from 'expo-clipboard';
@@ -65,10 +67,11 @@ import { TuiHeader } from './src/components/tui-header';
 import { TuiText } from './src/components/tui-text';
 import { TuiContainer } from './src/components/tui-container';
 import { getItems, deleteItem, addItem, updateItem, addMultiplePhotos, DumpItem, DumpType } from './src/utils/storage';
-import { ensureFileUri, getActualType } from './src/utils/helpers';
+import { ensureFileUri, getActualType, formatBytes, extractAudioArtwork } from './src/utils/helpers';
 import { LinksScreen } from './src/screens/LinksScreen';
 import { TextsScreen } from './src/screens/TextsScreen';
 import { PhotosScreen, PhotoLayout } from './src/screens/PhotosScreen';
+import { FilesScreen, getFileIcon, getFileTypeLabel } from './src/screens/FilesScreen';
 import { PhotoPickerSheet } from './src/components/photo-picker-sheet';
 import { LinkPreview, previewCache } from './src/components/link-preview';
 
@@ -221,7 +224,7 @@ function MainApp() {
   };
 
   // ─── Per-tab items (each tab filters independently so all tabs stay live) ────
-  const TAB_ORDER: DumpType[] = ['link', 'text', 'photo'];
+  const TAB_ORDER: DumpType[] = ['link', 'text', 'photo', 'file'];
 
   const linkItems = items
     .filter((item) => getActualType(item.value, item.type) === 'link')
@@ -230,10 +233,14 @@ function MainApp() {
     .filter((item) => getActualType(item.value, item.type) === 'text')
     .map((item) => item.id === editingItemId ? { ...item, value: editText } : item);
   const photoItems = items.filter((item) => getActualType(item.value, item.type) === 'photo');
+  const fileItems = items
+    .filter((item) => getActualType(item.value, item.type) === 'file')
+    .map((item) => item.id === editingItemId ? { ...item, value: editText } : item);
 
   const sortedLinkItems = sortAscending ? [...linkItems].reverse() : linkItems;
   const sortedTextItems = sortAscending ? [...textItems].reverse() : textItems;
   const sortedPhotoItems = sortAscending ? [...photoItems].reverse() : photoItems;
+  const sortedFileItems = sortAscending ? [...fileItems].reverse() : fileItems;
 
   // Keep legacy `sortedItems` pointing at the active tab so existing downstream
   // code (select-all, section count, etc.) doesn't need to change.
@@ -396,6 +403,12 @@ function MainApp() {
           encoding: FileSystem.EncodingType.Base64,
         });
         await Clipboard.setImageAsync(base64);
+      } else if (item.type === 'file') {
+        let name = item.value;
+        try {
+          name = JSON.parse(item.value).name;
+        } catch {}
+        await Clipboard.setStringAsync(name);
       } else {
         await Clipboard.setStringAsync(item.value);
       }
@@ -412,9 +425,27 @@ function MainApp() {
         const resolvedUri = await resolveToLocalFileUri(item.value);
         const isSharingAvailable = await Sharing.isAvailableAsync();
         if (isSharingAvailable) {
-          await Sharing.shareAsync(resolvedUri);
+          await Sharing.shareAsync(ensureFileUri(resolvedUri));
         } else {
           await Share.share({ message: item.value });
+        }
+      } else if (item.type === 'file') {
+        try {
+          const fileObj = JSON.parse(item.value);
+          const fileUri = ensureFileUri(fileObj.uri);
+          const isSharingAvailable = await Sharing.isAvailableAsync();
+          if (isSharingAvailable && fileUri) {
+            await Sharing.shareAsync(fileUri);
+          } else if (fileUri) {
+            await RNShare.open({ url: fileUri });
+          } else {
+            Alert.alert('Share Error', 'Sharing is not available for this file.');
+          }
+        } catch (e: any) {
+          const isCancelError = /user did not share|cancel|dismiss/i.test(e?.message || String(e));
+          if (!isCancelError) {
+            Alert.alert('Share Error', e?.message || String(e));
+          }
         }
       } else if (item.type === 'link') {
         // Use the `url` field so apps like Messenger receive a real URL, not just text
@@ -424,8 +455,11 @@ function MainApp() {
       }
       setContextMenuPhoto(null);
     } catch (e: any) {
-      console.error('Sharing failed:', e);
-      Alert.alert('Share Error', e?.message || String(e));
+      const isCancelError = /user did not share|cancel|dismiss/i.test(e?.message || String(e));
+      if (!isCancelError) {
+        console.error('Sharing failed:', e);
+        Alert.alert('Share Error', e?.message || String(e));
+      }
     }
   };
 
@@ -440,6 +474,16 @@ function MainApp() {
           style: 'destructive',
           onPress: async () => {
             try {
+              if (item.type === 'file') {
+                try {
+                  const fileObj = JSON.parse(item.value);
+                  if (fileObj.uri && fileObj.uri.startsWith('file://')) {
+                    await FileSystem.deleteAsync(fileObj.uri, { idempotent: true });
+                  }
+                } catch (err) {
+                  console.warn('Failed to delete file from disk:', err);
+                }
+              }
               const updatedList = await deleteItem(item.id);
               setItems(updatedList);
               setContextMenuPhoto(null);
@@ -457,36 +501,67 @@ function MainApp() {
     const selectedItems = items.filter((item) => selectedIds.has(item.id));
 
     try {
-      const photos = selectedItems.filter((item) => item.type === 'photo');
+      // 1. Separate file/photo paths from text/link items
+      const fileUris: string[] = [];
       const links = selectedItems.filter((item) => item.type === 'link');
       const texts = selectedItems.filter((item) => item.type === 'text');
 
-      if (photos.length > 0) {
-        // Resolve all photo URIs to local files
-        const resolvedUris = await Promise.all(
-          photos.map((photo) => resolveToLocalFileUri(photo.value))
-        );
-        await RNShare.open({ urls: resolvedUris, type: 'image/jpeg' });
-        return;
+      for (const item of selectedItems) {
+        if (item.type === 'file') {
+          try {
+            const fileObj = JSON.parse(item.value);
+            if (fileObj.uri) {
+              fileUris.push(ensureFileUri(fileObj.uri));
+            }
+          } catch (err) {
+            console.warn('Failed to parse file object value:', err);
+          }
+        } else if (item.type === 'photo') {
+          const resolvedUri = await resolveToLocalFileUri(item.value);
+          fileUris.push(ensureFileUri(resolvedUri));
+        }
       }
 
-      // For links: always pass the `url` field so Messenger and other apps receive
-      // a real URL object (not just plain text). Pass all links as message too.
-      const shareMessage = selectedItems.map((item) => item.value).join('\n');
-      const firstLink = links[0]?.value;
-
-      if (links.length === 1 && texts.length === 0) {
-        // Single link — cleanest share: just url + message identical
-        await Share.share({ url: firstLink, message: firstLink });
-      } else if (firstLink) {
-        // Multiple items including at least one link
-        await Share.share({ url: firstLink, message: shareMessage });
+      // 2. If we have any file/photo URIs, share them as actual files
+      if (fileUris.length > 0) {
+        if (fileUris.length === 1) {
+          const isSharingAvailable = await Sharing.isAvailableAsync();
+          if (isSharingAvailable) {
+            await Sharing.shareAsync(fileUris[0]);
+          } else {
+            await RNShare.open({ url: fileUris[0] });
+          }
+        } else {
+          // Share multiple files
+          await RNShare.open({ urls: fileUris });
+        }
       } else {
-        // Pure text items
-        await Share.share({ message: shareMessage });
+        // For links: always pass the `url` field so Messenger and other apps receive
+        // a real URL object (not just plain text). Pass all links as message too.
+        const shareMessage = selectedItems.map((item) => item.value).join('\n');
+        const firstLink = links[0]?.value;
+
+        if (links.length === 1 && texts.length === 0) {
+          // Single link — cleanest share: just url + message identical
+          await Share.share({ url: firstLink, message: firstLink });
+        } else if (firstLink) {
+          // Multiple items including at least one link
+          await Share.share({ url: firstLink, message: shareMessage });
+        } else {
+          // Pure text items
+          await Share.share({ message: shareMessage });
+        }
       }
+
+      // Deselect items and exit selection mode after triggering share
+      setSelectedIds(new Set());
+      setIsSelectionMode(false);
     } catch (e: any) {
-      if (e?.message && (e.message.includes('User cancelled') || e.message.includes('dismissed'))) return;
+      // Clean up selection state even if user cancels out of the share dialog
+      setSelectedIds(new Set());
+      setIsSelectionMode(false);
+      const isCancelError = /user did not share|cancel|dismiss/i.test(e?.message || String(e));
+      if (isCancelError) return;
       console.error('Sharing failed:', e);
       Alert.alert('Share Error', e?.message || String(e));
     }
@@ -494,17 +569,42 @@ function MainApp() {
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
-    try {
-      let updatedList = items;
-      for (const id of selectedIds) {
-        updatedList = await deleteItem(id);
-      }
-      setItems(updatedList);
-      setSelectedIds(new Set());
-      setIsSelectionMode(false);
-    } catch (e) {
-      console.error(e);
-    }
+    const count = selectedIds.size;
+    Alert.alert(
+      'Delete Items',
+      `Are you sure you want to delete ${count === 1 ? 'this item' : `these ${count} items`}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              let updatedList = items;
+              for (const id of selectedIds) {
+                const itemObj = items.find((x) => x.id === id);
+                if (itemObj && itemObj.type === 'file') {
+                  try {
+                    const fileObj = JSON.parse(itemObj.value);
+                    if (fileObj.uri && fileObj.uri.startsWith('file://')) {
+                      await FileSystem.deleteAsync(fileObj.uri, { idempotent: true });
+                    }
+                  } catch (err) {
+                    console.warn('Failed to delete bulk file from disk:', err);
+                  }
+                }
+                updatedList = await deleteItem(id);
+              }
+              setItems(updatedList);
+              setSelectedIds(new Set());
+              setIsSelectionMode(false);
+            } catch (e) {
+              console.error(e);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleShareActivePhoto = async () => {
@@ -517,6 +617,8 @@ function MainApp() {
         await Share.share({ message: activeFullscreenPhoto.value });
       }
     } catch (e: any) {
+      const isCancelError = /user did not share|cancel|dismiss/i.test(e?.message || String(e));
+      if (isCancelError) return;
       console.error('Sharing failed:', e);
       Alert.alert('Share Error', e?.message || String(e));
     }
@@ -924,7 +1026,16 @@ function MainApp() {
   const handleEditItem = (item: DumpItem) => {
     setContextMenuPhoto(null);
     setEditingItemId(item.id);
-    setEditText(item.value);
+    if (item.type === 'file') {
+      try {
+        const fileObj = JSON.parse(item.value);
+        setEditText(fileObj.name || 'File');
+      } catch {
+        setEditText(item.value);
+      }
+    } else {
+      setEditText(item.value);
+    }
   };
 
   const handleSaveEdit = async (id: string, value: string) => {
@@ -953,6 +1064,57 @@ function MainApp() {
     } else {
       Keyboard.dismiss();
       setIsPhotoSheetOpen(true);
+    }
+  };
+
+  const handlePickFile = async () => {
+    try {
+      setActiveFullscreenPhotoIndex(null);
+      setIsPhotoSheetOpen(false);
+      Keyboard.dismiss();
+
+      const result = await DocumentPicker.getDocumentAsync({
+        type: '*/*',
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled || !result.assets || result.assets.length === 0) {
+        return;
+      }
+
+      const asset = result.assets[0];
+      const destinationUri = `${FileSystem.documentDirectory}${Date.now()}_${asset.name}`;
+      await FileSystem.copyAsync({
+        from: asset.uri,
+        to: destinationUri,
+      });
+
+      // Extract album cover / artwork if it's an audio file
+      let artwork: string | null = null;
+      const isAudio = /\.(mp3|m4a|wav|flac|ogg)$/i.test(asset.name);
+      if (isAudio) {
+        artwork = await extractAudioArtwork(destinationUri);
+      }
+
+      const fileData: any = {
+        uri: destinationUri,
+        name: asset.name,
+        size: asset.size || 0,
+        mimeType: asset.mimeType || '',
+      };
+
+      if (artwork) {
+        fileData.artwork = artwork;
+      }
+
+      const updated = await addItem('file', JSON.stringify(fileData));
+      setItems(updated);
+      setActiveTab('file');
+      scrollToTab('file');
+      showToast('Added!', asset.name);
+    } catch (e) {
+      console.error('Failed to pick file:', e);
+      Alert.alert('File Pick Error', 'An error occurred while picking or saving the file.');
     }
   };
 
@@ -1047,6 +1209,7 @@ function MainApp() {
             <TabButton isActive={activeTab === 'link'} onPress={() => switchTab('link')} label="Links" Icon={Link2} />
             <TabButton isActive={activeTab === 'text'} onPress={() => switchTab('text')} label="Texts" Icon={FileText} />
             <TabButton isActive={activeTab === 'photo'} onPress={() => switchTab('photo')} label="Photos" Icon={ImageIcon} />
+            <TabButton isActive={activeTab === 'file'} onPress={() => switchTab('file')} label="Files" Icon={Paperclip} />
           </View>
 
           {/* Section header row */}
@@ -1232,6 +1395,30 @@ function MainApp() {
               registerMeasureFn={(fn) => {
                 measurePhotoRef.current = fn;
               }}
+            />
+          </ScrollView>
+
+          {/* ── Page 3: Files ── */}
+          <ScrollView
+            style={{ width: windowWidth }}
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
+                progressBackgroundColor={isDark ? '#27272A' : '#F4F4F5'}
+              />
+            }
+          >
+            <FilesScreen
+              sortedItems={sortedFileItems}
+              isSelectionMode={isSelectionMode && activeTab === 'file'}
+              selectedIds={selectedIds}
+              toggleSelect={toggleSelect}
+              onLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })}
+              editingItemId={editingItemId}
             />
           </ScrollView>
         </ScrollView>
@@ -1557,7 +1744,7 @@ function MainApp() {
                 ]}
                 value={editText}
                 onChangeText={setEditText}
-                placeholder={activeTab === 'link' ? "Edit link..." : "Edit text..."}
+                placeholder={activeTab === 'link' ? "Edit link..." : activeTab === 'file' ? "Rename file..." : "Edit text..."}
                 placeholderTextColor={colors.mutedForeground}
                 autoCapitalize="none"
                 autoFocus
@@ -1592,13 +1779,28 @@ function MainApp() {
                   {
                     borderColor: colors.primary,
                     backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+                    marginRight: isPhotoSheetOpen ? 0 : 6,
                   },
                 ]}
               >
                 <ImageIcon size={16} color={colors.primary} />
               </Pressable>
 
-              {/* Cancel edit button removed — editing is now inline in cards */}
+              {!isPhotoSheetOpen && (
+                <Pressable
+                  onPress={handlePickFile}
+                  hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+                  style={({ pressed }) => [
+                    styles.iconBtn,
+                    {
+                      borderColor: colors.primary,
+                      backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+                    },
+                  ]}
+                >
+                  <Paperclip size={16} color={colors.primary} />
+                </Pressable>
+              )}
 
               <TextInput
                 style={[
@@ -1836,6 +2038,10 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
     previewLeft = cardCenter - previewWidth / 2;
     if (previewLeft < 16) previewLeft = 16;
     else if (previewLeft + previewWidth > screenWidth - 16) previewLeft = screenWidth - 16 - previewWidth;
+  } else if (item.type === 'file') {
+    previewWidth = bounds.width;
+    previewLeft = bounds.x;
+    previewHeight = 68;
   } else {
     // Estimate the full text height so the preview displays the entire value (not truncated)
     // Average character width is ~10.2px for JetBrains Mono at size 14 with styling. Card has 24px horizontal padding.
@@ -1974,7 +2180,11 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
             <View style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 1.5, backgroundColor: colors.primary, zIndex: 5 }} />
             <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 1.5, backgroundColor: colors.primary, zIndex: 5 }} />
 
-            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 16 }} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={item.type === 'file' ? undefined : { paddingBottom: 16 }}
+              showsVerticalScrollIndicator={false}
+            >
               {item.type === 'link' ? (
                 /* Link card — URL text + link preview, matches real card */
                 <>
@@ -1985,6 +2195,51 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
                   </View>
                   <LinkPreview url={item.value} />
                 </>
+              ) : item.type === 'file' ? (
+                /* File card replica */
+                (() => {
+                  let fileObj: any = { uri: '', name: 'File', size: 0, mimeType: '' };
+                  try {
+                    fileObj = JSON.parse(item.value);
+                  } catch {}
+                  const FileIconComponent = getFileIcon(fileObj.name);
+                  const typeLabel = getFileTypeLabel(fileObj.name);
+                  const isImageFile = /\.(png|jpe?g|gif|webp|heic)$/i.test(fileObj.name);
+                  const artworkUri = fileObj.artwork || (isImageFile ? fileObj.uri : null);
+                  return (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12 }}>
+                      <View style={{
+                        width: 40,
+                        height: 40,
+                        borderWidth: 1.5,
+                        borderColor: colors.primary,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 12,
+                        overflow: 'hidden',
+                      }}>
+                        {artworkUri ? (
+                          <Image
+                            source={{ uri: ensureFileUri(artworkUri) }}
+                            style={{ width: '100%', height: '100%' }}
+                            contentFit="cover"
+                            transition={100}
+                          />
+                        ) : (
+                          <FileIconComponent size={20} color={colors.primary} />
+                        )}
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <TuiText size="md" weight="bold" style={{ color: colors.foreground }} numberOfLines={1}>
+                          {fileObj.name}
+                        </TuiText>
+                        <TuiText size="sm" style={{ color: colors.mutedForeground, marginTop: 2 }}>
+                          {typeLabel} {fileObj.size > 0 ? `• ${formatBytes(fileObj.size)}` : ''}
+                        </TuiText>
+                      </View>
+                    </View>
+                  );
+                })()
               ) : (
                 /* Text card — content padded like TuiContainer */
                 <View style={{ paddingTop: 12, paddingHorizontal: 12 }}>
