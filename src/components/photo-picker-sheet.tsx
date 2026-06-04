@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import * as MediaLibrary from 'expo-media-library';
 import * as ImagePicker from 'expo-image-picker';
-import { FolderOpen, ShieldAlert, Search } from 'lucide-react-native';
+import { FolderOpen, ShieldAlert } from 'lucide-react-native';
 
 import { useTheme } from '../theme/theme-provider';
 import { TuiText } from './tui-text';
@@ -173,27 +173,6 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* MESSENGER-STYLE SUB-HEADER */}
-      <View style={[styles.subHeader, { borderBottomColor: colors.primary + '20' }]}>
-        <Search size={16} color={colors.mutedForeground} />
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <TuiText weight="bold" size="sm" style={{ color: colors.foreground }}>
-            Recents ▾
-          </TuiText>
-        </View>
-        {isLimited ? (
-          <Pressable onPress={handleManageAccess}>
-            <TuiText weight="bold" size="xs" style={{ color: colors.primary }}>
-              Manage
-            </TuiText>
-          </Pressable>
-        ) : (
-          <Pressable onPress={handleOpenSystemGallery}>
-            <FolderOpen size={16} color={colors.primary} />
-          </Pressable>
-        )}
-      </View>
-
       {/* CONTENT AREA */}
       <View style={styles.contentContainer}>
         {hasPermission === false ? (
@@ -268,13 +247,6 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  subHeader: {
-    height: 40,
-    borderBottomWidth: 1.5,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
   },
   contentContainer: {
     flex: 1,

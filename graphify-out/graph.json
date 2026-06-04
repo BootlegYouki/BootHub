@@ -1060,7 +1060,7 @@
       "label": "styles",
       "file_type": "code",
       "source_file": "src/components/photo-picker-sheet.tsx",
-      "source_location": "L268",
+      "source_location": "L247",
       "id": "components_photo_picker_sheet_styles",
       "community": 8,
       "norm_label": "styles"
@@ -6304,5 +6304,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "a80919cbd725793da2f44dd57e4a37b861f52cc3"
+  "built_at_commit": "0b1dd9646aa23ffc6779f9ec1080f0cfe5729da7"
 }
