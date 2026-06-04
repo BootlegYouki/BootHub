@@ -11,121 +11,16 @@ export interface DumpItem {
 
 const STORAGE_KEY = '@boothub_dump_items';
 
-const defaultSeedItems: DumpItem[] = [
-  {
-    id: 'mock-long-text',
-    type: 'text',
-    label: '06-04-2026 @ Mock Data',
-    value: 'This is a mock text item with extremely long lines to test multiline input auto-growing and text wrapping in both the read cards and the bottom bar edit input. ' +
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. ' +
-      'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ' +
-      'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ' +
-      'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. ' +
-      'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
-  },
-  {
-    id: 'mock-file-txt',
-    type: 'file',
-    label: '06-04-2026 @ Mock Data',
-    value: JSON.stringify({
-      uri: 'file:///dummy/path/boothub_readme.txt',
-      name: 'boothub_readme.txt',
-      size: 15360,
-      mimeType: 'text/plain',
-    }),
-  },
-  {
-    id: '1',
-    type: 'link',
-    label: '06-04-2026 @ Just Now',
-    value: 'https://www.instagram.com/p/DY39qSboKXX/?igsh=Y214YTU3eHl4YW82',
-  },
-  {
-    id: '2',
-    type: 'link',
-    label: '06-04-2026 @ 10m ago',
-    value: 'https://github.com/achorein/expo-share-intent',
-  },
-  {
-    id: '3',
-    type: 'link',
-    label: '06-04-2026 @ 2h ago',
-    value: 'https://reactnative.dev/docs/navigation',
-  },
-  {
-    id: '4',
-    type: 'text',
-    label: '06-04-2026 @ 1h ago',
-    value: 'Remember to install expo-share-intent version 5.0.0 for Expo SDK 54!',
-  },
-  {
-    id: '5',
-    type: 'text',
-    label: '06-04-2026 @ 3h ago',
-    value: 'Buy groceries: milk, eggs, whole-wheat bread, coffee beans.',
-  },
-  {
-    id: '6',
-    type: 'photo',
-    label: '06-03-2026 @ Yesterday',
-    value: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800',
-  },
-  {
-    id: '7',
-    type: 'photo',
-    label: '06-02-2026 @ 2 days ago',
-    value: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=800',
-  },
-];
+const defaultSeedItems: DumpItem[] = [];
 
 export const getItems = async (): Promise<DumpItem[]> => {
   try {
     const rawData = await AsyncStorage.getItem(STORAGE_KEY);
     if (rawData) {
       const parsed = JSON.parse(rawData) as DumpItem[];
-      // Seed the mock item if it's missing from existing storage items
-      let updated = [...parsed];
-      let changed = false;
-      
-      if (!parsed.some((item) => item.id === 'mock-long-text')) {
-        const mockItem: DumpItem = {
-          id: 'mock-long-text',
-          type: 'text',
-          label: '06-04-2026 @ Mock Data',
-          value: 'This is a mock text item with extremely long lines to test multiline input auto-growing and text wrapping in both the read cards and the bottom bar edit input. ' +
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. ' +
-            'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ' +
-            'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ' +
-            'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. ' +
-            'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
-        };
-        updated.unshift(mockItem);
-        changed = true;
-      }
-      
-      if (!parsed.some((item) => item.id === 'mock-file-txt')) {
-        const mockFileItem: DumpItem = {
-          id: 'mock-file-txt',
-          type: 'file',
-          label: '06-04-2026 @ Mock Data',
-          value: JSON.stringify({
-            uri: 'file:///dummy/path/boothub_readme.txt',
-            name: 'boothub_readme.txt',
-            size: 15360,
-            mimeType: 'text/plain',
-          }),
-        };
-        updated.unshift(mockFileItem);
-        changed = true;
-      }
-
-      if (changed) {
-        await saveItems(updated);
-        return updated;
-      }
       return parsed;
     }
-    // Seed default items if storage is empty
+    // Seed default items if storage is empty (which is empty array now)
     await saveItems(defaultSeedItems);
     return defaultSeedItems;
   } catch (e) {

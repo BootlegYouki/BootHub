@@ -2039,9 +2039,21 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
     if (previewLeft < 16) previewLeft = 16;
     else if (previewLeft + previewWidth > screenWidth - 16) previewLeft = screenWidth - 16 - previewWidth;
   } else if (item.type === 'file') {
+    let fileObj: any = {};
+    try {
+      fileObj = JSON.parse(item.value);
+    } catch {}
+    const isImageFile = /\.(png|jpe?g|gif|webp|heic)$/i.test(fileObj.name || '');
+    const hasPhoto = !!(fileObj.artwork || (isImageFile ? fileObj.uri : null));
+
     previewWidth = bounds.width;
     previewLeft = bounds.x;
-    previewHeight = 68;
+    if (hasPhoto) {
+      const squareSize = Math.min(bounds.width, maxPreviewHeight - 68);
+      previewHeight = 68 + squareSize;
+    } else {
+      previewHeight = 68;
+    }
   } else {
     // Estimate the full text height so the preview displays the entire value (not truncated)
     // Average character width is ~10.2px for JetBrains Mono at size 14 with styling. Card has 24px horizontal padding.
@@ -2094,7 +2106,9 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
   const showBelow = spaceBelow > spaceAbove;
 
   let menuTop = 0;
-  const menuGap = isPhoto ? 16 : 1;
+  const menuGap = isPhoto
+    ? 16
+    : Math.max(1, Math.round(15 - 0.025 * (previewHeight + menuHeight)));
   if (showBelow) {
     menuTop = previewTop + previewHeight + menuGap;
     // If menu overflows the bottom of the screen, shift both preview and menu up
@@ -2206,37 +2220,57 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
                   const typeLabel = getFileTypeLabel(fileObj.name);
                   const isImageFile = /\.(png|jpe?g|gif|webp|heic)$/i.test(fileObj.name);
                   const artworkUri = fileObj.artwork || (isImageFile ? fileObj.uri : null);
+                  const squareSize = Math.min(bounds.width, maxPreviewHeight - 68);
                   return (
-                    <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12 }}>
-                      <View style={{
-                        width: 40,
-                        height: 40,
-                        borderWidth: 1.5,
-                        borderColor: colors.primary,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginRight: 12,
-                        overflow: 'hidden',
-                      }}>
-                        {artworkUri ? (
-                          <Image
-                            source={{ uri: ensureFileUri(artworkUri) }}
-                            style={{ width: '100%', height: '100%' }}
-                            contentFit="cover"
-                            transition={100}
-                          />
-                        ) : (
-                          <FileIconComponent size={20} color={colors.primary} />
-                        )}
+                    <View style={{ flex: 1 }}>
+                      {/* Top File info row */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, height: 68 }}>
+                        <View style={{
+                          width: 40,
+                          height: 40,
+                          borderWidth: 1.5,
+                          borderColor: colors.primary,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginRight: 12,
+                          overflow: 'hidden',
+                        }}>
+                          {artworkUri ? (
+                            <Image
+                              source={{ uri: ensureFileUri(artworkUri) }}
+                              style={{ width: '100%', height: '100%' }}
+                              contentFit="cover"
+                              transition={100}
+                            />
+                          ) : (
+                            <FileIconComponent size={20} color={colors.primary} />
+                          )}
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <TuiText size="md" weight="bold" style={{ color: colors.foreground }} numberOfLines={1}>
+                            {fileObj.name}
+                          </TuiText>
+                          <TuiText size="sm" style={{ color: colors.mutedForeground, marginTop: 2 }}>
+                            {typeLabel} {fileObj.size > 0 ? `• ${formatBytes(fileObj.size)}` : ''}
+                          </TuiText>
+                        </View>
                       </View>
-                      <View style={{ flex: 1 }}>
-                        <TuiText size="md" weight="bold" style={{ color: colors.foreground }} numberOfLines={1}>
-                          {fileObj.name}
-                        </TuiText>
-                        <TuiText size="sm" style={{ color: colors.mutedForeground, marginTop: 2 }}>
-                          {typeLabel} {fileObj.size > 0 ? `• ${formatBytes(fileObj.size)}` : ''}
-                        </TuiText>
-                      </View>
+
+                      {/* Large Square Image Preview section (if file has photo) */}
+                      {artworkUri && (
+                        <>
+                          {/* Divider line matching LinkPreview */}
+                          <View style={{ height: 1.5, backgroundColor: colors.primary + '30' }} />
+                          <View style={{ width: '100%', height: squareSize - 1.5, backgroundColor: '#00000010' }}>
+                            <Image
+                              source={{ uri: ensureFileUri(artworkUri) }}
+                              style={{ width: '100%', height: '100%' }}
+                              contentFit="cover"
+                              transition={200}
+                            />
+                          </View>
+                        </>
+                      )}
                     </View>
                   );
                 })()
