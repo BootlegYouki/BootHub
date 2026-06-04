@@ -13,6 +13,17 @@ const STORAGE_KEY = '@boothub_dump_items';
 
 const defaultSeedItems: DumpItem[] = [
   {
+    id: 'mock-long-text',
+    type: 'text',
+    label: '06-04-2026 @ Mock Data',
+    value: 'This is a mock text item with extremely long lines to test multiline input auto-growing and text wrapping in both the read cards and the bottom bar edit input. ' +
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. ' +
+      'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ' +
+      'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ' +
+      'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. ' +
+      'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+  },
+  {
     id: '1',
     type: 'link',
     label: '06-04-2026 @ Just Now',
@@ -60,7 +71,25 @@ export const getItems = async (): Promise<DumpItem[]> => {
   try {
     const rawData = await AsyncStorage.getItem(STORAGE_KEY);
     if (rawData) {
-      return JSON.parse(rawData);
+      const parsed = JSON.parse(rawData) as DumpItem[];
+      // Seed the mock item if it's missing from existing storage items
+      if (!parsed.some((item) => item.id === 'mock-long-text')) {
+        const mockItem: DumpItem = {
+          id: 'mock-long-text',
+          type: 'text',
+          label: '06-04-2026 @ Mock Data',
+          value: 'This is a mock text item with extremely long lines to test multiline input auto-growing and text wrapping in both the read cards and the bottom bar edit input. ' +
+            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. ' +
+            'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ' +
+            'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. ' +
+            'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. ' +
+            'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+        };
+        const updated = [mockItem, ...parsed];
+        await saveItems(updated);
+        return updated;
+      }
+      return parsed;
     }
     // Seed default items if storage is empty
     await saveItems(defaultSeedItems);
@@ -114,6 +143,20 @@ export const deleteItem = async (id: string): Promise<DumpItem[]> => {
     return updated;
   } catch (e) {
     console.error('Failed to delete item:', e);
+    return [];
+  }
+};
+
+export const updateItem = async (id: string, value: string): Promise<DumpItem[]> => {
+  try {
+    const currentItems = await getItems();
+    const updated = currentItems.map((item) =>
+      item.id === id ? { ...item, value } : item
+    );
+    await saveItems(updated);
+    return updated;
+  } catch (e) {
+    console.error('Failed to update item:', e);
     return [];
   }
 };

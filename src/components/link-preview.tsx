@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../theme/theme-provider';
 import { TuiText } from './tui-text';
 
-interface PreviewData {
+export interface PreviewData {
   image: string | null;
   title: string | null;
   description: string | null;
@@ -16,7 +16,7 @@ interface LinkPreviewProps {
 }
 
 // In-memory cache to prevent multiple fetches of the same URL in a single session
-const previewCache = new Map<string, PreviewData | null>();
+export const previewCache = new Map<string, PreviewData | null>();
 
 const getStorageKeyForUrl = (url: string) => {
   return `@boothub_preview_cache:${encodeURIComponent(url)}`;
@@ -59,7 +59,10 @@ const extractMetaTags = (html: string): { [key: string]: string } => {
 
 // Check if a URL points directly to an image asset
 const isDirectImageUrl = (url: string) => {
-  return /\.(?:jpg|jpeg|png|webp|gif)(?:\?.*)?$/i.test(url);
+  return (
+    /\.(?:jpg|jpeg|png|webp|gif)(?:\?.*)?$/i.test(url) ||
+    url.includes('images.unsplash.com')
+  );
 };
 
 export const LinkPreview: React.FC<LinkPreviewProps> = ({ url }) => {

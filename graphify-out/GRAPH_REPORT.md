@@ -1,16 +1,16 @@
 # Graph Report - BootHub  (2026-06-04)
 
 ## Corpus Check
-- 37 files · ~60,113 words
+- 37 files · ~62,769 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 258 nodes · 403 edges · 20 communities (18 shown, 2 thin omitted)
+- 264 nodes · 423 edges · 20 communities (18 shown, 2 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `251de4fd`
+- Built from commit: `4bd0b3ff`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -31,16 +31,16 @@
 - [[_COMMUNITY_Community 25|Community 25]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `useTheme()` - 42 edges
+1. `useTheme()` - 44 edges
 2. `TuiText()` - 19 edges
 3. `expo` - 12 edges
 4. `scripts` - 10 edges
-5. `TuiContainer()` - 8 edges
-6. `DumpItem` - 8 edges
-7. `getItems()` - 6 edges
-8. `TUI Template Native (Expo / React Native)` - 6 edges
-9. `ensureFileUri()` - 5 edges
-10. `saveItems()` - 5 edges
+5. `DumpItem` - 10 edges
+6. `TuiContainer()` - 8 edges
+7. `getItems()` - 7 edges
+8. `saveItems()` - 6 edges
+9. `TUI Template Native (Expo / React Native)` - 6 edges
+10. `truncateText()` - 5 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `TabButton()` --calls--> `useTheme()`  [EXTRACTED]
@@ -57,16 +57,16 @@
 ## Communities (20 total, 2 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.08
-Nodes (18): ContextMenuOverlay(), ContextMenuOverlayProps, DumpItem, DumpType, MainApp(), mockItems, styles, TabButtonProps (+10 more)
+Cohesion: 0.09
+Nodes (21): ContextMenuOverlay(), ContextMenuOverlayProps, DumpItem, DumpType, MainApp(), mockItems, styles, TabButtonProps (+13 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.09
 Nodes (22): backgroundColor, foregroundImage, adaptiveIcon, predictiveBackGestureEnabled, expo, android, icon, ios (+14 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.15
-Nodes (12): PhotoPickerSheet(), PhotoPickerSheetProps, styles, { width: screenWidth }, { width: screenWidth, height: screenHeight }, styles, TuiContainer(), TuiContainerProps (+4 more)
+Cohesion: 0.18
+Nodes (10): PhotoPickerSheet(), PhotoPickerSheetProps, styles, { width: screenWidth }, { width: screenWidth, height: screenHeight }, styles, TuiContainer(), TuiContainerProps (+2 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.08
@@ -77,8 +77,8 @@ Cohesion: 0.07
 Nodes (26): author, devDependencies, eslint, @eslint/js, eslint-plugin-react-hooks, eslint-plugin-react-refresh, globals, prettier (+18 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.15
-Nodes (19): LinksScreen(), LinksScreenProps, styles, PhotoLayout, PhotosScreen(), PhotosScreenProps, styles, TextsScreenProps (+11 more)
+Cohesion: 0.13
+Nodes (20): LinkItem(), LinkItemProps, LinksScreen(), LinksScreenProps, styles, PhotoLayout, PhotosScreen(), PhotosScreenProps (+12 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.15
@@ -86,7 +86,7 @@ Nodes (11): 1. Rename the Project, 2. Install Dependencies, 3. Launch Developmen
 
 ### Community 7 - "Community 7"
 Cohesion: 0.06
-Nodes (45): TabButton(), styles, TuiButton(), TuiButtonProps, MONTHS, styles, TuiCalendar(), TuiCalendarProps (+37 more)
+Nodes (49): TabButton(), styles, TuiButton(), TuiButtonProps, MONTHS, styles, TuiCalendar(), TuiCalendarProps (+41 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.47
@@ -105,7 +105,7 @@ Cohesion: 0.50
 Nodes (3): apps, identifier, name
 
 ## Knowledge Gaps
-- **138 isolated node(s):** `name`, `slug`, `version`, `orientation`, `icon` (+133 more)
+- **137 isolated node(s):** `name`, `slug`, `version`, `orientation`, `icon` (+132 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **2 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -113,13 +113,13 @@ Nodes (3): apps, identifier, name
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `useTheme()` connect `Community 7` to `Community 0`, `Community 2`, `Community 5`, `Community 21`?**
-  _High betweenness centrality (0.047) - this node is a cross-community bridge._
+  _High betweenness centrality (0.052) - this node is a cross-community bridge._
 - **Why does `dependencies` connect `Community 3` to `Community 4`?**
-  _High betweenness centrality (0.028) - this node is a cross-community bridge._
+  _High betweenness centrality (0.027) - this node is a cross-community bridge._
 - **What connects `name`, `slug`, `version` to the rest of the system?**
-  _138 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _137 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.08064516129032258 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.09243697478991597 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._
 - **Should `Community 3` be split into smaller, more focused modules?**

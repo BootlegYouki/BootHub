@@ -6,6 +6,12 @@ export const formatBreakAll = (text: string) => {
   return text.split('').join('\u200b');
 };
 
+export const truncateText = (text: string, limit = 100) => {
+  if (!text) return '';
+  if (text.length <= limit) return text;
+  return text.slice(0, limit) + '...';
+};
+
 export const handleOpenUrl = async (url: string) => {
   try {
     const supported = await Linking.canOpenURL(url);
@@ -34,6 +40,7 @@ export const ensureFileUri = (uri: string) => {
 };
 
 export const getActualType = (value: string, fallbackType: DumpType): DumpType => {
+  if (fallbackType === 'photo') return 'photo';
   const trimmed = value.trim();
   const isPhoto =
     /^ph:\/\//i.test(trimmed) ||

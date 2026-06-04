@@ -93,7 +93,11 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
   };
 
   useEffect(() => {
-    checkPermission(false);
+    // Delay checking permissions and loading photos until the bottom sheet slide-in transition (250ms) completes
+    const timer = setTimeout(() => {
+      checkPermission(false);
+    }, 210);
+    return () => clearTimeout(timer);
   }, []);
 
   const checkPermission = async (request = false) => {
@@ -249,7 +253,7 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
               </TuiText>
             </Pressable>
           </View>
-        ) : hasPermission === null ? (
+        ) : (hasPermission === null || (photos.length === 0 && isLoading)) ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color={colors.primary} />
           </View>
@@ -348,7 +352,7 @@ const styles = StyleSheet.create({
   gridContent: {
     paddingHorizontal: COLUMN_MARGIN,
     paddingTop: COLUMN_MARGIN,
-    paddingBottom: 64, // Space to clear the floating button
+    paddingBottom: 72, // Space to clear the floating button
   },
   gridImage: {
     width: '100%',
@@ -407,7 +411,7 @@ const styles = StyleSheet.create({
   },
   confirmBtn: {
     borderWidth: 1.5,
-    height: 40,
+    height: 48,
     borderRadius: 0,
     alignItems: 'center',
     justifyContent: 'center',

@@ -14,6 +14,7 @@ interface TuiContainerProps {
   labelSize?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
   noPadding?: boolean;
   onPress?: () => void;
+  onLongPress?: () => void;
 }
 
 export const TuiContainer: React.FC<TuiContainerProps> = ({
@@ -27,6 +28,7 @@ export const TuiContainer: React.FC<TuiContainerProps> = ({
   labelSize = 'md',
   noPadding = false,
   onPress,
+  onLongPress,
 }) => {
   const { colors, isDark } = useTheme();
   const [legendWidth, setLegendWidth] = React.useState(0);
@@ -42,7 +44,8 @@ export const TuiContainer: React.FC<TuiContainerProps> = ({
   return (
     <Pressable
       onPress={onPress}
-      disabled={!onPress}
+      onLongPress={onLongPress}
+      disabled={!onPress && !onLongPress}
       style={[
         styles.outerContainer,
         containerPadding,

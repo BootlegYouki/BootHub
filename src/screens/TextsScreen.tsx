@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, StyleSheet, UIManager, findNodeHandle } from 'react-native';
 
 import { TuiContainer } from '../components/tui-container';
 import { TuiText } from '../components/tui-text';
@@ -11,15 +11,71 @@ interface TextsScreenProps {
   isSelectionMode: boolean;
   selectedIds: Set<string>;
   toggleSelect: (id: string) => void;
+  onLongPress?: (item: DumpItem, bounds: { x: number; y: number; width: number; height: number }) => void;
+  editingItemId: string | null;
 }
+
+interface TextItemProps {
+  item: DumpItem;
+  isSelected: boolean;
+  isSelectionMode: boolean;
+  toggleSelect: (id: string) => void;
+  onLongPress?: (item: DumpItem, bounds: { x: number; y: number; width: number; height: number }) => void;
+  isEditing: boolean;
+}
+
+const TextItem: React.FC<TextItemProps> = ({
+  item, isSelected, isSelectionMode, toggleSelect, onLongPress,
+  isEditing,
+}) => {
+  const { colors, isDark } = useTheme();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const itemRef = useRef<View>(null);
+
+  const handleLongPress = () => {
+    if (!onLongPress || isSelectionMode) return;
+    const node = findNodeHandle(itemRef.current);
+    if (node != null) {
+      UIManager.measure(node, (_x, _y, width, height, pageX, pageY) => {
+        onLongPress(item, { x: pageX, y: pageY, width, height });
+      });
+    }
+  };
+
+  return (
+    <View ref={itemRef}>
+      <TuiContainer
+        label={item.label}
+        accentBorder={isEditing || isSelected}
+        style={
+          isEditing
+            ? { backgroundColor: isDark ? '#27272A' : '#E4E4E7' }
+            : isSelected
+            ? { backgroundColor: isDark ? '#27272A' : '#E4E4E7' }
+            : undefined
+        }
+        onPress={isSelectionMode ? () => toggleSelect(item.id) : () => setIsExpanded(!isExpanded)}
+        onLongPress={!isSelectionMode && !isEditing ? handleLongPress : undefined}
+      >
+        <View pointerEvents={isSelectionMode ? 'none' : 'auto'}>
+          <TuiText size="md" style={styles.itemText} numberOfLines={isExpanded ? undefined : 3}>
+            {item.value}
+          </TuiText>
+        </View>
+      </TuiContainer>
+    </View>
+  );
+};
 
 export const TextsScreen: React.FC<TextsScreenProps> = ({
   sortedItems,
   isSelectionMode,
   selectedIds,
   toggleSelect,
+  onLongPress,
+  editingItemId,
 }) => {
-  const { colors, isDark } = useTheme();
+  const { colors } = useTheme();
 
   if (sortedItems.length === 0) {
     return (
@@ -36,24 +92,17 @@ export const TextsScreen: React.FC<TextsScreenProps> = ({
 
   return (
     <>
-      {sortedItems.map((item) => {
-        const isSelected = isSelectionMode && selectedIds.has(item.id);
-        return (
-          <TuiContainer
-            key={item.id}
-            label={item.label}
-            accentBorder={isSelected}
-            style={isSelected ? { backgroundColor: isDark ? '#27272A' : '#E4E4E7' } : undefined}
-            onPress={isSelectionMode ? () => toggleSelect(item.id) : undefined}
-          >
-            <View pointerEvents={isSelectionMode ? 'none' : 'auto'}>
-              <TuiText size="md" style={styles.itemText}>
-                {item.value}
-              </TuiText>
-            </View>
-          </TuiContainer>
-        );
-      })}
+      {sortedItems.map((item) => (
+        <TextItem
+          key={item.id}
+          item={item}
+          isSelected={isSelectionMode && selectedIds.has(item.id)}
+          isSelectionMode={isSelectionMode}
+          toggleSelect={toggleSelect}
+          onLongPress={onLongPress}
+          isEditing={editingItemId === item.id}
+        />
+      ))}
     </>
   );
 };

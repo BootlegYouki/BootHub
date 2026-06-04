@@ -24,6 +24,7 @@ import Animated, {
   useSharedValue,
   withTiming,
   runOnJS,
+  withDelay,
 } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -49,6 +50,8 @@ import {
   ListChecks,
   ArrowLeft,
   Copy,
+  Pencil,
+  X,
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Sharing from 'expo-sharing';
@@ -61,12 +64,13 @@ import { ThemeProvider, useTheme } from './src/theme/theme-provider';
 import { TuiHeader } from './src/components/tui-header';
 import { TuiText } from './src/components/tui-text';
 import { TuiContainer } from './src/components/tui-container';
-import { getItems, deleteItem, addItem, addMultiplePhotos, DumpItem, DumpType } from './src/utils/storage';
+import { getItems, deleteItem, addItem, updateItem, addMultiplePhotos, DumpItem, DumpType } from './src/utils/storage';
 import { ensureFileUri, getActualType } from './src/utils/helpers';
 import { LinksScreen } from './src/screens/LinksScreen';
 import { TextsScreen } from './src/screens/TextsScreen';
 import { PhotosScreen, PhotoLayout } from './src/screens/PhotosScreen';
 import { PhotoPickerSheet } from './src/components/photo-picker-sheet';
+import { LinkPreview, previewCache } from './src/components/link-preview';
 
 // ─── Tab Button ──────────────────────────────────────────────────────────────
 
@@ -132,6 +136,7 @@ function MainApp() {
   const [isSelectionMode, setIsSelectionMode] = useState<boolean>(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPhotoSheetOpen, setIsPhotoSheetOpen] = useState<boolean>(false);
+  const [isSwipingDown, setIsSwipingDown] = useState<boolean>(false);
   const [photoSheetState, setPhotoSheetState] = useState({ isAllSelected: false, sortAscending: false });
   const [photoSheetTriggerSelectAll, setPhotoSheetTriggerSelectAll] = useState(0);
   const [photoSheetTriggerSort, setPhotoSheetTriggerSort] = useState(0);
@@ -215,8 +220,43 @@ function MainApp() {
     };
   };
 
-  const filteredItems = items.filter((item) => getActualType(item.value, item.type) === activeTab);
+  // ─── Per-tab items (each tab filters independently so all tabs stay live) ────
+  const TAB_ORDER: DumpType[] = ['link', 'text', 'photo'];
+
+  const linkItems = items
+    .filter((item) => getActualType(item.value, item.type) === 'link')
+    .map((item) => item.id === editingItemId ? { ...item, value: editText } : item);
+  const textItems = items
+    .filter((item) => getActualType(item.value, item.type) === 'text')
+    .map((item) => item.id === editingItemId ? { ...item, value: editText } : item);
+  const photoItems = items.filter((item) => getActualType(item.value, item.type) === 'photo');
+
+  const sortedLinkItems = sortAscending ? [...linkItems].reverse() : linkItems;
+  const sortedTextItems = sortAscending ? [...textItems].reverse() : textItems;
+  const sortedPhotoItems = sortAscending ? [...photoItems].reverse() : photoItems;
+
+  // Keep legacy `sortedItems` pointing at the active tab so existing downstream
+  // code (select-all, section count, etc.) doesn't need to change.
+  const filteredItems = items
+    .filter((item) => getActualType(item.value, item.type) === activeTab)
+    .map((item) => item.id === editingItemId ? { ...item, value: editText } : item);
   const sortedItems = sortAscending ? [...filteredItems].reverse() : filteredItems;
+
+  // ─── Tab pager refs ───────────────────────────────────────────────────────────
+  const tabPagerRef = useRef<ScrollView>(null);
+  const isTabScrollingRef = useRef<boolean>(false);
+
+  const scrollToTab = (tab: DumpType, animated = true) => {
+    const index = TAB_ORDER.indexOf(tab);
+    if (index === -1) return;
+    tabPagerRef.current?.scrollTo({ x: index * windowWidth, y: 0, animated });
+  };
+
+  const switchTab = (tab: DumpType) => {
+    setActiveTab(tab);
+    scrollToTab(tab);
+  };
+
 
   const activeFullscreenPhoto =
     activeFullscreenPhotoIndex !== null && activeFullscreenPhotoIndex >= 0 && activeFullscreenPhotoIndex < sortedItems.length
@@ -279,7 +319,18 @@ function MainApp() {
     setIsSelectionMode(false);
     setSelectedIds(new Set());
     setActiveFullscreenPhotoIndex(null);
+    setEditingItemId(null);
   }, [activeTab]);
+
+  // Sync pager position on mount (no animation so it doesn't flash)
+  useEffect(() => {
+    const index = ['link', 'text', 'photo'].indexOf(activeTab);
+    if (index > 0) {
+      tabPagerRef.current?.scrollTo({ x: index * windowWidth, y: 0, animated: false });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
 
   // Clear selected IDs when leaving selection mode
   useEffect(() => {
@@ -316,7 +367,7 @@ function MainApp() {
 
   const resolveToLocalFileUri = async (uri: string): Promise<string> => {
     let fileUri = uri;
-    
+
     if (fileUri.startsWith('ph://')) {
       const assetId = fileUri.slice(5);
       const assetInfo = await MediaLibrary.getAssetInfoAsync(assetId);
@@ -326,38 +377,48 @@ function MainApp() {
         throw new Error('Could not resolve local path for photo library asset.');
       }
     }
-    
+
     if (fileUri.startsWith('http://') || fileUri.startsWith('https://')) {
       const filename = fileUri.split('/').pop()?.split('?')[0] || 'temp_image.jpg';
       const tempFileUri = `${FileSystem.cacheDirectory}${Date.now()}_${filename}`;
       const downloadResult = await FileSystem.downloadAsync(fileUri, tempFileUri);
       fileUri = downloadResult.uri;
     }
-    
+
     return ensureFileUri(fileUri);
   };
 
-  const handleCopyPhoto = async (item: DumpItem) => {
+  const handleCopyItem = async (item: DumpItem) => {
     try {
-      const resolvedUri = await resolveToLocalFileUri(item.value);
-      const base64 = await FileSystem.readAsStringAsync(resolvedUri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      
-      await Clipboard.setImageAsync(base64);
+      if (item.type === 'photo') {
+        const resolvedUri = await resolveToLocalFileUri(item.value);
+        const base64 = await FileSystem.readAsStringAsync(resolvedUri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        await Clipboard.setImageAsync(base64);
+      } else {
+        await Clipboard.setStringAsync(item.value);
+      }
       setContextMenuPhoto(null);
     } catch (e: any) {
-      console.error('Failed to copy photo:', e);
+      console.error('Failed to copy item:', e);
       Alert.alert('Copy Error', e?.message || String(e));
     }
   };
 
-  const handleSharePhoto = async (item: DumpItem) => {
+  const handleShareItem = async (item: DumpItem) => {
     try {
-      const resolvedUri = await resolveToLocalFileUri(item.value);
-      const isSharingAvailable = await Sharing.isAvailableAsync();
-      if (isSharingAvailable) {
-        await Sharing.shareAsync(resolvedUri);
+      if (item.type === 'photo') {
+        const resolvedUri = await resolveToLocalFileUri(item.value);
+        const isSharingAvailable = await Sharing.isAvailableAsync();
+        if (isSharingAvailable) {
+          await Sharing.shareAsync(resolvedUri);
+        } else {
+          await Share.share({ message: item.value });
+        }
+      } else if (item.type === 'link') {
+        // Use the `url` field so apps like Messenger receive a real URL, not just text
+        await Share.share({ url: item.value, message: item.value });
       } else {
         await Share.share({ message: item.value });
       }
@@ -368,10 +429,10 @@ function MainApp() {
     }
   };
 
-  const handleDeletePhoto = async (item: DumpItem) => {
+  const handleDeleteItem = async (item: DumpItem) => {
     Alert.alert(
-      'Delete Photo',
-      'Are you sure you want to delete this photo?',
+      'Delete Item',
+      'Are you sure you want to delete this item?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -397,28 +458,35 @@ function MainApp() {
 
     try {
       const photos = selectedItems.filter((item) => item.type === 'photo');
-      
+      const links = selectedItems.filter((item) => item.type === 'link');
+      const texts = selectedItems.filter((item) => item.type === 'text');
+
       if (photos.length > 0) {
         // Resolve all photo URIs to local files
         const resolvedUris = await Promise.all(
           photos.map((photo) => resolveToLocalFileUri(photo.value))
         );
-        
-        await RNShare.open({
-          urls: resolvedUris,
-          type: 'image/jpeg',
-        });
+        await RNShare.open({ urls: resolvedUris, type: 'image/jpeg' });
         return;
       }
 
-      // Fallback for text/links
+      // For links: always pass the `url` field so Messenger and other apps receive
+      // a real URL object (not just plain text). Pass all links as message too.
       const shareMessage = selectedItems.map((item) => item.value).join('\n');
-      await Share.share({ message: shareMessage });
-    } catch (e: any) {
-      // User cancelling the share sheet throws an error on iOS, which we can safely ignore
-      if (e?.message && (e.message.includes('User cancelled') || e.message.includes('dismissed'))) {
-        return;
+      const firstLink = links[0]?.value;
+
+      if (links.length === 1 && texts.length === 0) {
+        // Single link — cleanest share: just url + message identical
+        await Share.share({ url: firstLink, message: firstLink });
+      } else if (firstLink) {
+        // Multiple items including at least one link
+        await Share.share({ url: firstLink, message: shareMessage });
+      } else {
+        // Pure text items
+        await Share.share({ message: shareMessage });
       }
+    } catch (e: any) {
+      if (e?.message && (e.message.includes('User cancelled') || e.message.includes('dismissed'))) return;
       console.error('Sharing failed:', e);
       Alert.alert('Share Error', e?.message || String(e));
     }
@@ -485,7 +553,7 @@ function MainApp() {
   const latestStateRef = useRef({
     activeFullscreenPhotoIndex,
     activeFullscreenPhoto,
-    handleCloseFullscreen: () => {},
+    handleCloseFullscreen: () => { },
   });
 
   const handlePhotoPress = (item: DumpItem, startBounds: PhotoLayout) => {
@@ -601,15 +669,83 @@ function MainApp() {
     };
   }, [activeFullscreenPhotoIndex, activeFullscreenPhoto, handleCloseFullscreen]);
 
+  const touchInitiallyHorizontalRef = useRef<boolean>(false);
+  const touchInitiallyVerticalRef = useRef<boolean>(false);
+  const currentScrollX = useRef<number>(0);
+  const isScrollingRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    if (activeFullscreenPhotoIndex !== null) {
+      currentScrollX.current = activeFullscreenPhotoIndex * windowWidth;
+    }
+  }, [activeFullscreenPhotoIndex]);
+
+  const shouldSetPanResponder = (gestureState: any) => {
+    // If the flat list is actively scrolling or being dragged horizontally,
+    // lock to horizontal immediately so it doesn't get interrupted.
+    if (isScrollingRef.current) {
+      touchInitiallyHorizontalRef.current = true;
+      touchInitiallyVerticalRef.current = false;
+      return false;
+    }
+
+    const offsetFromPage = currentScrollX.current % windowWidth;
+    const isMidScroll = Math.abs(offsetFromPage) > 2 && Math.abs(offsetFromPage) < windowWidth - 2;
+
+    if (isMidScroll) {
+      touchInitiallyHorizontalRef.current = true;
+      touchInitiallyVerticalRef.current = false;
+      return false;
+    }
+
+    const absX = Math.abs(gestureState.dx);
+    const absY = Math.abs(gestureState.dy);
+
+    // Determine dominant direction:
+    // 1. Eagerly lock to horizontal if we see even a small horizontal drag (5px).
+    // 2. Lock to vertical only if we see a more significant vertical drag (20px).
+    if (!touchInitiallyHorizontalRef.current && !touchInitiallyVerticalRef.current) {
+      if (absX > 5) {
+        touchInitiallyHorizontalRef.current = true;
+      } else if (absY > 20) {
+        touchInitiallyVerticalRef.current = true;
+      }
+    }
+
+    if (touchInitiallyHorizontalRef.current) {
+      return false;
+    }
+
+    if (touchInitiallyVerticalRef.current) {
+      // Capture only if swiping down (to dismiss) with at least 15px downward drag.
+      // If they swipe up, we are still vertically locked (so they can't horizontal page),
+      // but we return false so we don't start the dismiss animation.
+      return gestureState.dy > 15;
+    }
+
+    return false;
+  };
+
   const panResponder = useRef(
     PanResponder.create({
+      onStartShouldSetPanResponder: () => {
+        touchInitiallyHorizontalRef.current = false;
+        touchInitiallyVerticalRef.current = false;
+        return false;
+      },
+      onStartShouldSetPanResponderCapture: () => {
+        touchInitiallyHorizontalRef.current = false;
+        touchInitiallyVerticalRef.current = false;
+        return false;
+      },
       onMoveShouldSetPanResponder: (evt, gestureState) => {
-        // Only capture vertical swipes that are downward (dy > 0)
-        return gestureState.dy > 10 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+        return shouldSetPanResponder(gestureState);
       },
       onMoveShouldSetPanResponderCapture: (evt, gestureState) => {
-        // Intercept downward vertical swipes to steal the responder from the FlatList
-        return gestureState.dy > 10 && Math.abs(gestureState.dy) > Math.abs(gestureState.dx);
+        return shouldSetPanResponder(gestureState);
+      },
+      onPanResponderGrant: () => {
+        setIsSwipingDown(true);
       },
       onPanResponderMove: (evt, gestureState) => {
         if (gestureState.dy > 0) {
@@ -622,6 +758,15 @@ function MainApp() {
         } else {
           translateY.value = withTiming(0, { duration: 200 });
         }
+        setIsSwipingDown(false);
+        touchInitiallyHorizontalRef.current = false;
+        touchInitiallyVerticalRef.current = false;
+      },
+      onPanResponderTerminate: () => {
+        translateY.value = withTiming(0, { duration: 200 });
+        setIsSwipingDown(false);
+        touchInitiallyHorizontalRef.current = false;
+        touchInitiallyVerticalRef.current = false;
       },
     })
   ).current;
@@ -635,7 +780,10 @@ function MainApp() {
   const backdropStyle = useAnimatedStyle(() => {
     // Use zoomPhase (shared value, UI-thread-synchronous) so the first frame
     // is never stale. 0 = idle/open, 1 = zooming-in, 2 = zooming-out.
-    if (zoomPhase.value === 1 || zoomPhase.value === 2) {
+    if (zoomPhase.value === 2) {
+      return { opacity: 0 };
+    }
+    if (zoomPhase.value === 1) {
       return { opacity: animationProgress.value };
     }
     return {
@@ -724,6 +872,79 @@ function MainApp() {
   }, []);
 
   const [inputText, setInputText] = useState<string>('');
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editText, setEditText] = useState<string>('');
+  const editInputRef = useRef<TextInput>(null);
+
+  const [toast, setToast] = useState<{ label: string; caption: string } | null>(null);
+  const toastOpacity = useSharedValue(0);
+  const toastTranslateY = useSharedValue(-20);
+
+  const showToast = (label: string, caption: string) => {
+    setToast({ label, caption });
+    toastOpacity.value = 0;
+    toastTranslateY.value = -20;
+
+    toastOpacity.value = withTiming(1, { duration: 250 }, () => {
+      toastOpacity.value = withDelay(
+        2000,
+        withTiming(0, { duration: 250 }, (fin) => {
+          if (fin) {
+            runOnJS(setToast)(null);
+          }
+        })
+      );
+    });
+    toastTranslateY.value = withTiming(0, { duration: 250 }, () => {
+      toastTranslateY.value = withDelay(
+        2000,
+        withTiming(-20, { duration: 250 })
+      );
+    });
+  };
+
+  const animatedToastStyle = useAnimatedStyle(() => {
+    return {
+      opacity: toastOpacity.value,
+      transform: [{ translateY: toastTranslateY.value }],
+    };
+  });
+
+  useEffect(() => {
+    if (editingItemId !== null) {
+      const timer = setTimeout(() => {
+        editInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    } else {
+      Keyboard.dismiss();
+    }
+  }, [editingItemId]);
+
+  const handleEditItem = (item: DumpItem) => {
+    setContextMenuPhoto(null);
+    setEditingItemId(item.id);
+    setEditText(item.value);
+  };
+
+  const handleSaveEdit = async (id: string, value: string) => {
+    Keyboard.dismiss();
+    if (!value) return;
+    try {
+      const updated = await updateItem(id, value);
+      setItems(updated);
+      showToast('Edited!', value);
+    } catch (e) {
+      console.error('Failed to save edit:', e);
+    } finally {
+      setEditingItemId(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    Keyboard.dismiss();
+    setEditingItemId(null);
+  };
 
   const handlePickImage = () => {
     setActiveFullscreenPhotoIndex(null);
@@ -740,6 +961,8 @@ function MainApp() {
       const updated = await addMultiplePhotos(uris);
       setItems(updated);
       setActiveTab('photo');
+      scrollToTab('photo');
+      showToast('Added!', `${uris.length} photo${uris.length > 1 ? 's' : ''}`);
     } catch (e) {
       console.error('Failed to add multiple photos:', e);
     }
@@ -756,7 +979,9 @@ function MainApp() {
       const updated = await addItem(type, trimmed);
       setItems(updated);
       setActiveTab(type);
+      scrollToTab(type);
       setInputText('');
+      showToast('Added!', trimmed);
     } catch (e) {
       console.error('Failed to submit item:', e);
     }
@@ -768,7 +993,10 @@ function MainApp() {
     return <View style={[styles.loaderContainer, { backgroundColor: '#18181B' }]} />;
   }
 
-  const toggleTheme = () => setThemeMode(isDark ? 'light' : 'dark');
+  const toggleTheme = () => {
+    setEditingItemId(null);
+    setThemeMode(isDark ? 'light' : 'dark');
+  };
 
   const dynamicSubtitle = activeTab === 'photo' ? 'photos' : activeTab + 's';
   const capitalizedTitle = activeTab.charAt(0).toUpperCase() + activeTab.slice(1) + 's';
@@ -796,11 +1024,11 @@ function MainApp() {
     // No KeyboardAvoidingView — the Animated.View spacer below handles it
     // natively via Reanimated's useAnimatedKeyboard shared value.
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <SafeAreaView 
+      <SafeAreaView
         style={[
-          styles.safeArea, 
+          styles.safeArea,
           { backgroundColor: colors.background }
-        ]} 
+        ]}
         edges={['top']}
       >
         <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -816,9 +1044,9 @@ function MainApp() {
         {/* 02: TABS */}
         <View style={styles.topContainer}>
           <View style={styles.navRow}>
-            <TabButton isActive={activeTab === 'link'} onPress={() => setActiveTab('link')} label="Links" Icon={Link2} />
-            <TabButton isActive={activeTab === 'text'} onPress={() => setActiveTab('text')} label="Texts" Icon={FileText} />
-            <TabButton isActive={activeTab === 'photo'} onPress={() => setActiveTab('photo')} label="Photos" Icon={ImageIcon} />
+            <TabButton isActive={activeTab === 'link'} onPress={() => switchTab('link')} label="Links" Icon={Link2} />
+            <TabButton isActive={activeTab === 'text'} onPress={() => switchTab('text')} label="Texts" Icon={FileText} />
+            <TabButton isActive={activeTab === 'photo'} onPress={() => switchTab('photo')} label="Photos" Icon={ImageIcon} />
           </View>
 
           {/* Section header row */}
@@ -839,8 +1067,8 @@ function MainApp() {
                         backgroundColor: allSelected
                           ? colors.primary + '25'
                           : pressed
-                          ? colors.primary + '15'
-                          : 'transparent',
+                            ? colors.primary + '15'
+                            : 'transparent',
                         marginRight: 8,
                       },
                     ];
@@ -852,6 +1080,7 @@ function MainApp() {
 
               <Pressable
                 onPress={() => {
+                  setEditingItemId(null);
                   const nextMode = !isSelectionMode;
                   setIsSelectionMode(nextMode);
                   if (!nextMode) setSelectedIds(new Set());
@@ -863,8 +1092,8 @@ function MainApp() {
                     backgroundColor: isSelectionMode
                       ? colors.primary + '25'
                       : pressed
-                      ? colors.primary + '15'
-                      : 'transparent',
+                        ? colors.primary + '15'
+                        : 'transparent',
                     marginRight: 8,
                   },
                 ]}
@@ -873,7 +1102,10 @@ function MainApp() {
               </Pressable>
 
               <Pressable
-                onPress={() => setSortAscending(!sortAscending)}
+                onPress={() => {
+                  setEditingItemId(null);
+                  setSortAscending(!sortAscending);
+                }}
                 style={({ pressed }) => [
                   styles.headerActionBtn,
                   {
@@ -892,41 +1124,106 @@ function MainApp() {
           </View>
         </View>
 
-        {/* 03: SCROLLABLE FEED */}
+        {/* 03: HORIZONTAL TAB PAGER */}
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={colors.primary}
-              colors={[colors.primary]}
-              progressBackgroundColor={isDark ? '#27272A' : '#F4F4F5'}
-            />
-          }
+          ref={tabPagerRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          scrollEventThrottle={16}
+          // Update active tab mid-drag ONLY while user's finger is actively dragging.
+          // Guarding with isTabScrollingRef prevents flicker during momentum scrolls
+          // and programmatic scrollTo animations triggered by tab button presses.
+          onScroll={(e) => {
+            if (!isTabScrollingRef.current) return;
+            const index = Math.round(e.nativeEvent.contentOffset.x / windowWidth);
+            const tab = TAB_ORDER[Math.max(0, Math.min(index, TAB_ORDER.length - 1))];
+            if (tab !== activeTab) setActiveTab(tab);
+          }}
+          // Block vertical dismiss PanResponder while user is swiping tabs
+          onScrollBeginDrag={() => { isTabScrollingRef.current = true; }}
+          onScrollEndDrag={(e) => {
+            const vx = e.nativeEvent.velocity ? e.nativeEvent.velocity.x : 0;
+            if (vx === 0) isTabScrollingRef.current = false;
+          }}
+          onMomentumScrollEnd={(e) => {
+            isTabScrollingRef.current = false;
+            // Always sync to final snapped page after momentum ends
+            // (covers flings, partial drags that bounced back, and programmatic scrolls)
+            const index = Math.round(e.nativeEvent.contentOffset.x / windowWidth);
+            const tab = TAB_ORDER[Math.max(0, Math.min(index, TAB_ORDER.length - 1))];
+            setActiveTab(tab);
+          }}
+          style={{ flex: 1 }}
+          // Prevent the horizontal pager from consuming native vertical scroll
+          // gestures that belong to the inner per-tab vertical ScrollViews.
+          directionalLockEnabled
         >
-
-          {/* Active screen */}
-          {activeTab === 'link' && (
+          {/* ── Page 0: Links ── */}
+          <ScrollView
+            style={{ width: windowWidth }}
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
+                progressBackgroundColor={isDark ? '#27272A' : '#F4F4F5'}
+              />
+            }
+          >
             <LinksScreen
-              sortedItems={sortedItems}
-              isSelectionMode={isSelectionMode}
+              sortedItems={sortedLinkItems}
+              isSelectionMode={isSelectionMode && activeTab === 'link'}
               selectedIds={selectedIds}
               toggleSelect={toggleSelect}
+              onLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })}
+              editingItemId={editingItemId}
             />
-          )}
-          {activeTab === 'text' && (
+          </ScrollView>
+
+          {/* ── Page 1: Texts ── */}
+          <ScrollView
+            style={{ width: windowWidth }}
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
+                progressBackgroundColor={isDark ? '#27272A' : '#F4F4F5'}
+              />
+            }
+          >
             <TextsScreen
-              sortedItems={sortedItems}
-              isSelectionMode={isSelectionMode}
+              sortedItems={sortedTextItems}
+              isSelectionMode={isSelectionMode && activeTab === 'text'}
               selectedIds={selectedIds}
               toggleSelect={toggleSelect}
+              onLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })}
+              editingItemId={editingItemId}
             />
-          )}
-          {activeTab === 'photo' && (
+          </ScrollView>
+
+          {/* ── Page 2: Photos ── */}
+          <ScrollView
+            style={{ width: windowWidth }}
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={colors.primary}
+                colors={[colors.primary]}
+                progressBackgroundColor={isDark ? '#27272A' : '#F4F4F5'}
+              />
+            }
+          >
             <PhotosScreen
-              sortedItems={sortedItems}
-              isSelectionMode={isSelectionMode}
+              sortedItems={sortedPhotoItems}
+              isSelectionMode={isSelectionMode && activeTab === 'photo'}
               selectedIds={selectedIds}
               toggleSelect={toggleSelect}
               onPhotoPress={handlePhotoPress}
@@ -936,7 +1233,7 @@ function MainApp() {
                 measurePhotoRef.current = fn;
               }}
             />
-          )}
+          </ScrollView>
         </ScrollView>
 
         {/* Fullscreen Photo Overlay with native horizontal paging and swipe-down-to-close */}
@@ -955,6 +1252,16 @@ function MainApp() {
               containerStyle,
             ]}
           >
+            {/* Dark Backdrop */}
+            <Animated.View
+              style={[
+                StyleSheet.absoluteFillObject,
+                backdropStyle,
+                { backgroundColor: colors.background }
+              ]}
+              pointerEvents="none"
+            />
+
             {/* Completely transparent background */}
             {/* FlatList mounted unconditionally inside the overlay to pre-render and load images in background */}
             <View
@@ -968,6 +1275,7 @@ function MainApp() {
                 data={sortedItems}
                 horizontal
                 pagingEnabled
+                scrollEnabled={!isSwipingDown}
                 showsHorizontalScrollIndicator={false}
                 keyExtractor={(item) => item.id}
                 initialScrollIndex={activeFullscreenPhotoIndex}
@@ -976,8 +1284,23 @@ function MainApp() {
                   offset: windowWidth * index,
                   index,
                 })}
+                onScroll={(e) => {
+                  currentScrollX.current = e.nativeEvent.contentOffset.x;
+                }}
+                scrollEventThrottle={16}
+                onScrollBeginDrag={() => {
+                  isScrollingRef.current = true;
+                }}
+                onScrollEndDrag={(e) => {
+                  const velocityX = e.nativeEvent.velocity ? e.nativeEvent.velocity.x : 0;
+                  if (velocityX === 0) {
+                    isScrollingRef.current = false;
+                  }
+                }}
                 onMomentumScrollEnd={(e) => {
+                  isScrollingRef.current = false;
                   const contentOffset = e.nativeEvent.contentOffset.x;
+                  currentScrollX.current = contentOffset;
                   const layoutWidth = e.nativeEvent.layoutMeasurement.width;
                   const index = Math.round(contentOffset / layoutWidth);
                   if (index >= 0 && index < sortedItems.length) {
@@ -1044,7 +1367,7 @@ function MainApp() {
                   barBgStyle,
                 ]}
               />
-              
+
               {/* Top Controls Layout */}
               <View
                 style={{
@@ -1121,6 +1444,7 @@ function MainApp() {
                 {/* Bottom Left: Share Button */}
                 <Pressable
                   onPress={handleShareActivePhoto}
+                  hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
                   style={({ pressed }) => [
                     styles.iconBtn,
                     {
@@ -1135,6 +1459,7 @@ function MainApp() {
                 {/* Bottom Right: Delete Button */}
                 <Pressable
                   onPress={handleDeleteActivePhoto}
+                  hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
                   style={({ pressed }) => [
                     styles.iconBtn,
                     {
@@ -1151,133 +1476,175 @@ function MainApp() {
         )}
 
         {/* 04: BOTTOM BAR */}
-          <Animated.View
-            pointerEvents={activeFullscreenPhotoIndex !== null ? 'none' : 'auto'}
-            style={[
-              styles.bottomBar,
-              {
-                borderTopColor: colors.primary + '30',
-                backgroundColor: colors.background,
-                zIndex: activeFullscreenPhotoIndex !== null ? 0 : 1000,
-              },
-              animatedBottomBarStyle,
-            ]}
-          >
-            {isSelectionMode ? (
-              <View style={[styles.bottomBarRow, { justifyContent: 'space-between', alignItems: 'center' }]}>
-                <Pressable
-                  onPress={handleBulkShare}
-                  disabled={selectedIds.size === 0}
-                  style={({ pressed }) => [
-                    styles.iconBtn,
-                    {
-                      borderColor: colors.primary,
-                      backgroundColor: pressed ? colors.primary + '25' : 'transparent',
-                      opacity: selectedIds.size === 0 ? 0.4 : 1,
-                    },
-                  ]}
-                >
-                  <Share2 size={16} color={colors.primary} />
-                </Pressable>
+        <Animated.View
+          pointerEvents={activeFullscreenPhotoIndex !== null ? 'none' : 'auto'}
+          style={[
+            styles.bottomBar,
+            {
+              backgroundColor: colors.background,
+              zIndex: activeFullscreenPhotoIndex !== null ? 0 : 1000,
+            },
+            animatedBottomBarStyle,
+          ]}
+        >
+          {isSelectionMode ? (
+            <View style={[styles.bottomBarRow, { justifyContent: 'space-between', alignItems: 'center' }]}>
+              <Pressable
+                onPress={handleBulkShare}
+                disabled={selectedIds.size === 0}
+                hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+                style={({ pressed }) => [
+                  styles.iconBtn,
+                  {
+                    borderColor: colors.primary,
+                    backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+                    opacity: selectedIds.size === 0 ? 0.4 : 1,
+                  },
+                ]}
+              >
+                <Share2 size={16} color={colors.primary} />
+              </Pressable>
 
-                <TuiText
-                  size="sm"
-                  weight="bold"
-                  style={{ color: colors.primary, textAlign: 'center' }}
-                >
-                  {selectedIds.size} selected
-                </TuiText>
+              <TuiText
+                size="sm"
+                weight="bold"
+                style={{ color: colors.primary, textAlign: 'center' }}
+              >
+                {selectedIds.size} selected
+              </TuiText>
 
-                <Pressable
-                  onPress={handleBulkDelete}
-                  disabled={selectedIds.size === 0}
-                  style={({ pressed }) => [
-                    styles.iconBtn,
-                    {
-                      borderColor: colors.destructive || '#EF4444',
-                      backgroundColor: pressed ? (colors.destructive || '#EF4444') + '25' : 'transparent',
-                      opacity: selectedIds.size === 0 ? 0.4 : 1,
-                    },
-                  ]}
-                >
-                  <Trash2 size={16} color={colors.destructive || '#EF4444'} />
-                </Pressable>
-              </View>
-            ) : (
-              <View style={styles.bottomBarRow}>
-                <Pressable
-                  onPress={handlePickImage}
-                  style={({ pressed }) => [
-                    styles.iconBtn,
-                    {
-                      borderColor: colors.primary,
-                      backgroundColor: pressed ? colors.primary + '25' : 'transparent',
-                    },
-                  ]}
-                >
-                  <ImageIcon size={16} color={colors.primary} />
-                </Pressable>
+              <Pressable
+                onPress={handleBulkDelete}
+                disabled={selectedIds.size === 0}
+                hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+                style={({ pressed }) => [
+                  styles.iconBtn,
+                  {
+                    borderColor: colors.destructive || '#EF4444',
+                    backgroundColor: pressed ? (colors.destructive || '#EF4444') + '25' : 'transparent',
+                    opacity: selectedIds.size === 0 ? 0.4 : 1,
+                  },
+                ]}
+              >
+                <Trash2 size={16} color={colors.destructive || '#EF4444'} />
+              </Pressable>
+            </View>
+          ) : editingItemId !== null ? (
+            <View style={styles.bottomBarRow}>
+              <Pressable
+                onPress={handleCancelEdit}
+                hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+                style={({ pressed }) => [
+                  styles.iconBtn,
+                  {
+                    borderColor: colors.destructive || '#EF4444',
+                    backgroundColor: pressed ? (colors.destructive || '#EF4444') + '25' : 'transparent',
+                  },
+                ]}
+              >
+                <X size={16} color={colors.destructive || '#EF4444'} />
+              </Pressable>
 
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      borderColor: colors.primary,
-                      color: colors.foreground,
-                      backgroundColor: colors.card,
-                    },
-                  ]}
-                  value={inputText}
-                  onChangeText={setInputText}
-                  placeholder="Dump link, text, or select photo..."
-                  placeholderTextColor={colors.mutedForeground}
-                  autoCapitalize="none"
-                  onFocus={() => {
-                    setIsPhotoSheetOpen(false);
-                    setActiveFullscreenPhotoIndex(null);
-                  }}
-                />
+              <TextInput
+                ref={editInputRef}
+                style={[
+                  styles.input,
+                  {
+                    borderColor: colors.primary,
+                    color: colors.foreground,
+                    backgroundColor: colors.card,
+                  },
+                ]}
+                value={editText}
+                onChangeText={setEditText}
+                placeholder={activeTab === 'link' ? "Edit link..." : "Edit text..."}
+                placeholderTextColor={colors.mutedForeground}
+                autoCapitalize="none"
+                autoFocus
+                multiline={true}
+                onFocus={() => {
+                  setIsPhotoSheetOpen(false);
+                  setActiveFullscreenPhotoIndex(null);
+                }}
+              />
 
-                {isPhotoSheetOpen ? (
-                  <>
-                    <Pressable
-                      onPress={() => setPhotoSheetTriggerSelectAll((p) => p + 1)}
-                      style={({ pressed }) => [
-                        styles.iconBtn,
-                        {
-                          borderColor: colors.primary,
-                          backgroundColor: photoSheetState.isAllSelected
-                            ? colors.primary + '25'
-                            : pressed
+              <Pressable
+                onPress={() => handleSaveEdit(editingItemId, editText)}
+                hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+                style={({ pressed }) => [
+                  styles.iconBtn,
+                  {
+                    borderColor: colors.primary,
+                    backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+                  },
+                ]}
+              >
+                <Check size={16} color={colors.primary} />
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.bottomBarRow}>
+              <Pressable
+                onPress={handlePickImage}
+                hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+                style={({ pressed }) => [
+                  styles.iconBtn,
+                  {
+                    borderColor: colors.primary,
+                    backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+                  },
+                ]}
+              >
+                <ImageIcon size={16} color={colors.primary} />
+              </Pressable>
+
+              {/* Cancel edit button removed — editing is now inline in cards */}
+
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    borderColor: colors.primary,
+                    color: colors.foreground,
+                    backgroundColor: colors.card,
+                  },
+                ]}
+                value={inputText}
+                onChangeText={setInputText}
+                placeholder="Type Something"
+                placeholderTextColor={colors.mutedForeground}
+                autoCapitalize="none"
+                multiline={true}
+                onFocus={() => {
+                  setIsPhotoSheetOpen(false);
+                  setActiveFullscreenPhotoIndex(null);
+                }}
+              />
+
+              {isPhotoSheetOpen ? (
+                <>
+                  <Pressable
+                    onPress={() => setPhotoSheetTriggerSelectAll((p) => p + 1)}
+                    hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+                    style={({ pressed }) => [
+                      styles.iconBtn,
+                      {
+                        borderColor: colors.primary,
+                        backgroundColor: photoSheetState.isAllSelected
+                          ? colors.primary + '25'
+                          : pressed
                             ? colors.primary + '15'
                             : 'transparent',
-                          marginRight: 8,
-                        },
-                      ]}
-                    >
-                      <ListChecks size={16} color={colors.primary} />
-                    </Pressable>
+                        marginRight: 8,
+                      },
+                    ]}
+                  >
+                    <ListChecks size={16} color={colors.primary} />
+                  </Pressable>
 
-                    <Pressable
-                      onPress={() => setPhotoSheetTriggerSort((p) => p + 1)}
-                      style={({ pressed }) => [
-                        styles.iconBtn,
-                        {
-                          borderColor: colors.primary,
-                          backgroundColor: pressed ? colors.primary + '25' : 'transparent',
-                        },
-                      ]}
-                    >
-                      {photoSheetState.sortAscending ? (
-                        <ArrowUp size={16} color={colors.primary} />
-                      ) : (
-                        <ArrowDown size={16} color={colors.primary} />
-                      )}
-                    </Pressable>
-                  </>
-                ) : (
                   <Pressable
-                    onPress={handleSubmit}
+                    onPress={() => setPhotoSheetTriggerSort((p) => p + 1)}
+                    hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
                     style={({ pressed }) => [
                       styles.iconBtn,
                       {
@@ -1286,12 +1653,31 @@ function MainApp() {
                       },
                     ]}
                   >
-                    <Check size={16} color={colors.primary} />
+                    {photoSheetState.sortAscending ? (
+                      <ArrowUp size={16} color={colors.primary} />
+                    ) : (
+                      <ArrowDown size={16} color={colors.primary} />
+                    )}
                   </Pressable>
-                )}
-              </View>
-            )}
-          </Animated.View>
+                </>
+              ) : (
+                <Pressable
+                  onPress={handleSubmit}
+                  hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+                  style={({ pressed }) => [
+                    styles.iconBtn,
+                    {
+                      borderColor: colors.primary,
+                      backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+                    },
+                  ]}
+                >
+                  <Check size={16} color={colors.primary} />
+                </Pressable>
+              )}
+            </View>
+          )}
+        </Animated.View>
       </SafeAreaView>
 
       {/* Backdrop overlay for closing on tap outside (covers area above the bottom bar) */}
@@ -1330,10 +1716,33 @@ function MainApp() {
           contextMenuPhoto={contextMenuPhoto}
           imageSizes={imageSizes}
           onClose={() => setContextMenuPhoto(null)}
-          onCopy={() => handleCopyPhoto(contextMenuPhoto.item)}
-          onShare={() => handleSharePhoto(contextMenuPhoto.item)}
-          onDelete={() => handleDeletePhoto(contextMenuPhoto.item)}
+          onCopy={() => handleCopyItem(contextMenuPhoto.item)}
+          onShare={() => handleShareItem(contextMenuPhoto.item)}
+          onEdit={contextMenuPhoto.item.type !== 'photo' ? () => handleEditItem(contextMenuPhoto.item) : undefined}
+          onDelete={() => handleDeleteItem(contextMenuPhoto.item)}
         />
+      )}
+
+      {toast && (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            {
+              position: 'absolute',
+              top: insets.top + 70,
+              left: 20,
+              right: 20,
+              zIndex: 2500,
+            },
+            animatedToastStyle,
+          ]}
+        >
+          <TuiContainer label={toast.label} accentBorder={true}>
+            <TuiText size="sm" style={{ color: colors.foreground }} numberOfLines={2}>
+              {toast.caption}
+            </TuiText>
+          </TuiContainer>
+        </Animated.View>
       )}
     </View>
   );
@@ -1347,6 +1756,7 @@ interface ContextMenuOverlayProps {
   onClose: () => void;
   onCopy: () => void;
   onShare: () => void;
+  onEdit?: () => void;
   onDelete: () => void;
 }
 
@@ -1356,6 +1766,7 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
   onClose,
   onCopy,
   onShare,
+  onEdit,
   onDelete,
 }) => {
   const { colors, isDark } = useTheme();
@@ -1363,11 +1774,16 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
   const { item, bounds } = contextMenuPhoto;
 
-  const scale = useSharedValue(0.9);
+  const isPhoto = item.type === 'photo';
+  // Photos: grow in (0.9 → 1.0) — zoom reveal
+  // Links/Texts: press down (1.0 → 0.95) — card squish effect
+  const scale = useSharedValue(isPhoto ? 0.9 : 1.0);
+  const targetScale = isPhoto ? 1.0 : 0.95;
+  const closeScale = isPhoto ? 0.9 : 1.0;
   const opacity = useSharedValue(0);
 
   useEffect(() => {
-    scale.value = withTiming(1, { duration: 150 });
+    scale.value = withTiming(targetScale, { duration: 150 });
     opacity.value = withTiming(1, { duration: 150 });
   }, []);
 
@@ -1377,7 +1793,7 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
     if (isClosingRef.current) return;
     isClosingRef.current = true;
 
-    scale.value = withTiming(0.9, { duration: 150 });
+    scale.value = withTiming(closeScale, { duration: 150 });
     opacity.value = withTiming(0, { duration: 150 }, (finished) => {
       if (finished) {
         runOnJS(callback)();
@@ -1398,27 +1814,59 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
     };
   });
 
-  // Calculate size to show the WHOLE picture (aspect-ratio fit) but larger
+  // Calculate preview dimensions
   const maxPreviewWidth = screenWidth * 0.88;
   const maxPreviewHeight = screenHeight * 0.55;
-  const size = imageSizes[item.id];
-  const r = size ? size.width / size.height : 1.0;
 
-  let previewWidth = maxPreviewWidth;
-  let previewHeight = maxPreviewWidth / r;
+  let previewWidth: number;
+  let previewHeight: number;
+  let previewLeft: number;
 
-  if (previewHeight > maxPreviewHeight) {
-    previewHeight = maxPreviewHeight;
-    previewWidth = maxPreviewHeight * r;
-  }
+  if (item.type === 'photo') {
+    const size = imageSizes[item.id];
+    const r = size ? size.width / size.height : 1.0;
+    previewWidth = maxPreviewWidth;
+    previewHeight = maxPreviewWidth / r;
+    if (previewHeight > maxPreviewHeight) {
+      previewHeight = maxPreviewHeight;
+      previewWidth = maxPreviewHeight * r;
+    }
+    // Center on the photo card's horizontal center
+    const cardCenter = bounds.x + bounds.width / 2;
+    previewLeft = cardCenter - previewWidth / 2;
+    if (previewLeft < 16) previewLeft = 16;
+    else if (previewLeft + previewWidth > screenWidth - 16) previewLeft = screenWidth - 16 - previewWidth;
+  } else {
+    // Estimate the full text height so the preview displays the entire value (not truncated)
+    // Average character width is ~10.2px for JetBrains Mono at size 14 with styling. Card has 24px horizontal padding.
+    const charsPerLine = Math.max(15, Math.floor((bounds.width - 24) / 10.2));
+    const lines = Math.ceil(item.value.length / charsPerLine);
 
-  // Centered horizontally relative to the original card's horizontal center
-  const cardCenter = bounds.x + bounds.width / 2;
-  let previewLeft = cardCenter - previewWidth / 2;
-  if (previewLeft < 16) {
-    previewLeft = 16;
-  } else if (previewLeft + previewWidth > screenWidth - 16) {
-    previewLeft = screenWidth - 16 - previewWidth;
+    let linkOffset = 26;
+    if (item.type === 'link') {
+      if (previewCache.has(item.value)) {
+        const cached = previewCache.get(item.value);
+        if (cached) {
+          if (cached.image) {
+            linkOffset = 284; // URL + Image section + Info tray
+          } else if (cached.title || cached.description) {
+            linkOffset = 65;  // URL + Info tray (no image)
+          } else {
+            linkOffset = 20;  // URL only
+          }
+        } else {
+          linkOffset = 20;    // Fetched but has no preview data (like a broken/custom link)
+        }
+      } else {
+        // Not cached yet (loading) — assume it might have an image to be safe
+        linkOffset = 265;
+      }
+    }
+    const estimatedTextHeight = lines * 22 + linkOffset;
+
+    previewWidth = bounds.width;
+    previewLeft = bounds.x;
+    previewHeight = Math.min(estimatedTextHeight, maxPreviewHeight);
   }
 
   // Horizontal position of Menu centered relative to the preview
@@ -1434,14 +1882,15 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
   const cardVerticalCenter = bounds.y + bounds.height / 2;
   let previewTop = cardVerticalCenter - previewHeight / 2;
 
-  const menuHeight = 136; // 3 items of 44px each plus borders/separators
+  const menuHeight = isPhoto ? 136 : 180; // photos: 3 rows; link/text: 4 rows (Edit added)
   const spaceAbove = previewTop - insets.top;
   const spaceBelow = screenHeight - insets.bottom - (previewTop + previewHeight);
   const showBelow = spaceBelow > spaceAbove;
 
   let menuTop = 0;
+  const menuGap = isPhoto ? 16 : 1;
   if (showBelow) {
-    menuTop = previewTop + previewHeight + 12;
+    menuTop = previewTop + previewHeight + menuGap;
     // If menu overflows the bottom of the screen, shift both preview and menu up
     const overflow = (menuTop + menuHeight) - (screenHeight - insets.bottom - 16);
     if (overflow > 0) {
@@ -1449,7 +1898,7 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
       menuTop -= overflow;
     }
   } else {
-    menuTop = previewTop - menuHeight - 12;
+    menuTop = previewTop - menuHeight - menuGap;
     // If menu overflows the top of the screen, shift both preview and menu down
     const overflow = (insets.top + 16) - menuTop;
     if (overflow > 0) {
@@ -1484,7 +1933,7 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
         />
       </Pressable>
 
-      {/* Lifted Photo Preview */}
+      {/* Lifted Preview — image for photos, text card for links/texts */}
       <Animated.View
         style={[
           animatedPreviewStyle,
@@ -1503,18 +1952,51 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
           },
         ]}
       >
-        <Image
-          source={{ uri: ensureFileUri(item.value) }}
-          style={{
-            width: '100%',
-            height: '100%',
-            borderWidth: 1.5,
-            borderColor: colors.primary,
-            borderRadius: 0, // No radius!
-          }}
-          contentFit="contain" // Contain to show the whole picture
-          transition={0}
-        />
+        {item.type === 'photo' ? (
+          <Image
+            source={{ uri: ensureFileUri(item.value) }}
+            style={{
+              width: '100%',
+              height: '100%',
+              borderWidth: 1.5,
+              borderColor: colors.primary,
+              borderRadius: 0,
+            }}
+            contentFit="contain"
+            transition={0}
+          />
+        ) : (
+          /* TuiContainer replica — exact card size, no label */
+          <View style={{ width: '100%', height: '100%', backgroundColor: colors.card, overflow: 'hidden' }}>
+            {/* Segmented borders matching TuiContainer — zIndex:5 keeps them above content */}
+            <View style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 1.5, backgroundColor: colors.primary, zIndex: 5 }} />
+            <View style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 1.5, backgroundColor: colors.primary, zIndex: 5 }} />
+            <View style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 1.5, backgroundColor: colors.primary, zIndex: 5 }} />
+            <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 1.5, backgroundColor: colors.primary, zIndex: 5 }} />
+
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 16 }} showsVerticalScrollIndicator={false}>
+              {item.type === 'link' ? (
+                /* Link card — URL text + link preview, matches real card */
+                <>
+                  <View style={{ paddingTop: 12, paddingHorizontal: 12 }}>
+                    <TuiText size="md" weight="bold" style={{ color: colors.primary, textDecorationLine: 'underline', lineHeight: 22 }}>
+                      {item.value}
+                    </TuiText>
+                  </View>
+                  <LinkPreview url={item.value} />
+                </>
+              ) : (
+                /* Text card — content padded like TuiContainer */
+                <View style={{ paddingTop: 12, paddingHorizontal: 12 }}>
+                  <TuiText size="md" style={{ color: colors.foreground, lineHeight: 22, textAlign: 'justify' }}>
+                    {item.value}
+                  </TuiText>
+                </View>
+              )}
+            </ScrollView>
+          </View>
+        )}
+
       </Animated.View>
 
       {/* Context Menu Container */}
@@ -1577,6 +2059,26 @@ const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
           <Share2 size={16} color={colors.foreground} />
         </Pressable>
 
+        {/* Edit Row — only for link/text items */}
+        {onEdit && (
+          <Pressable
+            onPress={() => handleAction(onEdit)}
+            style={({ pressed }) => [
+              styles.menuRow,
+              {
+                backgroundColor: pressed ? colors.primary + '15' : 'transparent',
+                borderBottomWidth: 1,
+                borderBottomColor: colors.primary + '20',
+              },
+            ]}
+          >
+            <TuiText size="sm" style={{ color: colors.foreground }}>
+              Edit
+            </TuiText>
+            <Pencil size={16} color={colors.foreground} />
+          </Pressable>
+        )}
+
         {/* Delete Row */}
         <Pressable
           onPress={() => handleAction(onDelete)}
@@ -1615,18 +2117,21 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   loaderContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 90 },
-  bottomBar: { borderTopWidth: 1.5, paddingHorizontal: 16, paddingVertical: 12 },
-  bottomBarRow: { flexDirection: 'row', alignItems: 'center', width: '100%' },
+  bottomBar: { paddingHorizontal: 16, paddingVertical: 12 },
+  bottomBarRow: { flexDirection: 'row', alignItems: 'flex-end', width: '100%' },
   input: {
     flex: 1,
-    height: 40,
+    minHeight: 48,
+    maxHeight: 120,
     borderWidth: 1.5,
     marginHorizontal: 10,
     paddingHorizontal: 12,
+    paddingTop: 12,
+    paddingBottom: 12,
     fontFamily: 'JetBrainsMono_400Regular',
     fontSize: 14,
   },
-  iconBtn: { borderWidth: 1.5, width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  iconBtn: { borderWidth: 1.5, width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   topContainer: { paddingHorizontal: 16, paddingTop: 15, paddingBottom: 5 },
   bannerWrapper: {
     width: '100%',
