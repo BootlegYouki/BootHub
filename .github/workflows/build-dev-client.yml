@@ -18,7 +18,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 9
+          version: 10
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -30,10 +30,23 @@ jobs:
         run: pnpm install
 
       - name: Expo Prebuild (Generate iOS folder with dev client)
-        run: npx expo prebuild --platform ios --clean
+        run: npx expo prebuild --platform ios --clean --no-install
 
       - name: Install CocoaPods
         run: |
+          python3 -c '
+          import os
+          if os.path.exists("ios/Podfile"):
+              with open("ios/Podfile", "r") as f:
+                  content = f.read()
+              target = "post_install do |installer|"
+              insertion = "\n  installer.pods_project.targets.each do |target|\n    target.build_configurations.each do |config|\n      config.build_settings[\"CODE_SIGNING_ALLOWED\"] = \"NO\"\n      config.build_settings[\"CODE_SIGNING_REQUIRED\"] = \"NO\"\n    end\n  end\n"
+              if target in content and insertion not in content:
+                  content = content.replace(target, target + insertion)
+                  with open("ios/Podfile", "w") as f:
+                      f.write(content)
+                  print("Podfile updated successfully to disable code signing.")
+          '
           cd ios
           pod install
 
