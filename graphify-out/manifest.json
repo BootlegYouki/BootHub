@@ -160,13 +160,13 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\app.json": {
-    "mtime": 1780544453.6456373,
-    "ast_hash": "7cd072b4b4ded12d0638fa5c591e0b6e",
+    "mtime": 1780545698.2563512,
+    "ast_hash": "c29f05eabafa119fae62890060925dfb",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\App.tsx": {
-    "mtime": 1780544967.9463706,
-    "ast_hash": "fda03f77fefeeaa273aa4da21feaa783",
+    "mtime": 1780552189.3264787,
+    "ast_hash": "193823e0509c759fc75a115534bc8a13",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\eslint.config.js": {
@@ -180,8 +180,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\package.json": {
-    "mtime": 1780543107.796811,
-    "ast_hash": "7f70850b77039b908a5f28d9335f4d50",
+    "mtime": 1780551977.462819,
+    "ast_hash": "a3d48fae3f93d7ebfdde8c8b825d2164",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\tsconfig.json": {
@@ -220,8 +220,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\tui-container.tsx": {
-    "mtime": 1780534621.6426728,
-    "ast_hash": "3be47261fa0775c10d94626053b76db1",
+    "mtime": 1780551152.2350721,
+    "ast_hash": "e31d094fa07c269a59e6ba1af80c99e8",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\tui-drawer.tsx": {
@@ -230,8 +230,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\tui-header.tsx": {
-    "mtime": 1780450065.8134549,
-    "ast_hash": "5353ccf32ee28bfc75035f1951998efa",
+    "mtime": 1780550795.3148787,
+    "ast_hash": "7c90c9909a76f63c6e65b19dde28beb3",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\tui-input.tsx": {
@@ -295,13 +295,13 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\.expo\\devices.json": {
-    "mtime": 1780543873.7710118,
-    "ast_hash": "24db11b25172bba2d21181eec88dd634",
+    "mtime": 1780546315.9898438,
+    "ast_hash": "6c3a7fba141692b14869ed3b8bef10d1",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\scripts\\convert-png-to-svg.py": {
-    "mtime": 1780530005.2041457,
-    "ast_hash": "2370f61e1519dabc5dcc453e364a9ccf",
+    "mtime": 1780550769.7163067,
+    "ast_hash": "811f4af7b19d4aba0dcd93c576903950",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\banner-svg.tsx": {
@@ -310,8 +310,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\icon-svg.tsx": {
-    "mtime": 1780530012.716833,
-    "ast_hash": "f24a77bb4f3f3ff1a858dd56706d47ae",
+    "mtime": 1780550779.2413251,
+    "ast_hash": "aa9eb343456746dca5625ad12fdd53cf",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\logo-svg.tsx": {
@@ -329,24 +329,9 @@
     "ast_hash": "4a0be6c9a34011327dc1d11df38f3e01",
     "semantic_hash": ""
   },
-  "E:\\Github\\BootHub\\assets\\banner.svg": {
-    "mtime": 1780529550.024407,
-    "ast_hash": "43dba8b80e31ea1e6d88e4e64c5d6c3d",
-    "semantic_hash": ""
-  },
-  "E:\\Github\\BootHub\\assets\\darkmode.png": {
-    "mtime": 1780529104.9340444,
-    "ast_hash": "2b16629e3779aa27ff074bee872c3d04",
-    "semantic_hash": ""
-  },
-  "E:\\Github\\BootHub\\assets\\lightmode.png": {
-    "mtime": 1780529108.233636,
-    "ast_hash": "00c3a3f29dd64ce03322600e66d820ef",
-    "semantic_hash": ""
-  },
   "E:\\Github\\BootHub\\src\\components\\link-preview.tsx": {
-    "mtime": 1780543044.5387745,
-    "ast_hash": "00b782ef28d49b4d069f52150b6471e4",
+    "mtime": 1780550940.4268212,
+    "ast_hash": "c141d4270af43333786b25fff4b5d4dd",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\.expo\\web\\cache\\production\\images\\favicon\\favicon-199cee9f49a5c61203e164c69dcb619e810715ec705b310c4ff18514ea26b008-contain-transparent\\favicon-48.png": {
@@ -365,8 +350,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\PhotosScreen.tsx": {
-    "mtime": 1780543036.998309,
-    "ast_hash": "bb546c32096bad1417c08a1c7a4835c9",
+    "mtime": 1780552036.5242798,
+    "ast_hash": "27905c4a81628b37e46259cced0526e0",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\TextsScreen.tsx": {
@@ -375,8 +360,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\utils\\helpers.ts": {
-    "mtime": 1780538481.2602587,
-    "ast_hash": "2403aba1cb7b5267b132c9f5f98df05f",
+    "mtime": 1780546482.650943,
+    "ast_hash": "f358ed06bced596f152773a0d2811708",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\.github\\workflows\\build-dev-client.yml": {
@@ -385,13 +370,18 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\photo-picker-sheet.tsx": {
-    "mtime": 1780543040.6312287,
-    "ast_hash": "87591351189eb9aa03079937a1909979",
+    "mtime": 1780549890.1984024,
+    "ast_hash": "8fd3094cddc9ab13715449038484950c",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\sidestore.json": {
-    "mtime": 1780544453.6461546,
-    "ast_hash": "bcc4c5b4c5af2d07743e8eaa0ce89823",
+    "mtime": 1780545698.2568595,
+    "ast_hash": "b8b863338cc9914f7c06845b4032e68c",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\assets\\icon-to-svg.png": {
+    "mtime": 1780550547.8137288,
+    "ast_hash": "cbd62aa5c8288bd9a30a71f747c2e008",
     "semantic_hash": ""
   }
 }

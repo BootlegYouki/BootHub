@@ -14,6 +14,7 @@ import {
   PanResponder,
   Dimensions,
   Image as RNImage,
+  RefreshControl,
 } from 'react-native';
 import { Image } from 'expo-image';
 import Animated, {
@@ -33,6 +34,7 @@ import {
 } from '@expo-google-fonts/jetbrains-mono';
 import {
   Inbox,
+  Archive,
   Sun,
   Moon,
   Link2,
@@ -46,15 +48,18 @@ import {
   Share2,
   ListChecks,
   ArrowLeft,
+  Copy,
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Clipboard from 'expo-clipboard';
+import * as MediaLibrary from 'expo-media-library';
 
 import { ThemeProvider, useTheme } from './src/theme/theme-provider';
 import { TuiHeader } from './src/components/tui-header';
 import { TuiText } from './src/components/tui-text';
 import { TuiContainer } from './src/components/tui-container';
-import { BannerSvg } from './src/components/banner-svg';
 import { getItems, deleteItem, addItem, addMultiplePhotos, DumpItem, DumpType } from './src/utils/storage';
 import { ensureFileUri, getActualType } from './src/utils/helpers';
 import { LinksScreen } from './src/screens/LinksScreen';
@@ -120,10 +125,15 @@ function MainApp() {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<DumpType>('link');
   const [items, setItems] = useState<DumpItem[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [contextMenuPhoto, setContextMenuPhoto] = useState<{ item: DumpItem; bounds: PhotoLayout } | null>(null);
   const [sortAscending, setSortAscending] = useState<boolean>(false);
   const [isSelectionMode, setIsSelectionMode] = useState<boolean>(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPhotoSheetOpen, setIsPhotoSheetOpen] = useState<boolean>(false);
+  const [photoSheetState, setPhotoSheetState] = useState({ isAllSelected: false, sortAscending: false });
+  const [photoSheetTriggerSelectAll, setPhotoSheetTriggerSelectAll] = useState(0);
+  const [photoSheetTriggerSort, setPhotoSheetTriggerSort] = useState(0);
   const photoSheetHeight = useSharedValue(0);
   const [activeFullscreenPhotoIndex, setActiveFullscreenPhotoIndex] = useState<number | null>(null);
 
@@ -140,6 +150,17 @@ function MainApp() {
   const endHeight = useSharedValue(0);
 
   const animationProgress = useSharedValue(0);
+  // 0 = idle/open, 1 = zooming-in, 2 = zooming-out
+  // This is a shared value (UI-thread-synchronous) so useAnimatedStyle never
+  // reads a stale JS-state snapshot on the first frame.
+  const zoomPhase = useSharedValue(0);
+  // Separate opacity for the header/footer controls so they can fade in
+  // independently after the zoom completes, not during it.
+  const controlsOpacity = useSharedValue(0);
+  const isHoldingPhoto = useSharedValue(0);
+  const barBackgroundOpacity = useSharedValue(1);
+  // Tracks whether controls are currently visible (toggled by tapping the photo)
+  const controlsVisible = useRef<boolean>(true);
   const measurePhotoRef = useRef<
     ((id: string, callback: (bounds: PhotoLayout | null) => void) => void) | null
   >(null);
@@ -242,18 +263,12 @@ function MainApp() {
     const padding = interpolate(
       totalHeight,
       [0, 50],
-      [targetPadding, 12],
+      [targetPadding + 8, 12],
       'clamp'
     );
 
-    const isFullscreen = activeFullscreenPhotoIndex !== null;
-    const translateYVal = withTiming(isFullscreen ? 100 : 0, { duration: 250 });
-    const opacity = withTiming(isFullscreen ? 0 : 1, { duration: 250 });
-
     return {
       paddingBottom: padding,
-      opacity,
-      transform: [{ translateY: translateYVal }],
     };
   });
 
@@ -296,6 +311,78 @@ function MainApp() {
       }
       return next;
     });
+  };
+
+  const handleCopyPhoto = async (item: DumpItem) => {
+    try {
+      let fileUri = item.value;
+      
+      if (fileUri.startsWith('ph://')) {
+        const assetId = fileUri.slice(5);
+        const assetInfo = await MediaLibrary.getAssetInfoAsync(assetId);
+        if (assetInfo && assetInfo.localUri) {
+          fileUri = assetInfo.localUri;
+        } else {
+          throw new Error('Could not resolve local path for photo library asset.');
+        }
+      }
+      
+      if (fileUri.startsWith('http://') || fileUri.startsWith('https://')) {
+        const filename = fileUri.split('/').pop()?.split('?')[0] || 'temp_image.jpg';
+        const tempFileUri = `${FileSystem.cacheDirectory}${Date.now()}_${filename}`;
+        const downloadResult = await FileSystem.downloadAsync(fileUri, tempFileUri);
+        fileUri = downloadResult.uri;
+      }
+      
+      const base64 = await FileSystem.readAsStringAsync(ensureFileUri(fileUri), {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      
+      await Clipboard.setImageAsync(base64);
+      setContextMenuPhoto(null);
+      Alert.alert('Success', 'Photo copied to clipboard.');
+    } catch (e: any) {
+      console.error('Failed to copy photo:', e);
+      Alert.alert('Copy Error', e?.message || String(e));
+    }
+  };
+
+  const handleSharePhoto = async (item: DumpItem) => {
+    try {
+      const isSharingAvailable = await Sharing.isAvailableAsync();
+      if (isSharingAvailable) {
+        await Sharing.shareAsync(ensureFileUri(item.value));
+      } else {
+        await Share.share({ message: item.value });
+      }
+      setContextMenuPhoto(null);
+    } catch (e: any) {
+      console.error('Sharing failed:', e);
+      Alert.alert('Share Error', e?.message || String(e));
+    }
+  };
+
+  const handleDeletePhoto = async (item: DumpItem) => {
+    Alert.alert(
+      'Delete Photo',
+      'Are you sure you want to delete this photo?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const updatedList = await deleteItem(item.id);
+              setItems(updatedList);
+              setContextMenuPhoto(null);
+            } catch (e) {
+              console.error(e);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleBulkShare = async () => {
@@ -396,8 +483,14 @@ function MainApp() {
     endWidth.value = endBounds.width;
     endHeight.value = endBounds.height;
 
-    // Reset animation progress synchronously before the overlay mounts to prevent first-frame controls flash
+    // Reset synchronously on the UI thread — zoomPhase=1 means "zooming in".
+    // This MUST happen before React mounts the overlay so the first frame
+    // never sees zoomPhase=0 (idle) with opacity=1.
     animationProgress.value = 0;
+    controlsOpacity.value = 0;
+    controlsVisible.current = true;
+    zoomPhase.value = 1;
+    barBackgroundOpacity.value = 1;
 
     setIsZooming('in');
     const index = sortedItems.findIndex((x) => x.id === item.id);
@@ -436,8 +529,15 @@ function MainApp() {
         endHeight.value = currentBounds.height;
 
         setIsZooming('out');
+        zoomPhase.value = 2;
+        // Snap controls invisible immediately before zoom-out plays
+        controlsOpacity.value = 0;
         animationProgress.value = 1;
         animationProgress.value = withTiming(0, { duration: 250 }, () => {
+          // Do NOT reset zoomPhase here — it fires on the UI thread while the
+          // overlay is still mounted. Resetting to 0 would make controls flash
+          // for 1-2 frames before React unmounts the overlay.
+          // zoomPhase resets to 0 in the useEffect below once unmounted.
           runOnJS(setActiveFullscreenPhotoIndex)(null);
           runOnJS(setIsZooming)(null);
           translateY.value = 0;
@@ -453,14 +553,27 @@ function MainApp() {
   useEffect(() => {
     if (isZooming === 'in') {
       animationProgress.value = 0;
+      controlsOpacity.value = 0;
       // requestAnimationFrame ensures the native view has rendered and is ready
       requestAnimationFrame(() => {
         animationProgress.value = withTiming(1, { duration: 250 }, () => {
+          zoomPhase.value = 0;
           runOnJS(setIsZooming)(null);
+          // Fade controls in after zoom fully completes
+          controlsOpacity.value = withTiming(1, { duration: 120 });
         });
       });
     }
   }, [isZooming]);
+
+  // Reset zoomPhase after the overlay has fully unmounted.
+  // This must happen here (JS thread, post-render) not in the animation callback
+  // (UI thread, pre-unmount) to avoid a 1-2 frame controls flash.
+  useEffect(() => {
+    if (activeFullscreenPhotoIndex === null) {
+      zoomPhase.value = 0;
+    }
+  }, [activeFullscreenPhotoIndex]);
 
   useEffect(() => {
     latestStateRef.current = {
@@ -502,28 +615,31 @@ function MainApp() {
   });
 
   const backdropStyle = useAnimatedStyle(() => {
-    const opacity = isZooming 
-      ? animationProgress.value 
-      : interpolate(translateY.value, [0, 120], [1, 0], 'clamp');
-
+    // Use zoomPhase (shared value, UI-thread-synchronous) so the first frame
+    // is never stale. 0 = idle/open, 1 = zooming-in, 2 = zooming-out.
+    if (zoomPhase.value === 1 || zoomPhase.value === 2) {
+      return { opacity: animationProgress.value };
+    }
     return {
-      opacity,
+      opacity: interpolate(translateY.value, [0, 120], [1, 0], 'clamp'),
     };
   });
 
   const controlsStyle = useAnimatedStyle(() => {
-    if (isZooming === 'in') {
-      return {
-        opacity: interpolate(animationProgress.value, [0, 1], [0, 1], 'clamp'),
-      };
+    // While zooming in or out, keep controls fully hidden
+    if (zoomPhase.value === 1 || zoomPhase.value === 2) {
+      return { opacity: 0 };
     }
-    if (isZooming === 'out') {
-      return {
-        opacity: 0,
-      };
-    }
+    // Fully open: fade-in opacity attenuated by drag-dismiss
+    const baseOpacity = interpolate(translateY.value, [0, 100], [1, 0], 'clamp');
     return {
-      opacity: interpolate(translateY.value, [0, 100], [1, 0], 'clamp'),
+      opacity: controlsOpacity.value * baseOpacity,
+    };
+  });
+
+  const barBgStyle = useAnimatedStyle(() => {
+    return {
+      opacity: barBackgroundOpacity.value,
     };
   });
 
@@ -552,6 +668,8 @@ function MainApp() {
     const borderWidth = interpolate(animationProgress.value, [0, 1], [1.5, 0]);
     const padding = interpolate(animationProgress.value, [0, 1], [6, 0]);
 
+    const opacity = isZooming ? 1 : 0;
+
     return {
       position: 'absolute',
       left,
@@ -561,10 +679,23 @@ function MainApp() {
       borderWidth,
       padding,
       borderColor: colors.primary + (isDark ? '40' : '26'),
-      backgroundColor: colors.card,
+      backgroundColor: 'transparent',
       overflow: 'hidden',
+      opacity,
     };
   });
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const data = await getItems();
+      setItems(data);
+    } catch (e) {
+      console.error('Failed to refresh items:', e);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     const loadItems = async () => {
@@ -621,6 +752,7 @@ function MainApp() {
   const toggleTheme = () => setThemeMode(isDark ? 'light' : 'dark');
 
   const dynamicSubtitle = activeTab === 'photo' ? 'photos' : activeTab + 's';
+  const capitalizedTitle = activeTab.charAt(0).toUpperCase() + activeTab.slice(1) + 's';
 
   const themeToggle = (
     <Pressable
@@ -657,32 +789,23 @@ function MainApp() {
         {/* 01: HEADER */}
         <TuiHeader
           title="BootHub"
-          subtitle={dynamicSubtitle}
-          Icon={Inbox}
+          subtitle="by BootlegYouki"
+          Icon={Archive}
           rightElement={themeToggle}
         />
 
-        {/* 02: BANNER + TABS */}
+        {/* 02: TABS */}
         <View style={styles.topContainer}>
-          <TuiContainer label="banner" accentBorder={true}>
-            <View style={styles.bannerWrapper}>
-              <BannerSvg color={colors.primary} />
-            </View>
-          </TuiContainer>
-
           <View style={styles.navRow}>
             <TabButton isActive={activeTab === 'link'} onPress={() => setActiveTab('link')} label="Links" Icon={Link2} />
             <TabButton isActive={activeTab === 'text'} onPress={() => setActiveTab('text')} label="Texts" Icon={FileText} />
             <TabButton isActive={activeTab === 'photo'} onPress={() => setActiveTab('photo')} label="Photos" Icon={ImageIcon} />
           </View>
-        </View>
 
-        {/* 03: SCROLLABLE FEED */}
-        <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Section header row */}
           <View style={styles.sectionHeaderRow}>
             <TuiText size="lg" weight="bold" style={[styles.sectionTitle, { color: colors.primary }]}>
-              {activeTab.toUpperCase()}S
+              {capitalizedTitle} : {sortedItems.length}
             </TuiText>
             <View style={styles.headerActions}>
               {isSelectionMode && (
@@ -748,6 +871,21 @@ function MainApp() {
               </Pressable>
             </View>
           </View>
+        </View>
+
+        {/* 03: SCROLLABLE FEED */}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+              progressBackgroundColor={isDark ? '#27272A' : '#F4F4F5'}
+            />
+          }
+        >
 
           {/* Active screen */}
           {activeTab === 'link' && (
@@ -773,7 +911,8 @@ function MainApp() {
               selectedIds={selectedIds}
               toggleSelect={toggleSelect}
               onPhotoPress={handlePhotoPress}
-              activePhotoId={activeFullscreenPhoto?.id}
+              onPhotoLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })}
+              activePhotoId={activeFullscreenPhoto?.id || contextMenuPhoto?.item.id}
               registerMeasureFn={(fn) => {
                 measurePhotoRef.current = fn;
               }}
@@ -797,14 +936,7 @@ function MainApp() {
               containerStyle,
             ]}
           >
-            {/* Stark theme-based backdrop that fades in/out separately, preventing the image from fading */}
-            <Animated.View
-              style={[
-                StyleSheet.absoluteFillObject,
-                { backgroundColor: colors.background },
-                backdropStyle,
-              ]}
-            />
+            {/* Completely transparent background */}
             {/* FlatList mounted unconditionally inside the overlay to pre-render and load images in background */}
             <View
               style={[
@@ -835,142 +967,185 @@ function MainApp() {
                 }}
                 renderItem={({ item }) => (
                   <View style={{ width: windowWidth, height: windowHeight, justifyContent: 'center', alignItems: 'center' }}>
-                    <Image
-                      source={{ uri: ensureFileUri(item.value) }}
+                    <Pressable
+                      onPress={() => {
+                        const next = !controlsVisible.current;
+                        controlsVisible.current = next;
+                        controlsOpacity.value = withTiming(next ? 1 : 0, { duration: 150 });
+                      }}
                       style={{ width: '100%', height: '100%' }}
-                      contentFit="contain"
-                      transition={0}
-                    />
+                    >
+                      <Image
+                        source={{ uri: ensureFileUri(item.value) }}
+                        style={{ width: '100%', height: '100%' }}
+                        contentFit="contain"
+                        transition={0}
+                      />
+                    </Pressable>
                   </View>
                 )}
                 style={{ width: '100%', height: '100%' }}
               />
             </View>
 
-            {/* Transition Zoom Image (rendered on top of FlatList during zoom transitions) */}
-            {isZooming && (
-              <Animated.View style={animatedTransitionStyle} pointerEvents="none">
-                <Image
-                  source={{ uri: ensureFileUri(activeFullscreenPhoto.value) }}
-                  style={{ width: '100%', height: '100%' }}
-                  contentFit="cover"
-                  transition={0}
-                />
-              </Animated.View>
-            )}
-
-            {/* Top Controls Overlay */}
-            <Animated.View
-              pointerEvents="box-none"
-              style={[
-                {
-                  position: 'absolute',
-                  top: insets.top > 0 ? insets.top + 8 : 16,
-                  left: 16,
-                  right: 16,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  zIndex: 950,
-                },
-                controlsStyle,
-              ]}
-            >
-              {/* Top Left: Back Button */}
-              <Pressable
-                onPress={handleCloseFullscreen}
-                style={({ pressed }) => [
-                  styles.headerActionBtn,
-                  {
-                    borderColor: colors.primary,
-                    backgroundColor: pressed ? colors.primary + '25' : colors.card + '80',
-                  },
-                ]}
-              >
-                <ArrowLeft size={16} color={colors.primary} />
-              </Pressable>
-
-              {/* Top Middle: Date/Time Stamp */}
-              <View
-                style={{
-                  backgroundColor: colors.card + '80',
-                  borderWidth: 1.5,
-                  borderColor: colors.primary,
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                }}
-              >
-                <TuiText weight="bold" size="sm" style={{ color: colors.primary }}>
-                  {activeFullscreenPhoto.label}
-                </TuiText>
-              </View>
-
-              {/* Spacer to align center */}
-              <View style={{ width: 40, height: 40 }} />
+            {/* Transition Zoom Image (rendered on top of FlatList during zoom transitions, kept mounted to avoid reload flicker) */}
+            <Animated.View style={animatedTransitionStyle} pointerEvents="none">
+              <Image
+                source={{ uri: ensureFileUri(activeFullscreenPhoto.value) }}
+                style={{ width: '100%', height: '100%' }}
+                contentFit="cover"
+                transition={0}
+              />
             </Animated.View>
 
-            {/* Bottom Controls Overlay */}
+            {/* Top Header Bar Container */}
             <Animated.View
-              pointerEvents="box-none"
               style={[
                 {
                   position: 'absolute',
-                  bottom: insets.bottom > 0 ? insets.bottom + 8 : 16,
-                  left: 16,
-                  right: 16,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: insets.top > 0 ? insets.top + 56 : 64,
                   zIndex: 950,
+                  opacity: 0,
                 },
                 controlsStyle,
               ]}
             >
-              {/* Bottom Left: Share Button */}
-              <Pressable
-                onPress={handleShareActivePhoto}
-                style={({ pressed }) => [
-                  styles.iconBtn,
+              {/* Dynamic Theme Background */}
+              <Animated.View
+                style={[
+                  StyleSheet.absoluteFillObject,
                   {
-                    borderColor: colors.primary,
-                    backgroundColor: pressed ? colors.primary + '25' : colors.card + '80',
+                    backgroundColor: colors.background,
+                    borderBottomWidth: 1.5,
+                    borderBottomColor: colors.primary + (isDark ? '40' : '26'),
                   },
+                  barBgStyle,
                 ]}
+              />
+              
+              {/* Top Controls Layout */}
+              <View
+                style={{
+                  flex: 1,
+                  paddingTop: insets.top > 0 ? insets.top : 8,
+                  paddingHorizontal: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
               >
-                <Share2 size={16} color={colors.primary} />
-              </Pressable>
+                {/* Top Left: Back Button */}
+                <Pressable
+                  onPress={handleCloseFullscreen}
+                  style={({ pressed }) => [
+                    styles.headerActionBtn,
+                    {
+                      borderColor: colors.primary,
+                      backgroundColor: pressed ? colors.primary + '25' : colors.card + '80',
+                    },
+                  ]}
+                >
+                  <ArrowLeft size={16} color={colors.primary} />
+                </Pressable>
 
-              {/* Bottom Right: Delete Button */}
-              <Pressable
-                onPress={handleDeleteActivePhoto}
-                style={({ pressed }) => [
-                  styles.iconBtn,
-                  {
-                    borderColor: colors.destructive || '#EF4444',
-                    backgroundColor: pressed ? (colors.destructive || '#EF4444') + '25' : colors.card + '80',
-                  },
-                ]}
+                {/* Top Middle: Date/Time Stamp */}
+                <View
+                  style={{
+                    backgroundColor: colors.card + '80',
+                    borderWidth: 1.5,
+                    borderColor: colors.primary,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                  }}
+                >
+                  <TuiText weight="bold" size="sm" style={{ color: colors.primary }}>
+                    {activeFullscreenPhoto.label}
+                  </TuiText>
+                </View>
+
+                {/* Spacer to align center */}
+                <View style={{ width: 40, height: 40 }} />
+              </View>
+            </Animated.View>
+
+            {/* Bottom Footer Bar Container */}
+            <Animated.View
+              style={[
+                {
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: insets.bottom > 0 ? insets.bottom + 64 : 72,
+                  zIndex: 950,
+                  opacity: 0,
+                },
+                controlsStyle,
+              ]}
+            >
+
+              {/* Bottom Controls Layout */}
+              <View
+                style={{
+                  flex: 1,
+                  paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
+                  paddingHorizontal: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingTop: 8,
+                }}
               >
-                <Trash2 size={16} color={colors.destructive || '#EF4444'} />
-              </Pressable>
+                {/* Bottom Left: Share Button */}
+                <Pressable
+                  onPress={handleShareActivePhoto}
+                  style={({ pressed }) => [
+                    styles.iconBtn,
+                    {
+                      borderColor: colors.primary,
+                      backgroundColor: pressed ? colors.primary + '25' : colors.card + '80',
+                    },
+                  ]}
+                >
+                  <Share2 size={16} color={colors.primary} />
+                </Pressable>
+
+                {/* Bottom Right: Delete Button */}
+                <Pressable
+                  onPress={handleDeleteActivePhoto}
+                  style={({ pressed }) => [
+                    styles.iconBtn,
+                    {
+                      borderColor: colors.destructive || '#EF4444',
+                      backgroundColor: pressed ? (colors.destructive || '#EF4444') + '25' : colors.card + '80',
+                    },
+                  ]}
+                >
+                  <Trash2 size={16} color={colors.destructive || '#EF4444'} />
+                </Pressable>
+              </View>
             </Animated.View>
           </Animated.View>
         )}
 
         {/* 04: BOTTOM BAR */}
           <Animated.View
+            pointerEvents={activeFullscreenPhotoIndex !== null ? 'none' : 'auto'}
             style={[
               styles.bottomBar,
               {
                 borderTopColor: colors.primary + '30',
                 backgroundColor: colors.background,
-                zIndex: 1000,
+                zIndex: activeFullscreenPhotoIndex !== null ? 0 : 1000,
               },
               animatedBottomBarStyle,
             ]}
           >
             {isSelectionMode ? (
-              <View style={styles.bottomBarRow}>
+              <View style={[styles.bottomBarRow, { justifyContent: 'space-between' }]}>
                 <Pressable
                   onPress={handleBulkShare}
                   disabled={selectedIds.size === 0}
@@ -985,13 +1160,7 @@ function MainApp() {
                 >
                   <Share2 size={16} color={colors.primary} />
                 </Pressable>
- 
-                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                  <TuiText weight="bold" size="md" style={{ color: colors.foreground }}>
-                    {selectedIds.size} {selectedIds.size === 1 ? 'Item' : 'Items'} Selected
-                  </TuiText>
-                </View>
- 
+
                 <Pressable
                   onPress={handleBulkDelete}
                   disabled={selectedIds.size === 0}
@@ -1021,7 +1190,7 @@ function MainApp() {
                 >
                   <ImageIcon size={16} color={colors.primary} />
                 </Pressable>
- 
+
                 <TextInput
                   style={[
                     styles.input,
@@ -1041,19 +1210,58 @@ function MainApp() {
                     setActiveFullscreenPhotoIndex(null);
                   }}
                 />
- 
-                <Pressable
-                  onPress={handleSubmit}
-                  style={({ pressed }) => [
-                    styles.iconBtn,
-                    {
-                      borderColor: colors.primary,
-                      backgroundColor: pressed ? colors.primary + '25' : 'transparent',
-                    },
-                  ]}
-                >
-                  <Check size={16} color={colors.primary} />
-                </Pressable>
+
+                {isPhotoSheetOpen ? (
+                  <>
+                    <Pressable
+                      onPress={() => setPhotoSheetTriggerSelectAll((p) => p + 1)}
+                      style={({ pressed }) => [
+                        styles.iconBtn,
+                        {
+                          borderColor: colors.primary,
+                          backgroundColor: photoSheetState.isAllSelected
+                            ? colors.primary + '25'
+                            : pressed
+                            ? colors.primary + '15'
+                            : 'transparent',
+                          marginRight: 8,
+                        },
+                      ]}
+                    >
+                      <ListChecks size={16} color={colors.primary} />
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => setPhotoSheetTriggerSort((p) => p + 1)}
+                      style={({ pressed }) => [
+                        styles.iconBtn,
+                        {
+                          borderColor: colors.primary,
+                          backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+                        },
+                      ]}
+                    >
+                      {photoSheetState.sortAscending ? (
+                        <ArrowUp size={16} color={colors.primary} />
+                      ) : (
+                        <ArrowDown size={16} color={colors.primary} />
+                      )}
+                    </Pressable>
+                  </>
+                ) : (
+                  <Pressable
+                    onPress={handleSubmit}
+                    style={({ pressed }) => [
+                      styles.iconBtn,
+                      {
+                        borderColor: colors.primary,
+                        backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+                      },
+                    ]}
+                  >
+                    <Check size={16} color={colors.primary} />
+                  </Pressable>
+                )}
               </View>
             )}
           </Animated.View>
@@ -1082,12 +1290,218 @@ function MainApp() {
           <PhotoPickerSheet
             onClose={() => setIsPhotoSheetOpen(false)}
             onAddPhotos={handleAddMultiplePhotos}
+            triggerSelectAll={photoSheetTriggerSelectAll}
+            triggerSort={photoSheetTriggerSort}
+            onStateChange={setPhotoSheetState}
           />
         )}
       </Animated.View>
+
+      {/* Context Menu Overlay */}
+      {contextMenuPhoto && (
+        <ContextMenuOverlay
+          contextMenuPhoto={contextMenuPhoto}
+          onClose={() => setContextMenuPhoto(null)}
+          onCopy={() => handleCopyPhoto(contextMenuPhoto.item)}
+          onShare={() => handleSharePhoto(contextMenuPhoto.item)}
+          onDelete={() => handleDeletePhoto(contextMenuPhoto.item)}
+        />
+      )}
     </View>
   );
 }
+
+// ─── Context Menu Overlay ──────────────────────────────────────────────────────
+
+interface ContextMenuOverlayProps {
+  contextMenuPhoto: { item: DumpItem; bounds: PhotoLayout };
+  onClose: () => void;
+  onCopy: () => void;
+  onShare: () => void;
+  onDelete: () => void;
+}
+
+const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
+  contextMenuPhoto,
+  onClose,
+  onCopy,
+  onShare,
+  onDelete,
+}) => {
+  const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
+  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+  const { item, bounds } = contextMenuPhoto;
+
+  const scale = useSharedValue(0.9);
+  const opacity = useSharedValue(0);
+
+  useEffect(() => {
+    scale.value = withTiming(1, { duration: 150 });
+    opacity.value = withTiming(1, { duration: 150 });
+  }, []);
+
+  const animatedPreviewStyle = useAnimatedStyle(() => {
+    return {
+      opacity: opacity.value,
+      transform: [{ scale: scale.value }],
+    };
+  });
+
+  // Horizontal position
+  const menuWidth = 240;
+  let menuLeft = bounds.x + (bounds.width - menuWidth) / 2;
+  if (menuLeft < 16) {
+    menuLeft = 16;
+  } else if (menuLeft + menuWidth > screenWidth - 16) {
+    menuLeft = screenWidth - 16 - menuWidth;
+  }
+
+  // Vertical position
+  const menuHeight = 136; // 3 items of 44px each plus borders/separators
+  const spaceAbove = bounds.y - insets.top;
+  const spaceBelow = screenHeight - insets.bottom - (bounds.y + bounds.height);
+  const showBelow = spaceBelow > spaceAbove;
+
+  let menuTop = 0;
+  if (showBelow) {
+    menuTop = bounds.y + bounds.height + 12;
+  } else {
+    menuTop = bounds.y - menuHeight - 12;
+  }
+
+  // Fallback bounds
+  if (menuTop < insets.top + 10) {
+    menuTop = insets.top + 10;
+  } else if (menuTop + menuHeight > screenHeight - insets.bottom - 10) {
+    menuTop = screenHeight - insets.bottom - 10 - menuHeight;
+  }
+
+  return (
+    <View style={[StyleSheet.absoluteFillObject, { zIndex: 1500 }]}>
+      {/* Backdrop */}
+      <Pressable
+        onPress={onClose}
+        style={[
+          StyleSheet.absoluteFillObject,
+          {
+            backgroundColor: 'rgba(0,0,0,0.6)',
+          },
+        ]}
+      />
+
+      {/* Lifted Photo Preview */}
+      <Animated.View
+        style={[
+          animatedPreviewStyle,
+          {
+            position: 'absolute',
+            left: bounds.x,
+            top: bounds.y,
+            width: bounds.width,
+            height: bounds.height,
+            zIndex: 1600,
+            shadowColor: '#000000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 10,
+          },
+        ]}
+      >
+        <Image
+          source={{ uri: ensureFileUri(item.value) }}
+          style={{
+            width: '100%',
+            height: '100%',
+            borderWidth: 1.5,
+            borderColor: colors.primary,
+            borderRadius: 8,
+          }}
+          contentFit="cover"
+          transition={0}
+        />
+      </Animated.View>
+
+      {/* Context Menu Container */}
+      <Animated.View
+        style={[
+          animatedPreviewStyle,
+          {
+            position: 'absolute',
+            left: menuLeft,
+            top: menuTop,
+            width: menuWidth,
+            height: menuHeight,
+            zIndex: 1700,
+            borderRadius: 14,
+            borderWidth: 1.5,
+            borderColor: colors.primary,
+            backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
+            overflow: 'hidden',
+            shadowColor: '#000000',
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.25,
+            shadowRadius: 10,
+            elevation: 12,
+          },
+        ]}
+      >
+        {/* Copy Row */}
+        <Pressable
+          onPress={onCopy}
+          style={({ pressed }) => [
+            styles.menuRow,
+            {
+              backgroundColor: pressed ? colors.primary + '15' : 'transparent',
+              borderBottomWidth: 1,
+              borderBottomColor: colors.primary + '20',
+            },
+          ]}
+        >
+          <TuiText size="sm" style={{ color: colors.foreground }}>
+            Copy
+          </TuiText>
+          <Copy size={16} color={colors.foreground} />
+        </Pressable>
+
+        {/* Share Row */}
+        <Pressable
+          onPress={onShare}
+          style={({ pressed }) => [
+            styles.menuRow,
+            {
+              backgroundColor: pressed ? colors.primary + '15' : 'transparent',
+              borderBottomWidth: 1,
+              borderBottomColor: colors.primary + '20',
+            },
+          ]}
+        >
+          <TuiText size="sm" style={{ color: colors.foreground }}>
+            Share
+          </TuiText>
+          <Share2 size={16} color={colors.foreground} />
+        </Pressable>
+
+        {/* Delete Row */}
+        <Pressable
+          onPress={onDelete}
+          style={({ pressed }) => [
+            styles.menuRow,
+            {
+              backgroundColor: pressed ? (colors.destructive || '#EF4444') + '15' : 'transparent',
+            },
+          ]}
+        >
+          <TuiText size="sm" style={{ color: colors.destructive || '#EF4444' }}>
+            Delete
+          </TuiText>
+          <Trash2 size={16} color={colors.destructive || '#EF4444'} />
+        </Pressable>
+      </Animated.View>
+    </View>
+  );
+};
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
 
@@ -1119,7 +1533,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   iconBtn: { borderWidth: 1.5, width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  topContainer: { paddingHorizontal: 16, paddingTop: 16 },
+  topContainer: { paddingHorizontal: 16, paddingTop: 15, paddingBottom: 5 },
   bannerWrapper: {
     width: '100%',
     aspectRatio: 412 / 94,
@@ -1134,7 +1548,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  navRow: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 18, gap: 12 },
+  navRow: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: 6, gap: 12 },
   tabSquare: { flex: 1, height: 80, alignItems: 'center', justifyContent: 'center', position: 'relative' },
   borderLeft: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 1.5, zIndex: 5 },
   borderRight: { position: 'absolute', right: 0, top: 0, bottom: 0, width: 1.5, zIndex: 5 },
@@ -1155,10 +1569,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 12,
+    marginTop: 6,
     marginBottom: 8,
   },
   sectionTitle: { letterSpacing: 1.5 },
   headerActions: { flexDirection: 'row', alignItems: 'center' },
   headerActionBtn: { borderWidth: 1.5, width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  menuRow: {
+    height: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+  },
 });

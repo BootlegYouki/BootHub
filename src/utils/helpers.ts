@@ -18,6 +18,10 @@ export const handleOpenUrl = async (url: string) => {
 };
 
 export const ensureFileUri = (uri: string) => {
+  if (!uri) return '';
+  if (uri.startsWith('http://') || uri.startsWith('https://') || uri.startsWith('data:')) {
+    return uri;
+  }
   if (Platform.OS === 'ios') {
     if (uri.startsWith('ph://') || uri.startsWith('assets-library://')) {
       return uri;

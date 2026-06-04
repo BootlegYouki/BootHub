@@ -2,12 +2,13 @@ import os
 import sys
 from PIL import Image
 
-def vectorize_png(img_path, svg_path, component_path=None, threshold=40, trace_dark=False):
+def vectorize_png(img_path, svg_path, component_path=None, threshold=40, trace_dark=False, trace_transparent=False):
     if not os.path.exists(img_path):
         print(f"Error: Source image not found at {img_path}")
         return False
         
-    print(f"Loading image {img_path} (tracing {'dark' if trace_dark else 'light'} pixels)...")
+    mode_str = "transparent" if trace_transparent else ("dark" if trace_dark else "light")
+    print(f"Loading image {img_path} (tracing {mode_str} pixels)...")
     img = Image.open(img_path).convert('RGBA')
     width, height = img.size
     
@@ -19,7 +20,9 @@ def vectorize_png(img_path, svg_path, component_path=None, threshold=40, trace_d
         for x in range(width):
             r, g, b, a = img.getpixel((x, y))
             # Foreground check: check if it's transparent and matches color threshold
-            if trace_dark:
+            if trace_transparent:
+                is_foreground = (a < 30)
+            elif trace_dark:
                 is_foreground = (r + g + b < threshold) and (a > 30)
             else:
                 is_foreground = (r + g + b > threshold) and (a > 30)
@@ -92,6 +95,7 @@ if __name__ == "__main__":
     out_tsx = None
     threshold = 40
     trace_dark = False
+    trace_transparent = False
     
     # Parse remaining arguments
     for arg in sys.argv[3:]:
@@ -101,5 +105,7 @@ if __name__ == "__main__":
             threshold = int(arg)
         elif arg in ['dark', '--dark']:
             trace_dark = True
+        elif arg in ['transparent', '--transparent']:
+            trace_transparent = True
             
-    vectorize_png(in_png, out_svg, out_tsx, threshold, trace_dark)
+    vectorize_png(in_png, out_svg, out_tsx, threshold, trace_dark, trace_transparent)

@@ -252,7 +252,7 @@ export const LinkPreview: React.FC<LinkPreviewProps> = ({ url }) => {
   }
 
   if (!data || (!data.image && !data.title)) {
-    return null; // Collapse gracefully if no preview metadata is found
+    return <View style={{ height: 12 }} />; // Add bottom spacing if no preview is available
   }
 
   return (

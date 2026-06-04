@@ -19,6 +19,9 @@ import { TuiText } from './tui-text';
 interface PhotoPickerSheetProps {
   onClose: () => void;
   onAddPhotos: (uris: string[]) => void;
+  triggerSelectAll?: number;
+  triggerSort?: number;
+  onStateChange?: (state: { isAllSelected: boolean; sortAscending: boolean }) => void;
 }
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -29,8 +32,11 @@ const IMAGE_SIZE = (screenWidth - COLUMN_MARGIN * (NUM_COLUMNS + 1)) / NUM_COLUM
 export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
   onClose,
   onAddPhotos,
+  triggerSelectAll = 0,
+  triggerSort = 0,
+  onStateChange,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   // Permissions state
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -44,6 +50,47 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
 
   // Selection state
   const [selectedUris, setSelectedUris] = useState<string[]>([]);
+
+  // Sorting state
+  const [sortAscending, setSortAscending] = useState<boolean>(false);
+
+  const sortedPhotos = React.useMemo(() => {
+    return sortAscending ? [...photos].reverse() : photos;
+  }, [photos, sortAscending]);
+
+  useEffect(() => {
+    if (triggerSelectAll > 0) {
+      handleToggleSelectAll();
+    }
+  }, [triggerSelectAll]);
+
+  useEffect(() => {
+    if (triggerSort > 0) {
+      setSortAscending((prev) => !prev);
+    }
+  }, [triggerSort]);
+
+  useEffect(() => {
+    const isAll = photos.length > 0 && photos.every((p) => selectedUris.includes(p.uri));
+    onStateChange?.({ isAllSelected: isAll, sortAscending });
+  }, [photos, selectedUris, sortAscending]);
+
+  const handleToggleSelectAll = () => {
+    const allSelected = photos.length > 0 && photos.every((p) => selectedUris.includes(p.uri));
+    if (allSelected) {
+      setSelectedUris((prev) => prev.filter((uri) => !photos.some((p) => p.uri === uri)));
+    } else {
+      setSelectedUris((prev) => {
+        const next = [...prev];
+        photos.forEach((p) => {
+          if (!next.includes(p.uri)) {
+            next.push(p.uri);
+          }
+        });
+        return next;
+      });
+    }
+  };
 
   useEffect(() => {
     checkPermission(false);
@@ -156,16 +203,17 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
         style={{ width: IMAGE_SIZE, height: IMAGE_SIZE, margin: COLUMN_MARGIN }}
       >
         <Image source={{ uri: item.uri }} style={styles.gridImage} contentFit="cover" transition={0} />
-        {isSelected ? (
-          <View style={styles.selectedOverlay}>
-            <View style={[styles.numberBadge, { backgroundColor: colors.primary }]}>
-              <TuiText weight="bold" style={styles.badgeText}>
+        {isSelected && (
+          <>
+            {/* Darkened overlay so the number is readable */}
+            <View style={styles.selectedOverlay} />
+            {/* Centered number badge */}
+            <View style={[styles.numberBadge, { backgroundColor: colors.primary, borderColor: '#FFFFFF' }]}>
+              <TuiText weight="bold" style={[styles.badgeText, { color: isDark ? '#000000' : '#FFFFFF' }]}>
                 {selectIndex + 1}
               </TuiText>
             </View>
-          </View>
-        ) : (
-          <View style={styles.unselectedBadge} />
+          </>
         )}
       </Pressable>
     );
@@ -208,7 +256,7 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
         ) : (
           <View style={{ flex: 1 }}>
             <FlatList
-              data={photos}
+              data={sortedPhotos}
               renderItem={renderPhotoCell}
               keyExtractor={(item) => item.id}
               numColumns={NUM_COLUMNS}
@@ -229,9 +277,21 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
               <View style={styles.floatingButtonContainer}>
                 <Pressable
                   onPress={handleConfirmSelection}
-                  style={[styles.confirmBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]}
+                  style={[
+                    styles.confirmBtn,
+                    {
+                      backgroundColor: isDark ? '#000000' : '#FFFFFF',
+                      borderColor: isDark ? '#FFFFFF' : '#000000',
+                    },
+                  ]}
                 >
-                  <TuiText weight="bold" style={styles.confirmBtnText}>
+                  <TuiText
+                    weight="bold"
+                    style={[
+                      styles.confirmBtnText,
+                      { color: isDark ? '#FFFFFF' : '#000000' },
+                    ]}
+                  >
                     ADD {selectedUris.length} {selectedUris.length === 1 ? 'PHOTO' : 'PHOTOS'}
                   </TuiText>
                 </Pressable>
@@ -297,24 +357,31 @@ const styles = StyleSheet.create({
   },
   selectedOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   numberBadge: {
-    width: 28,
-    height: 28,
+    position: 'absolute',
+    // center in parent
+    top: '50%',
+    left: '50%',
+    marginTop: -18,
+    marginLeft: -18,
+    width: 36,
+    height: 36,
     borderRadius: 0,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderWidth: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
   },
   badgeText: {
-    color: '#000000',
-    fontSize: 12,
-    lineHeight: 12,
+    color: '#FFFFFF',
+    fontSize: 14,
+    lineHeight: 14,
     fontFamily: 'JetBrainsMono_700Bold',
+    paddingTop: 5,
+    paddingLeft: 1
   },
   unselectedBadge: {
     position: 'absolute',
@@ -333,7 +400,7 @@ const styles = StyleSheet.create({
   },
   floatingButtonContainer: {
     position: 'absolute',
-    bottom: 12,
+    bottom: 35,
     left: 16,
     right: 16,
     zIndex: 10,
@@ -347,7 +414,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   confirmBtnText: {
-    color: '#000000',
     fontSize: 13,
     fontFamily: 'JetBrainsMono_700Bold',
     letterSpacing: 0.5,

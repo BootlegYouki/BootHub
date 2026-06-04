@@ -39,11 +39,10 @@ export const TuiContainer: React.FC<TuiContainerProps> = ({
     ? { paddingTop: 0, paddingBottom: 0, paddingHorizontal: 0 } 
     : { paddingTop: 12, paddingBottom: 8, paddingHorizontal: 12 };
 
-  const ContainerView = onPress ? Pressable : View;
-
   return (
-    <ContainerView
+    <Pressable
       onPress={onPress}
+      disabled={!onPress}
       style={[
         styles.outerContainer,
         containerPadding,
@@ -105,7 +104,7 @@ export const TuiContainer: React.FC<TuiContainerProps> = ({
 
       {/* Main Content */}
       <View style={[styles.content, contentStyle]}>{children}</View>
-    </ContainerView>
+    </Pressable>
   );
 };
 

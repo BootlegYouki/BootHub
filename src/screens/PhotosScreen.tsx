@@ -21,6 +21,7 @@ interface PhotosScreenProps {
   selectedIds: Set<string>;
   toggleSelect: (id: string) => void;
   onPhotoPress?: (item: DumpItem, startBounds: PhotoLayout) => void;
+  onPhotoLongPress?: (item: DumpItem, startBounds: PhotoLayout) => void;
   activePhotoId?: string | null;
   registerMeasureFn?: (
     fn: (id: string, callback: (bounds: PhotoLayout | null) => void) => void
@@ -33,6 +34,7 @@ export const PhotosScreen: React.FC<PhotosScreenProps> = ({
   selectedIds,
   toggleSelect,
   onPhotoPress,
+  onPhotoLongPress,
   activePhotoId,
   registerMeasureFn,
 }) => {
@@ -106,6 +108,20 @@ export const PhotosScreen: React.FC<PhotosScreenProps> = ({
                   }
                 : undefined
             }
+            onLongPress={
+              !isSelectionMode && onPhotoLongPress
+                ? () => {
+                    itemRefs.current[item.id]?.measureInWindow(
+                      (x: number, y: number, width: number, height: number) => {
+                        if (width > 0 && height > 0) {
+                          onPhotoLongPress(item, { x, y, width, height });
+                        }
+                      }
+                    );
+                  }
+                : undefined
+            }
+            delayLongPress={250}
             style={[
               styles.photoCard,
               {

@@ -37,7 +37,7 @@ export const TuiHeader: React.FC<TuiHeaderProps> = ({
         </TuiText>
         {subtitle && (
           <TuiText size="md" weight="bold" style={{ color: colors.mutedForeground, marginLeft: 8 }}>
-            // {subtitle}
+            {subtitle}
           </TuiText>
         )}
       </View>
