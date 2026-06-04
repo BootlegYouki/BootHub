@@ -417,6 +417,7 @@ function MainApp() {
             {
               borderTopColor: colors.primary + '30',
               backgroundColor: colors.background,
+              zIndex: 1000,
             },
             animatedBottomBarStyle,
           ]}
@@ -507,9 +508,22 @@ function MainApp() {
           )}
         </Animated.View>
       </SafeAreaView>
+
+      {/* Backdrop overlay for closing on tap outside */}
+      {isPhotoSheetOpen && (
+        <Pressable
+          style={{
+            ...StyleSheet.absoluteFillObject,
+            backgroundColor: 'transparent',
+            zIndex: 998,
+          }}
+          onPress={() => setIsPhotoSheetOpen(false)}
+        />
+      )}
+
       {/* Combined bottom spacer (acts like a keyboard spacer, but loads the custom
           photo picker inside when the photo sheet is active) */}
-      <Animated.View style={[bottomSpacerStyle, { backgroundColor: colors.background, overflow: 'hidden' }]}>
+      <Animated.View style={[bottomSpacerStyle, { backgroundColor: colors.background, overflow: 'hidden', zIndex: 1000 }]}>
         {isPhotoSheetOpen && (
           <PhotoPickerSheet
             onClose={() => setIsPhotoSheetOpen(false)}

@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
   numberBadge: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: 0,
     borderWidth: 2,
     borderColor: '#FFFFFF',
     justifyContent: 'center',
@@ -342,6 +342,7 @@ const styles = StyleSheet.create({
     color: '#000000',
     fontSize: 12,
     lineHeight: 12,
+    fontFamily: 'JetBrainsMono_700Bold',
   },
   unselectedBadge: {
     position: 'absolute',
@@ -349,7 +350,7 @@ const styles = StyleSheet.create({
     right: 6,
     width: 18,
     height: 18,
-    borderRadius: 9,
+    borderRadius: 0,
     borderWidth: 1.5,
     borderColor: '#FFFFFFB0',
     backgroundColor: 'rgba(0, 0, 0, 0.15)',
@@ -368,18 +369,15 @@ const styles = StyleSheet.create({
   confirmBtn: {
     borderWidth: 1.5,
     height: 40,
-    borderRadius: 20, // Circular border like Messenger's floating button
+    borderRadius: 0,
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
-    shadowColor: '#000000',
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
   },
   confirmBtnText: {
     color: '#000000',
     fontSize: 13,
+    fontFamily: 'JetBrainsMono_700Bold',
     letterSpacing: 0.5,
   },
 });
