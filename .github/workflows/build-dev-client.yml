@@ -112,7 +112,21 @@ jobs:
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY=""
+            CODE_SIGN_IDENTITY="" | tee xcodebuild.log
+
+      - name: Parse and Report Xcode Errors
+        if: failure()
+        run: |
+          python3 scripts/parse-build-errors.py
+
+      - name: Upload Xcode Build Log Artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-dev-log
+          path: ios/xcodebuild.log
+          retention-days: 7
+
 
       - name: Package into IPA
         run: |
