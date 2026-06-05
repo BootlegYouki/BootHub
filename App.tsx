@@ -56,6 +56,9 @@ import {
   X,
   Paperclip,
   Search,
+  MoreHorizontal,
+  Folder,
+  FolderPlus,
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -69,7 +72,7 @@ import { ThemeProvider, useTheme } from './src/theme/theme-provider';
 import { TuiHeader } from './src/components/tui-header';
 import { TuiText } from './src/components/tui-text';
 import { TuiContainer } from './src/components/tui-container';
-import { getItems, deleteItem, addItem, updateItem, addMultiplePhotos, DumpItem, DumpType } from './src/utils/storage';
+import { getItems, deleteItem, addItem, updateItem, addMultiplePhotos, setItemFolder, DumpItem, DumpType } from './src/utils/storage';
 import { ensureFileUri, getActualType, extractAudioArtwork } from './src/utils/helpers';
 import { LinksScreen } from './src/screens/LinksScreen';
 import { TextsScreen } from './src/screens/TextsScreen';
@@ -135,6 +138,28 @@ function MainApp() {
   const [zoomStartBounds, setZoomStartBounds] = useState<PhotoLayout | null>(null);
 
   const [imageSizes, setImageSizes] = useState<Record<string, { width: number; height: number }>>({});
+  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+
+  const getActiveExpandedFolder = () => {
+    const activeTabFolders = items.filter((x) => {
+      if (x.type !== 'folder') return false;
+      try {
+        const obj = JSON.parse(x.value);
+        return obj.tab === activeTab;
+      } catch {}
+      return false;
+    });
+
+    const expanded = activeTabFolders.find((f) => !!expandedFolders[f.id]);
+    if (expanded) {
+      let name = 'Folder';
+      try {
+        name = JSON.parse(expanded.value).name;
+      } catch {}
+      return { id: expanded.id, name };
+    }
+    return null;
+  };
   const measurePhotoRef = useRef<
     ((id: string, callback: (bounds: PhotoLayout | null) => void) => void) | null
   >(null);
@@ -142,6 +167,31 @@ function MainApp() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearchFocused, setIsSearchFocused] = useState<boolean>(false);
   const [isFooterFocused, setIsFooterFocused] = useState<boolean>(false);
+
+  const [headerMenuExpanded, setHeaderMenuExpanded] = useState<boolean>(false);
+  const headerMenuAnimation = useSharedValue(0);
+
+  const toggleHeaderMenu = () => {
+    const next = !headerMenuExpanded;
+    setHeaderMenuExpanded(next);
+    headerMenuAnimation.value = withTiming(next ? 1 : 0, { duration: 180 });
+  };
+
+  const subButtonStyle = useAnimatedStyle(() => {
+    const scale = interpolate(headerMenuAnimation.value, [0, 1], [0, 1]);
+    const opacity = interpolate(headerMenuAnimation.value, [0, 1], [0, 1]);
+    const width = interpolate(headerMenuAnimation.value, [0, 1], [0, 48]);
+    const marginRight = interpolate(headerMenuAnimation.value, [0, 1], [0, 8]);
+
+    return {
+      width,
+      marginRight,
+      opacity,
+      transform: [{ scale }],
+      overflow: 'hidden',
+    };
+  });
+
 
   useEffect(() => {
     setSearchQuery('');
@@ -173,81 +223,130 @@ function MainApp() {
   // ─── Per-tab items (each tab filters independently so all tabs stay live) ────
   const TAB_ORDER: DumpType[] = ['link', 'text', 'photo', 'file'];
 
+  const getFolderTab = (item: DumpItem): string | null => {
+    if (item.type !== 'folder') return null;
+    try {
+      const obj = JSON.parse(item.value);
+      return obj.tab;
+    } catch {
+      return null;
+    }
+  };
+
+  const getFolderName = (item: DumpItem): string => {
+    if (item.type !== 'folder') return '';
+    try {
+      const obj = JSON.parse(item.value);
+      return obj.name || 'New Folder';
+    } catch {
+      return 'New Folder';
+    }
+  };
+
   const linkItems = items
-    .filter((item) => getActualType(item.value, item.type) === 'link')
-    .map((item) => item.id === editingItemId ? { ...item, value: editText } : item);
+    .filter((item) => {
+      const type = getActualType(item.value, item.type);
+      return type === 'link' || (item.type === 'folder' && getFolderTab(item) === 'link');
+    })
+    .map((item) => item.id === editingItemId ? { ...item, value: item.type === 'folder' ? JSON.stringify({ name: editText, tab: 'link' }) : editText } : item);
+
   const textItems = items
-    .filter((item) => getActualType(item.value, item.type) === 'text')
-    .map((item) => item.id === editingItemId ? { ...item, value: editText } : item);
-  const photoItems = items.filter((item) => getActualType(item.value, item.type) === 'photo');
+    .filter((item) => {
+      const type = getActualType(item.value, item.type);
+      return type === 'text' || (item.type === 'folder' && getFolderTab(item) === 'text');
+    })
+    .map((item) => item.id === editingItemId ? { ...item, value: item.type === 'folder' ? JSON.stringify({ name: editText, tab: 'text' }) : editText } : item);
+
+  const photoItems = items.filter((item) => {
+    const type = getActualType(item.value, item.type);
+    return type === 'photo' || (item.type === 'folder' && getFolderTab(item) === 'photo');
+  });
+
   const fileItems = items
-    .filter((item) => getActualType(item.value, item.type) === 'file')
-    .map((item) => item.id === editingItemId ? { ...item, value: editText } : item);
+    .filter((item) => {
+      const type = getActualType(item.value, item.type);
+      return type === 'file' || (item.type === 'folder' && getFolderTab(item) === 'file');
+    })
+    .map((item) => item.id === editingItemId ? { ...item, value: item.type === 'folder' ? JSON.stringify({ name: editText, tab: 'file' }) : editText } : item);
 
   const query = searchQuery.trim().toLowerCase();
 
+  const matchItem = (item: DumpItem, q: string, tabItems: DumpItem[]): boolean => {
+    if (item.type === 'folder') {
+      const name = getFolderName(item).toLowerCase();
+      if (name.includes(q)) return true;
+      const children = tabItems.filter((child) => child.folderId === item.id);
+      return children.some((child) => matchItem(child, q, tabItems));
+    }
+    
+    if (item.type === 'file') {
+      let fileName = '';
+      try {
+        fileName = JSON.parse(item.value).name || '';
+      } catch (e) {
+        fileName = item.value.split('/').pop() || '';
+      }
+      return (
+        fileName.toLowerCase().includes(q) ||
+        !!(item.label && item.label.toLowerCase().includes(q))
+      );
+    }
+
+    return (
+      item.value.toLowerCase().includes(q) ||
+      !!(item.label && item.label.toLowerCase().includes(q))
+    );
+  };
+
   const filteredLinks = query
-    ? linkItems.filter((item) =>
-        item.value.toLowerCase().includes(query) ||
-        (item.label && item.label.toLowerCase().includes(query))
-      )
+    ? linkItems.filter((item) => matchItem(item, query, linkItems))
     : linkItems;
 
   const filteredTexts = query
-    ? textItems.filter((item) =>
-        item.value.toLowerCase().includes(query) ||
-        (item.label && item.label.toLowerCase().includes(query))
-      )
+    ? textItems.filter((item) => matchItem(item, query, textItems))
     : textItems;
 
   const filteredFiles = query
-    ? fileItems.filter((item) => {
-        let fileName = '';
-        try {
-          fileName = JSON.parse(item.value).name || '';
-        } catch (e) {
-          fileName = item.value.split('/').pop() || '';
-        }
-        return (
-          fileName.toLowerCase().includes(query) ||
-          (item.label && item.label.toLowerCase().includes(query))
-        );
-      })
+    ? fileItems.filter((item) => matchItem(item, query, fileItems))
     : fileItems;
 
-  const sortedLinkItems = sortAscending ? [...filteredLinks].reverse() : filteredLinks;
-  const sortedTextItems = sortAscending ? [...filteredTexts].reverse() : filteredTexts;
-  const sortedPhotoItems = sortAscending ? [...photoItems].reverse() : photoItems;
-  const sortedFileItems = sortAscending ? [...filteredFiles].reverse() : filteredFiles;
+  const filteredPhotos = query
+    ? photoItems.filter((item) => matchItem(item, query, photoItems))
+    : photoItems;
+
+  const sortTabItems = (itemsList: DumpItem[]): DumpItem[] => {
+    const folders = itemsList.filter((x) => x.type === 'folder');
+    const nonFolders = itemsList.filter((x) => x.type !== 'folder');
+
+    const compareFn = (a: DumpItem, b: DumpItem) => {
+      return sortAscending ? a.id.localeCompare(b.id) : b.id.localeCompare(a.id);
+    };
+
+    folders.sort(compareFn);
+    nonFolders.sort(compareFn);
+
+    return [...folders, ...nonFolders];
+  };
+
+  const sortedLinkItems = sortTabItems(filteredLinks);
+  const sortedTextItems = sortTabItems(filteredTexts);
+  const sortedPhotoItems = sortTabItems(filteredPhotos);
+  const sortedFileItems = sortTabItems(filteredFiles);
 
   // Keep legacy `sortedItems` pointing at the active tab so existing downstream
   // code (select-all, section count, etc.) doesn't need to change.
   const filteredItems = items
-    .filter((item) => getActualType(item.value, item.type) === activeTab)
-    .map((item) => item.id === editingItemId ? { ...item, value: editText } : item);
+    .filter((item) => {
+      const type = getActualType(item.value, item.type);
+      return type === activeTab || (item.type === 'folder' && getFolderTab(item) === activeTab);
+    })
+    .map((item) => item.id === editingItemId ? { ...item, value: item.type === 'folder' ? JSON.stringify({ name: editText, tab: activeTab }) : editText } : item);
 
   const filteredSearchItems = query
-    ? filteredItems.filter((item) => {
-        if (activeTab === 'file') {
-          let fileName = '';
-          try {
-            fileName = JSON.parse(item.value).name || '';
-          } catch (e) {
-            fileName = item.value.split('/').pop() || '';
-          }
-          return (
-            fileName.toLowerCase().includes(query) ||
-            (item.label && item.label.toLowerCase().includes(query))
-          );
-        }
-        return (
-          item.value.toLowerCase().includes(query) ||
-          (item.label && item.label.toLowerCase().includes(query))
-        );
-      })
+    ? filteredItems.filter((item) => matchItem(item, query, filteredItems))
     : filteredItems;
 
-  const sortedItems = sortAscending ? [...filteredSearchItems].reverse() : filteredSearchItems;
+  const sortedItems = sortTabItems(filteredSearchItems);
 
   // ─── Tab pager refs ───────────────────────────────────────────────────────────
   const tabPagerRef = useRef<ScrollView>(null);
@@ -339,6 +438,8 @@ function MainApp() {
     setActiveFullscreenPhotoIndex(null);
     setEditingItemId(null);
     Keyboard.dismiss();
+    setHeaderMenuExpanded(false);
+    headerMenuAnimation.value = 0;
   }, [activeTab]);
 
   // Sync pager position on mount (no animation so it doesn't flash)
@@ -408,6 +509,7 @@ function MainApp() {
   };
 
   const handleCopyItem = async (item: DumpItem) => {
+    setContextMenuPhoto(null);
     try {
       if (item.type === 'photo') {
         const resolvedUri = await resolveToLocalFileUri(item.value);
@@ -424,7 +526,6 @@ function MainApp() {
       } else {
         await Clipboard.setStringAsync(item.value);
       }
-      setContextMenuPhoto(null);
     } catch (e: any) {
       console.error('Failed to copy item:', e);
       Alert.alert('Copy Error', e?.message || String(e));
@@ -432,6 +533,7 @@ function MainApp() {
   };
 
   const handleShareItem = async (item: DumpItem) => {
+    setContextMenuPhoto(null);
     try {
       if (item.type === 'photo') {
         const resolvedUri = await resolveToLocalFileUri(item.value);
@@ -465,7 +567,6 @@ function MainApp() {
       } else {
         await Share.share({ message: item.value });
       }
-      setContextMenuPhoto(null);
     } catch (e: any) {
       const isCancelError = /user did not share|cancel|dismiss/i.test(e?.message || String(e));
       if (!isCancelError) {
@@ -476,6 +577,7 @@ function MainApp() {
   };
 
   const handleDeleteItem = async (item: DumpItem) => {
+    setContextMenuPhoto(null);
     Alert.alert(
       'Delete Item',
       'Are you sure you want to delete this item?',
@@ -498,7 +600,6 @@ function MainApp() {
               }
               const updatedList = await deleteItem(item.id);
               setItems(updatedList);
-              setContextMenuPhoto(null);
             } catch (e) {
               console.error(e);
             }
@@ -669,6 +770,60 @@ function MainApp() {
     }
   };
 
+  const handleCreateFolder = async () => {
+    setEditingItemId('temp-new-folder');
+    setEditText('');
+  };
+
+  const handleSetItemFolder = async (itemId: string, folderId: string | undefined) => {
+    setContextMenuPhoto(null);
+    try {
+      const updatedList = await setItemFolder(itemId, folderId);
+      setItems(updatedList);
+      showToast(folderId ? 'Moved to folder' : 'Removed from folder', '');
+    } catch (e) {
+      console.error('Failed to move item to folder:', e);
+    }
+  };
+
+  const handleMoveToFolder = (item: DumpItem) => {
+    setContextMenuPhoto(null);
+    // Find all folders belonging to the active tab
+    const tabFolders = items.filter((x) => {
+      if (x.type !== 'folder') return false;
+      try {
+        const obj = JSON.parse(x.value);
+        return obj.tab === activeTab;
+      } catch {}
+      return false;
+    });
+
+    if (tabFolders.length === 0) {
+      Alert.alert('No Folders', 'Create a folder first.');
+      return;
+    }
+
+    const options = tabFolders.map((f) => {
+      let name = 'Folder';
+      try {
+        name = JSON.parse(f.value).name;
+      } catch {}
+      return {
+        text: name,
+        onPress: () => handleSetItemFolder(item.id, f.id),
+      };
+    });
+
+    Alert.alert(
+      'Move to Folder',
+      'Select a folder to move this item to:',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        ...options,
+      ]
+    );
+  };
+
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
     try {
@@ -755,6 +910,13 @@ function MainApp() {
       } catch {
         setEditText(item.value);
       }
+    } else if (item.type === 'folder') {
+      try {
+        const folderObj = JSON.parse(item.value);
+        setEditText(folderObj.name || 'New Folder');
+      } catch {
+        setEditText(item.value);
+      }
     } else {
       setEditText(item.value);
     }
@@ -762,11 +924,83 @@ function MainApp() {
 
   const handleSaveEdit = async (id: string, value: string) => {
     Keyboard.dismiss();
-    if (!value) return;
+    let finalValue = value.trim();
+
+    if (id === 'temp-new-folder') {
+      if (!finalValue) {
+        finalValue = 'New Folder';
+      }
+
+      const existingNames = items
+        .filter((x) => x.type === 'folder')
+        .map((x) => {
+          try {
+            const obj = JSON.parse(x.value);
+            if (obj.tab === activeTab) {
+              return obj.name;
+            }
+          } catch {}
+          return null;
+        })
+        .filter((name): name is string => name !== null);
+
+      if (existingNames.includes(finalValue)) {
+        let counter = 1;
+        while (existingNames.includes(`${finalValue}_${counter}`)) {
+          counter++;
+        }
+        finalValue = `${finalValue}_${counter}`;
+      }
+
+      try {
+        const folderVal = JSON.stringify({ name: finalValue, tab: activeTab });
+        const updatedList = await addItem('folder', folderVal);
+        setItems(updatedList);
+        showToast('Folder created!', finalValue);
+      } catch (e) {
+        console.error('Failed to create folder:', e);
+      } finally {
+        setEditingItemId(null);
+      }
+      return;
+    }
+
+    const item = items.find((x) => x.id === id);
+    if (!item) return;
+
+    if (item.type === 'folder') {
+      if (!finalValue) {
+        finalValue = 'New Folder';
+      }
+
+      const existingNames = items
+        .filter((x) => x.type === 'folder' && x.id !== id)
+        .map((x) => {
+          try {
+            const obj = JSON.parse(x.value);
+            if (obj.tab === activeTab) {
+              return obj.name;
+            }
+          } catch {}
+          return null;
+        })
+        .filter((name): name is string => name !== null);
+
+      if (existingNames.includes(finalValue)) {
+        let counter = 1;
+        while (existingNames.includes(`${finalValue}_${counter}`)) {
+          counter++;
+        }
+        finalValue = `${finalValue}_${counter}`;
+      }
+    } else {
+      if (!finalValue) return;
+    }
+
     try {
-      const updated = await updateItem(id, value);
+      const updated = await updateItem(id, finalValue);
       setItems(updated);
-      showToast('Edited!', value);
+      showToast('Edited!', finalValue);
     } catch (e) {
       console.error('Failed to save edit:', e);
     } finally {
@@ -829,11 +1063,34 @@ function MainApp() {
         fileData.artwork = artwork;
       }
 
-      const updated = await addItem('file', JSON.stringify(fileData));
-      setItems(updated);
-      setActiveTab('file');
-      scrollToTab('file');
-      showToast('Added!', asset.name);
+      const saveFile = async (folderId?: string) => {
+        const updated = await addItem('file', JSON.stringify(fileData), folderId);
+        setItems(updated);
+        setActiveTab('file');
+        scrollToTab('file');
+        showToast(folderId ? 'Added to folder!' : 'Added!', asset.name);
+      };
+
+      const folder = getActiveExpandedFolder();
+      if (folder) {
+        Alert.alert(
+          'Add to Folder',
+          `Would you like to add this to the folder "${folder.name}"?`,
+          [
+            {
+              text: 'No (Add to top level)',
+              style: 'cancel',
+              onPress: () => saveFile()
+            },
+            {
+              text: 'Yes',
+              onPress: () => saveFile(folder.id)
+            }
+          ]
+        );
+      } else {
+        await saveFile();
+      }
     } catch (e) {
       console.error('Failed to pick file:', e);
       Alert.alert('File Pick Error', 'An error occurred while picking or saving the file.');
@@ -841,14 +1098,37 @@ function MainApp() {
   };
 
   const handleAddMultiplePhotos = async (uris: string[]) => {
-    try {
-      const updated = await addMultiplePhotos(uris);
-      setItems(updated);
-      setActiveTab('photo');
-      scrollToTab('photo');
-      showToast('Added!', `${uris.length} photo${uris.length > 1 ? 's' : ''}`);
-    } catch (e) {
-      console.error('Failed to add multiple photos:', e);
+    const savePhotos = async (folderId?: string) => {
+      try {
+        const updated = await addMultiplePhotos(uris, folderId);
+        setItems(updated);
+        setActiveTab('photo');
+        scrollToTab('photo');
+        showToast(folderId ? 'Added to folder!' : 'Added!', `${uris.length} photo${uris.length > 1 ? 's' : ''}`);
+      } catch (e) {
+        console.error('Failed to add multiple photos:', e);
+      }
+    };
+
+    const folder = getActiveExpandedFolder();
+    if (folder) {
+      Alert.alert(
+        'Add to Folder',
+        `Would you like to add ${uris.length === 1 ? 'this photo' : `these ${uris.length} photos`} to the folder "${folder.name}"?`,
+        [
+          {
+            text: 'No (Add to top level)',
+            style: 'cancel',
+            onPress: () => savePhotos()
+          },
+          {
+            text: 'Yes',
+            onPress: () => savePhotos(folder.id)
+          }
+        ]
+      );
+    } else {
+      await savePhotos();
     }
   };
 
@@ -859,25 +1139,50 @@ function MainApp() {
     const trimmed = inputText.trim();
     const type = getActualType(trimmed, 'text');
 
-    try {
-      const updated = await addItem(type, trimmed);
-      setItems(updated);
-      setActiveTab(type);
-      scrollToTab(type);
-      setInputText('');
-      showToast('Added!', trimmed);
-    } catch (e) {
-      console.error('Failed to submit item:', e);
+    const saveText = async (folderId?: string) => {
+      try {
+        const updated = await addItem(type, trimmed, folderId);
+        setItems(updated);
+        setActiveTab(type);
+        scrollToTab(type);
+        setInputText('');
+        showToast(folderId ? 'Added to folder!' : 'Added!', trimmed);
+      } catch (e) {
+        console.error('Failed to submit item:', e);
+      }
+    };
+
+    const folder = getActiveExpandedFolder();
+    if (folder) {
+      Alert.alert(
+        'Add to Folder',
+        `Would you like to add this to the folder "${folder.name}"?`,
+        [
+          {
+            text: 'No (Add to top level)',
+            style: 'cancel',
+            onPress: () => saveText()
+          },
+          {
+            text: 'Yes',
+            onPress: () => saveText(folder.id)
+          }
+        ]
+      );
+    } else {
+      await saveText();
     }
   };
 
   // Render initial dark/light splash screen until the app is ready
   if (!isAppReady) {
-    const splashBg = isDark ? '#18181B' : '#F4F4F5';
+    const splashBg = isDark ? '#000000' : '#FFFFFF';
     const splashIconColor = isDark ? '#FFFFFF' : '#000000';
     return (
       <View style={{ flex: 1, backgroundColor: splashBg, justifyContent: 'center', alignItems: 'center' }}>
-        {themeLoaded && <SplashIcon color={splashIconColor} size={160} />}
+        {themeLoaded && (
+          <SplashIcon color={splashIconColor} />
+        )}
       </View>
     );
   }
@@ -985,65 +1290,101 @@ function MainApp() {
 
           {/* Section header row */}
           <View style={styles.sectionHeaderRow}>
-            {activeTab !== 'photo' ? (
-              renderSearchBar()
-            ) : (
-              <TuiText size="lg" weight="bold" style={[styles.sectionTitle, { color: colors.primary }]}>
-                {capitalizedTitle} : {sortedItems.length}
-              </TuiText>
-            )}
+            {renderSearchBar()}
             <View style={styles.headerActions}>
               {isSelectionMode && (
-                <Pressable
-                  onPress={handleToggleSelectAll}
-                  style={({ pressed }) => {
-                    const allSelected = sortedItems.length > 0 && sortedItems.every((item) => selectedIds.has(item.id));
-                    return [
+                <Animated.View style={subButtonStyle}>
+                  <Pressable
+                    onPress={handleToggleSelectAll}
+                    style={({ pressed }) => {
+                      const allSelected = sortedItems.length > 0 && sortedItems.every((item) => selectedIds.has(item.id));
+                      return [
+                        styles.headerActionBtn,
+                        {
+                          borderColor: colors.primary,
+                          backgroundColor: allSelected
+                            ? colors.primary + '25'
+                            : pressed
+                              ? colors.primary + '15'
+                              : 'transparent',
+                          width: 48,
+                        },
+                      ];
+                    }}
+                  >
+                    <ListChecks size={16} color={colors.primary} />
+                  </Pressable>
+                </Animated.View>
+              )}
+
+              {!isSelectionMode && (
+                <Animated.View style={subButtonStyle}>
+                  <Pressable
+                    onPress={handleCreateFolder}
+                    style={({ pressed }) => [
                       styles.headerActionBtn,
                       {
                         borderColor: colors.primary,
-                        backgroundColor: allSelected
-                          ? colors.primary + '25'
-                          : pressed
-                            ? colors.primary + '15'
-                            : 'transparent',
-                        marginRight: 8,
+                        backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+                        width: 48,
                       },
-                    ];
-                  }}
-                >
-                  <ListChecks size={16} color={colors.primary} />
-                </Pressable>
+                    ]}
+                  >
+                    <FolderPlus size={16} color={colors.primary} />
+                  </Pressable>
+                </Animated.View>
               )}
 
-              <Pressable
-                onPress={() => {
-                  setEditingItemId(null);
-                  const nextMode = !isSelectionMode;
-                  setIsSelectionMode(nextMode);
-                  if (!nextMode) setSelectedIds(new Set());
-                }}
-                style={({ pressed }) => [
-                  styles.headerActionBtn,
-                  {
-                    borderColor: colors.primary,
-                    backgroundColor: isSelectionMode
-                      ? colors.primary + '25'
-                      : pressed
-                        ? colors.primary + '15'
-                        : 'transparent',
-                    marginRight: 8,
-                  },
-                ]}
-              >
-                <CheckSquare size={16} color={colors.primary} />
-              </Pressable>
+              <Animated.View style={subButtonStyle}>
+                <Pressable
+                  onPress={() => {
+                    setEditingItemId(null);
+                    const nextMode = !isSelectionMode;
+                    setIsSelectionMode(nextMode);
+                    if (!nextMode) setSelectedIds(new Set());
+                  }}
+                  style={({ pressed }) => [
+                    styles.headerActionBtn,
+                    {
+                      borderColor: colors.primary,
+                      backgroundColor: isSelectionMode
+                        ? colors.primary + '25'
+                        : pressed
+                          ? colors.primary + '15'
+                          : 'transparent',
+                      width: 48,
+                    },
+                  ]}
+                >
+                  <CheckSquare size={16} color={colors.primary} />
+                </Pressable>
+              </Animated.View>
+
+              <Animated.View style={subButtonStyle}>
+                <Pressable
+                  onPress={() => {
+                    setEditingItemId(null);
+                    setSortAscending(!sortAscending);
+                  }}
+                  style={({ pressed }) => [
+                    styles.headerActionBtn,
+                    {
+                      borderColor: colors.primary,
+                      backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+                      width: 48,
+                    },
+                  ]}
+                >
+                  {sortAscending ? (
+                    <ArrowUp size={16} color={colors.primary} />
+                  ) : (
+                    <ArrowDown size={16} color={colors.primary} />
+                  )}
+                </Pressable>
+              </Animated.View>
 
               <Pressable
-                onPress={() => {
-                  setEditingItemId(null);
-                  setSortAscending(!sortAscending);
-                }}
+                onPress={toggleHeaderMenu}
                 style={({ pressed }) => [
                   styles.headerActionBtn,
                   {
@@ -1052,10 +1393,10 @@ function MainApp() {
                   },
                 ]}
               >
-                {sortAscending ? (
-                  <ArrowUp size={16} color={colors.primary} />
+                {headerMenuExpanded ? (
+                  <X size={16} color={colors.primary} />
                 ) : (
-                  <ArrowDown size={16} color={colors.primary} />
+                  <MoreHorizontal size={16} color={colors.primary} />
                 )}
               </Pressable>
             </View>
@@ -1121,6 +1462,8 @@ function MainApp() {
               onLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })}
               editingItemId={editingItemId}
               searchQuery={searchQuery}
+              expandedFolders={expandedFolders}
+              setExpandedFolders={setExpandedFolders}
             />
           </ScrollView>
 
@@ -1147,6 +1490,8 @@ function MainApp() {
               onLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })}
               editingItemId={editingItemId}
               searchQuery={searchQuery}
+              expandedFolders={expandedFolders}
+              setExpandedFolders={setExpandedFolders}
             />
           </ScrollView>
 
@@ -1176,6 +1521,8 @@ function MainApp() {
               registerMeasureFn={(fn) => {
                 measurePhotoRef.current = fn;
               }}
+              expandedFolders={expandedFolders}
+              setExpandedFolders={setExpandedFolders}
             />
           </ScrollView>
 
@@ -1202,6 +1549,8 @@ function MainApp() {
               onLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })}
               editingItemId={editingItemId}
               searchQuery={searchQuery}
+              expandedFolders={expandedFolders}
+              setExpandedFolders={setExpandedFolders}
             />
           </ScrollView>
         </ScrollView>
@@ -1302,11 +1651,16 @@ function MainApp() {
                 ]}
                 value={editText}
                 onChangeText={setEditText}
-                placeholder={activeTab === 'link' ? "Edit link..." : activeTab === 'file' ? "Rename file..." : "Edit text..."}
+                placeholder={
+                  editingItemId === 'temp-new-folder' || (editingItemId && items.find(x => x.id === editingItemId)?.type === 'folder')
+                    ? "Name your folder..."
+                    : (activeTab === 'link' ? "Edit link..." : activeTab === 'file' ? "Rename file..." : "Edit text...")
+                }
                 placeholderTextColor={colors.mutedForeground}
                 autoCapitalize="none"
                 autoFocus
                 multiline={true}
+                blurOnSubmit={false}
                 onFocus={() => {
                   setIsPhotoSheetOpen(false);
                   setActiveFullscreenPhotoIndex(null);
@@ -1348,14 +1702,9 @@ function MainApp() {
                 </Pressable>
               </View>
 
-              {/* Attachment / File Picker - Animation Kept */}
+              {/* Attachment / File Picker */}
               {!isPhotoSheetOpen && (
-                <Animated.View
-                  layout={LinearTransition.duration(BAR_SLIDE_DURATION).delay(BAR_SLIDE_DELAY)}
-                  entering={FadeIn.duration(BAR_FADE_DURATION).delay(BAR_FADE_DELAY)}
-                  exiting={FadeOut.duration(BAR_FADE_DURATION)}
-                  key="file-picker"
-                >
+                <View>
                   <Pressable
                     onPress={handlePickFile}
                     hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
@@ -1369,47 +1718,37 @@ function MainApp() {
                   >
                     <Paperclip size={16} color={colors.primary} />
                   </Pressable>
-                </Animated.View>
+                </View>
               )}
 
-              {/* Text Input - Layout Animation Kept for Smooth Flex Resizing */}
-              <Animated.View
-                layout={LinearTransition.duration(BAR_SLIDE_DURATION).delay(BAR_SLIDE_DELAY)}
-                style={{ flex: 1, marginHorizontal: 10 }}
-              >
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      borderColor: colors.primary,
-                      color: colors.foreground,
-                      backgroundColor: colors.card,
-                      marginHorizontal: 0,
-                    },
-                  ]}
-                  value={inputText}
-                  onChangeText={setInputText}
-                  placeholder="Type Something"
-                  placeholderTextColor={colors.mutedForeground}
-                  autoCapitalize="none"
-                  multiline={true}
-                  onFocus={() => {
-                    setIsPhotoSheetOpen(false);
-                    setActiveFullscreenPhotoIndex(null);
-                    setIsFooterFocused(true);
-                  }}
-                />
-              </Animated.View>
+              {/* Text Input */}
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    borderColor: colors.primary,
+                    color: colors.foreground,
+                    backgroundColor: colors.card,
+                  },
+                ]}
+                value={inputText}
+                onChangeText={setInputText}
+                placeholder="Type Something"
+                placeholderTextColor={colors.mutedForeground}
+                autoCapitalize="none"
+                multiline={true}
+                blurOnSubmit={false}
+                onFocus={() => {
+                  setIsPhotoSheetOpen(false);
+                  setActiveFullscreenPhotoIndex(null);
+                  setIsFooterFocused(true);
+                }}
+              />
 
               {isPhotoSheetOpen ? (
                 <View style={{ flexDirection: 'row', gap: 6 }}>
-                  {/* Select All Button - Animation Kept */}
-                  <Animated.View
-                    layout={LinearTransition.duration(BAR_SLIDE_DURATION).delay(BAR_SLIDE_DELAY)}
-                    entering={FadeIn.duration(BAR_FADE_DURATION).delay(BAR_FADE_DELAY)}
-                    exiting={FadeOut.duration(BAR_FADE_DURATION)}
-                    key="select-all-btn"
-                  >
+                  {/* Select All Button */}
+                  <View>
                     <Pressable
                       onPress={() => setPhotoSheetTriggerSelectAll((p) => p + 1)}
                       hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
@@ -1427,7 +1766,7 @@ function MainApp() {
                     >
                       <ListChecks size={16} color={colors.primary} />
                     </Pressable>
-                  </Animated.View>
+                  </View>
 
                   {/* Sort Button - Animation Removed */}
                   <View>
@@ -1513,6 +1852,8 @@ function MainApp() {
           onShare={() => handleShareItem(contextMenuPhoto.item)}
           onEdit={contextMenuPhoto.item.type !== 'photo' ? () => handleEditItem(contextMenuPhoto.item) : undefined}
           onDelete={() => handleDeleteItem(contextMenuPhoto.item)}
+          onMoveToFolder={() => handleMoveToFolder(contextMenuPhoto.item)}
+          onRemoveFromFolder={() => handleSetItemFolder(contextMenuPhoto.item.id, undefined)}
         />
       )}
 
@@ -1543,7 +1884,7 @@ function MainApp() {
           style={[
             StyleSheet.absoluteFill,
             {
-              backgroundColor: colors.background,
+              backgroundColor: isDark ? '#000000' : '#FFFFFF',
               justifyContent: 'center',
               alignItems: 'center',
               opacity: splashOpacity,
@@ -1552,7 +1893,9 @@ function MainApp() {
           ]}
           pointerEvents="none"
         >
-          {themeLoaded && <SplashIcon color={isDark ? '#FFFFFF' : '#000000'} size={160} />}
+          {themeLoaded && (
+            <SplashIcon color={isDark ? '#FFFFFF' : '#000000'} />
+          )}
         </RNAnimated.View>
       )}
     </View>
@@ -1592,6 +1935,7 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     fontFamily: 'JetBrainsMono_400Regular',
     fontSize: 14,
+    lineHeight: 18
   },
   iconBtn: { borderWidth: 1.5, width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
   topContainer: { paddingHorizontal: 16, paddingTop: 15, paddingBottom: 5 },

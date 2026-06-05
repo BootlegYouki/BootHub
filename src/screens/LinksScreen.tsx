@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { View, StyleSheet, UIManager, findNodeHandle } from 'react-native';
 
 import { TuiContainer } from '../components/tui-container';
@@ -7,6 +7,7 @@ import { LinkPreview } from '../components/link-preview';
 import { DumpItem } from '../utils/storage';
 import { useTheme } from '../theme/theme-provider';
 import { formatBreakAll, handleOpenUrl } from '../utils/helpers';
+import { FolderItem } from '../components/folder-item';
 
 interface LinksScreenProps {
   sortedItems: DumpItem[];
@@ -16,6 +17,8 @@ interface LinksScreenProps {
   onLongPress?: (item: DumpItem, bounds: { x: number; y: number; width: number; height: number }) => void;
   editingItemId: string | null;
   searchQuery?: string;
+  expandedFolders: Record<string, boolean>;
+  setExpandedFolders: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
 }
 
 interface LinkItemProps {
@@ -93,6 +96,8 @@ export const LinksScreen: React.FC<LinksScreenProps> = ({
   onLongPress,
   editingItemId,
   searchQuery,
+  expandedFolders,
+  setExpandedFolders,
 }) => {
   const { colors } = useTheme();
 
@@ -107,19 +112,58 @@ export const LinksScreen: React.FC<LinksScreenProps> = ({
     );
   }
 
+  // Filter top-level items: items without folderId
+  const topLevelItems = sortedItems.filter((item) => !item.folderId);
+
   return (
     <>
-      {sortedItems.map((item) => (
-        <LinkItem
-          key={item.id}
-          item={item}
-          isSelected={isSelectionMode && selectedIds.has(item.id)}
-          isSelectionMode={isSelectionMode}
-          toggleSelect={toggleSelect}
-          onLongPress={onLongPress}
-          isEditing={editingItemId === item.id}
-        />
-      ))}
+      {topLevelItems.map((item) => {
+        if (item.type === 'folder') {
+          let folderName = 'New Folder';
+          try {
+            folderName = JSON.parse(item.value).name || 'New Folder';
+          } catch {}
+          
+          const children = sortedItems.filter((child) => child.folderId === item.id);
+          const isExpanded = !!expandedFolders[item.id];
+          
+          return (
+            <FolderItem
+              key={item.id}
+              id={item.id}
+              name={folderName}
+              count={children.length}
+              isExpanded={isExpanded}
+              onToggleExpand={() => setExpandedFolders((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
+              onLongPress={(bounds) => onLongPress?.(item, bounds)}
+            >
+              {children.map((child) => (
+                <LinkItem
+                  key={child.id}
+                  item={child}
+                  isSelected={isSelectionMode && selectedIds.has(child.id)}
+                  isSelectionMode={isSelectionMode}
+                  toggleSelect={toggleSelect}
+                  onLongPress={onLongPress}
+                  isEditing={editingItemId === child.id}
+                />
+              ))}
+            </FolderItem>
+          );
+        }
+
+        return (
+          <LinkItem
+            key={item.id}
+            item={item}
+            isSelected={isSelectionMode && selectedIds.has(item.id)}
+            isSelectionMode={isSelectionMode}
+            toggleSelect={toggleSelect}
+            onLongPress={onLongPress}
+            isEditing={editingItemId === item.id}
+          />
+        );
+      })}
     </>
   );
 };

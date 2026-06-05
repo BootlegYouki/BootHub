@@ -85,32 +85,43 @@ export const FullscreenPhotoViewer: React.FC<FullscreenPhotoViewerProps> = ({
       ? sortedItems[activeFullscreenPhotoIndex]
       : null;
 
+  // Initial bounds calculation for transition targets
+  const initialEndBounds = activeFullscreenPhoto
+    ? calculateFullscreenImageBounds(activeFullscreenPhoto, imageSizes)
+    : { x: 0, y: 0, width: 0, height: 0 };
+
   // Zoom and swipe states
-  const [isZooming, setIsZooming] = useState<'in' | 'out' | null>(null);
+  const [isZooming, setIsZooming] = useState<'in' | 'out' | null>(
+    activeFullscreenPhoto && startBounds ? 'in' : null
+  );
   const [isSwipingDown, setIsSwipingDown] = useState<boolean>(false);
 
-  // Shared values for transitions
-  const startX = useSharedValue(0);
-  const startY = useSharedValue(0);
-  const startWidth = useSharedValue(0);
-  const startHeight = useSharedValue(0);
+  // Shared values for transitions initialized directly to prevent the one-frame flash/blink on mount
+  const startX = useSharedValue(startBounds ? startBounds.x : 0);
+  const startY = useSharedValue(startBounds ? startBounds.y : 0);
+  const startWidth = useSharedValue(startBounds ? startBounds.width : 0);
+  const startHeight = useSharedValue(startBounds ? startBounds.height : 0);
 
-  const endX = useSharedValue(0);
-  const endY = useSharedValue(0);
-  const endWidth = useSharedValue(0);
-  const endHeight = useSharedValue(0);
+  const endX = useSharedValue(initialEndBounds.x);
+  const endY = useSharedValue(initialEndBounds.y);
+  const endWidth = useSharedValue(initialEndBounds.width);
+  const endHeight = useSharedValue(initialEndBounds.height);
 
   const animationProgress = useSharedValue(0);
-  const zoomPhase = useSharedValue(0); // 0 = idle/open, 1 = zooming-in, 2 = zooming-out
+  const zoomPhase = useSharedValue(
+    activeFullscreenPhoto && startBounds ? 1 : 0
+  ); // 0 = idle/open, 1 = zooming-in, 2 = zooming-out
   const controlsOpacity = useSharedValue(0);
   const barBackgroundOpacity = useSharedValue(1);
   const translateY = useSharedValue(0);
 
   const controlsVisible = useRef<boolean>(true);
+  const hasZoomedIn = useRef<boolean>(false);
 
   // Initialize transition targets
   useEffect(() => {
-    if (activeFullscreenPhoto && startBounds) {
+    if (!hasZoomedIn.current && activeFullscreenPhoto && startBounds) {
+      hasZoomedIn.current = true;
       const endBounds = calculateFullscreenImageBounds(activeFullscreenPhoto, imageSizes);
 
       startX.value = startBounds.x;

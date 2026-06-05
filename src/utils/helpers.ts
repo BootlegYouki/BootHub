@@ -161,6 +161,7 @@ export const ensureFileUri = (uri: string) => {
 export const getActualType = (value: string, fallbackType: DumpType): DumpType => {
   if (fallbackType === 'photo') return 'photo';
   if (fallbackType === 'file') return 'file';
+  if (fallbackType === 'folder') return 'folder';
   const trimmed = value.trim();
   const isPhoto =
     /^ph:\/\//i.test(trimmed) ||

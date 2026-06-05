@@ -160,13 +160,13 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\app.json": {
-    "mtime": 1780565652.9152238,
-    "ast_hash": "4d53c224e374af7c8e4b698ec5fa5d9d",
+    "mtime": 1780621753.5393238,
+    "ast_hash": "e53db39c476b3a13fafff1a2acf61f78",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\App.tsx": {
-    "mtime": 1780573691.1898959,
-    "ast_hash": "dafede18e5f90311f864568d03252b43",
+    "mtime": 1780627123.4874032,
+    "ast_hash": "077b54aba204f01d89a5e82b4e38bd10",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\eslint.config.js": {
@@ -180,8 +180,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\package.json": {
-    "mtime": 1780556554.299954,
-    "ast_hash": "ff76973d67555202eb2f402701a84a1c",
+    "mtime": 1780621730.858034,
+    "ast_hash": "cae6dfb05b56cc953c16912003431585",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\tsconfig.json": {
@@ -195,8 +195,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\splash-icon.tsx": {
-    "mtime": 1780530060.2647188,
-    "ast_hash": "22c3dbacac97c3a23e3b888923e02ddb",
+    "mtime": 1780621753.5976787,
+    "ast_hash": "92cf3b9f646ed6e9ea6568cde2256760",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\tui-button.tsx": {
@@ -220,8 +220,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\tui-container.tsx": {
-    "mtime": 1780559133.0781732,
-    "ast_hash": "ccbe24e7dcccb91576ab78b813e17aed",
+    "mtime": 1780623219.6278594,
+    "ast_hash": "28a4752bed3c43b640d2ea5afb2ebbf1",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\tui-drawer.tsx": {
@@ -285,8 +285,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\.github\\workflows\\build-ios-ipa.yml": {
-    "mtime": 1780528123.1322792,
-    "ast_hash": "3a5644494d1d2f974d736404e6e53aeb",
+    "mtime": 1780621730.8493464,
+    "ast_hash": "f03c2749fd2ff6b9c64efc7c35a4ccc1",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\assets\\icon.png": {
@@ -297,11 +297,6 @@
   "E:\\Github\\BootHub\\.expo\\devices.json": {
     "mtime": 1780546315.9898438,
     "ast_hash": "6c3a7fba141692b14869ed3b8bef10d1",
-    "semantic_hash": ""
-  },
-  "E:\\Github\\BootHub\\scripts\\convert-png-to-svg.py": {
-    "mtime": 1780550769.7163067,
-    "ast_hash": "811f4af7b19d4aba0dcd93c576903950",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\banner-svg.tsx": {
@@ -330,8 +325,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\link-preview.tsx": {
-    "mtime": 1780563170.705801,
-    "ast_hash": "11c07bbb88cb15a5a875c8902a181d91",
+    "mtime": 1780621730.8606508,
+    "ast_hash": "78a8c93a9e234c6a4b44f9c37ba9e3e7",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\.expo\\web\\cache\\production\\images\\favicon\\favicon-199cee9f49a5c61203e164c69dcb619e810715ec705b310c4ff18514ea26b008-contain-transparent\\favicon-48.png": {
@@ -340,28 +335,28 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\utils\\storage.ts": {
-    "mtime": 1780568534.295118,
-    "ast_hash": "90ac6bd02ce6ce42d8578b291fccc32c",
+    "mtime": 1780626635.9369028,
+    "ast_hash": "0e26e08f559e60dd1c28177d815b6afc",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\LinksScreen.tsx": {
-    "mtime": 1780571668.2433865,
-    "ast_hash": "a7dd04bb2b940187b8141eb20f24df46",
+    "mtime": 1780626665.836228,
+    "ast_hash": "36a89048cd686b1ab0e9c6dd12dbb387",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\PhotosScreen.tsx": {
-    "mtime": 1780571531.788734,
-    "ast_hash": "bd27c735a66ea033c05357ce0cef3a62",
+    "mtime": 1780626972.2998261,
+    "ast_hash": "fa8dfbe28dcaf9da6017c39bcf36f532",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\TextsScreen.tsx": {
-    "mtime": 1780571676.5046294,
-    "ast_hash": "0ede2845dcd6fe9725bb6be4e076c241",
+    "mtime": 1780626679.5336864,
+    "ast_hash": "1f9e535f5573303759bb35ab6d967eab",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\utils\\helpers.ts": {
-    "mtime": 1780571415.3067954,
-    "ast_hash": "bb95eb4951d91df59caa2bd8817a43e2",
+    "mtime": 1780625111.0652125,
+    "ast_hash": "1b2cff968cb3e2f71bbf9e14da01a7e1",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\.github\\workflows\\build-dev-client.yml": {
@@ -375,23 +370,18 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\sidestore.json": {
-    "mtime": 1780545698.2568595,
-    "ast_hash": "b8b863338cc9914f7c06845b4032e68c",
-    "semantic_hash": ""
-  },
-  "E:\\Github\\BootHub\\assets\\icon-to-svg.png": {
-    "mtime": 1780550547.8137288,
-    "ast_hash": "cbd62aa5c8288bd9a30a71f747c2e008",
+    "mtime": 1780621752.2446887,
+    "ast_hash": "2de297fd697581bd714bc9b6f57f1651",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\FilesScreen.tsx": {
-    "mtime": 1780571680.459517,
-    "ast_hash": "91923bf749843d47a811f12af1c05992",
+    "mtime": 1780626687.3482466,
+    "ast_hash": "236f515e0abf3d0f376fe6e81d44324f",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\context-menu-overlay.tsx": {
-    "mtime": 1780569023.9943707,
-    "ast_hash": "01f9e72fc8ba145638ed4b3ce2c7a4d6",
+    "mtime": 1780626546.0845323,
+    "ast_hash": "bff49a9d4f7f8d9e3f8e48cd9902c02d",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\tab-button.tsx": {
@@ -400,13 +390,23 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\fullscreen-photo-viewer.tsx": {
-    "mtime": 1780569834.753716,
-    "ast_hash": "7b39da2ce25a7c2d007e6ff2671a547c",
+    "mtime": 1780623856.5220952,
+    "ast_hash": "022cea4d705bcf4923e0b73a61fbccd6",
     "semantic_hash": ""
   },
-  "E:\\Github\\BootHub\\assets\\icon-to-svg.svg": {
-    "mtime": 1780572915.8453324,
-    "ast_hash": "5e52630faedbdde345b3c4e0b95776ed",
+  "E:\\Github\\BootHub\\src\\components\\vaultleg-splash-icon.tsx": {
+    "mtime": 1780622148.0610218,
+    "ast_hash": "d910cb8724078e0ca0c56ff51a7dfd74",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\assets\\icon.svg": {
+    "mtime": 1780621753.5403242,
+    "ast_hash": "fda059f6ab50ce1956a68af6f5d51db9",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\folder-item.tsx": {
+    "mtime": 1780626333.132277,
+    "ast_hash": "5b812b2d027cc2f15bb0497c30a4c2a8",
     "semantic_hash": ""
   }
 }

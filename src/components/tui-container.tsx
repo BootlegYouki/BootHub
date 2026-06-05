@@ -1,5 +1,10 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle, Pressable } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useTheme } from '../theme/theme-provider';
 import { TuiText } from './tui-text';
 
@@ -17,6 +22,8 @@ interface TuiContainerProps {
   onLongPress?: () => void;
 }
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 export const TuiContainer: React.FC<TuiContainerProps> = ({
   children,
   label,
@@ -33,6 +40,14 @@ export const TuiContainer: React.FC<TuiContainerProps> = ({
   const { colors, isDark } = useTheme();
   const [legendWidth, setLegendWidth] = React.useState(0);
 
+  const scale = useSharedValue(1);
+
+  const animatedPressableStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: scale.value }],
+    };
+  });
+
   const borderColor = colors.primary;
   const borderOpacity = accentBorder ? 1 : (isDark ? 0.25 : 0.15);
   const backgroundColor = colors.card;
@@ -42,9 +57,18 @@ export const TuiContainer: React.FC<TuiContainerProps> = ({
     : { paddingTop: 12, paddingBottom: 8, paddingHorizontal: 12 };
 
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={onPress}
       onLongPress={onLongPress}
+      delayLongPress={350}
+      onPressIn={() => {
+        if (onLongPress) {
+          scale.value = withTiming(1.03, { duration: 150 });
+        }
+      }}
+      onPressOut={() => {
+        scale.value = withTiming(1, { duration: 150 });
+      }}
       disabled={!onPress && !onLongPress}
       style={[
         styles.outerContainer,
@@ -53,6 +77,7 @@ export const TuiContainer: React.FC<TuiContainerProps> = ({
           backgroundColor,
         },
         style,
+        animatedPressableStyle,
       ]}
     >
       {/* Custom Segmented Borders to support transparent legend background without intersection */}
@@ -107,7 +132,7 @@ export const TuiContainer: React.FC<TuiContainerProps> = ({
 
       {/* Main Content */}
       <View style={[styles.content, contentStyle]}>{children}</View>
-    </Pressable>
+    </AnimatedPressable>
   );
 };
 

@@ -1,12 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export type DumpType = 'link' | 'text' | 'photo' | 'file';
+export type DumpType = 'link' | 'text' | 'photo' | 'file' | 'folder';
 
 export interface DumpItem {
   id: string;
   type: DumpType;
   label: string; // Timestamp label, e.g. "06-04-2026 @ 10m ago"
-  value: string; // The URL, raw text, or local/remote image URI
+  value: string; // The URL, raw text, or local/remote image URI, or JSON for files/folders
+  folderId?: string;
 }
 
 const STORAGE_KEY = '@boothub_dump_items';
@@ -37,7 +38,7 @@ export const saveItems = async (items: DumpItem[]): Promise<void> => {
   }
 };
 
-export const addItem = async (type: DumpType, value: string): Promise<DumpItem[]> => {
+export const addItem = async (type: DumpType, value: string, folderId?: string): Promise<DumpItem[]> => {
   try {
     const currentItems = await getItems();
     
@@ -53,6 +54,7 @@ export const addItem = async (type: DumpType, value: string): Promise<DumpItem[]
       type,
       label,
       value,
+      ...(folderId ? { folderId } : {}),
     };
 
     const updated = [newItem, ...currentItems];
@@ -67,7 +69,15 @@ export const addItem = async (type: DumpType, value: string): Promise<DumpItem[]
 export const deleteItem = async (id: string): Promise<DumpItem[]> => {
   try {
     const currentItems = await getItems();
-    const updated = currentItems.filter((item) => item.id !== id);
+    const updated = currentItems
+      .filter((item) => item.id !== id)
+      .map((item) => {
+        if (item.folderId === id) {
+          const { folderId, ...rest } = item;
+          return rest;
+        }
+        return item;
+      });
     await saveItems(updated);
     return updated;
   } catch (e) {
@@ -90,6 +100,15 @@ export const updateItem = async (id: string, value: string): Promise<DumpItem[]>
             return { ...item, value };
           }
         }
+        if (item.type === 'folder') {
+          try {
+            const folderObj = JSON.parse(item.value);
+            folderObj.name = value;
+            return { ...item, value: JSON.stringify(folderObj) };
+          } catch {
+            return { ...item, value };
+          }
+        }
         return { ...item, value };
       }
       return item;
@@ -102,7 +121,7 @@ export const updateItem = async (id: string, value: string): Promise<DumpItem[]>
   }
 };
 
-export const addMultiplePhotos = async (uris: string[]): Promise<DumpItem[]> => {
+export const addMultiplePhotos = async (uris: string[], folderId?: string): Promise<DumpItem[]> => {
   try {
     const currentItems = await getItems();
     
@@ -117,6 +136,7 @@ export const addMultiplePhotos = async (uris: string[]): Promise<DumpItem[]> => 
       type: 'photo',
       label,
       value: uri,
+      ...(folderId ? { folderId } : {}),
     }));
 
     const updated = [...newItems, ...currentItems];
@@ -124,6 +144,27 @@ export const addMultiplePhotos = async (uris: string[]): Promise<DumpItem[]> => 
     return updated;
   } catch (e) {
     console.error('Failed to add multiple photos:', e);
+    return [];
+  }
+};
+
+export const setItemFolder = async (id: string, folderId: string | undefined): Promise<DumpItem[]> => {
+  try {
+    const currentItems = await getItems();
+    const updated = currentItems.map((item) => {
+      if (item.id === id) {
+        if (folderId === undefined) {
+          const { folderId: _, ...rest } = item;
+          return rest;
+        }
+        return { ...item, folderId };
+      }
+      return item;
+    });
+    await saveItems(updated);
+    return updated;
+  } catch (e) {
+    console.error('Failed to set item folder:', e);
     return [];
   }
 };

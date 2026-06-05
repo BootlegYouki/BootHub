@@ -14,7 +14,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Copy, Share2, Pencil, Trash2 } from 'lucide-react-native';
+import { Copy, Share2, Pencil, Trash2, Folder, FolderPlus } from 'lucide-react-native';
 
 import { useTheme } from '../theme/theme-provider';
 import { TuiText } from './tui-text';
@@ -32,6 +32,8 @@ export interface ContextMenuOverlayProps {
   onShare: () => void;
   onEdit?: () => void;
   onDelete: () => void;
+  onMoveToFolder?: () => void;
+  onRemoveFromFolder?: () => void;
 }
 
 export const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
@@ -42,6 +44,8 @@ export const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
   onShare,
   onEdit,
   onDelete,
+  onMoveToFolder,
+  onRemoveFromFolder,
 }) => {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
@@ -126,6 +130,10 @@ export const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
     } else {
       previewHeight = 68;
     }
+  } else if (item.type === 'folder') {
+    previewWidth = bounds.width;
+    previewLeft = bounds.x;
+    previewHeight = 68;
   } else {
     // Estimate the full text height so the preview displays the entire value (not truncated)
     // Average character width is ~10.2px for JetBrains Mono at size 14 with styling. Card has 24px horizontal padding.
@@ -172,7 +180,14 @@ export const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
   const cardVerticalCenter = bounds.y + bounds.height / 2;
   let previewTop = cardVerticalCenter - previewHeight / 2;
 
-  const menuHeight = isPhoto ? 136 : 180; // photos: 3 rows; link/text: 4 rows (Edit added)
+  const isFolder = item.type === 'folder';
+  let menuHeight = 220; // Default height for 5 rows
+  if (isFolder) {
+    menuHeight = 88; // Folders only have 2 rows (Rename, Delete)
+  } else if (isPhoto) {
+    menuHeight = 176; // Photos have 4 rows (Copy, Share, Move, Delete)
+  }
+  
   const spaceAbove = previewTop - insets.top;
   const spaceBelow = screenHeight - insets.bottom - (previewTop + previewHeight);
   const showBelow = spaceBelow > spaceAbove;
@@ -346,6 +361,37 @@ export const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
                     </View>
                   );
                 })()
+              ) : item.type === 'folder' ? (
+                /* Folder card preview */
+                (() => {
+                  let folderObj: any = { name: 'Folder', tab: '' };
+                  try {
+                    folderObj = JSON.parse(item.value);
+                  } catch {}
+                  return (
+                    <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12, height: 68 }}>
+                      <View style={{
+                        width: 40,
+                        height: 40,
+                        borderWidth: 1.5,
+                        borderColor: colors.primary,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 12,
+                      }}>
+                        <Folder size={20} color={colors.primary} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <TuiText size="md" weight="bold" style={{ color: colors.foreground }} numberOfLines={1}>
+                          {folderObj.name || 'New Folder'}
+                        </TuiText>
+                        <TuiText size="sm" style={{ color: colors.mutedForeground, marginTop: 2 }}>
+                          Folder • {folderObj.tab ? folderObj.tab.charAt(0).toUpperCase() + folderObj.tab.slice(1) + 's' : ''}
+                        </TuiText>
+                      </View>
+                    </View>
+                  );
+                })()
               ) : (
                 /* Text card — content padded like TuiContainer */
                 <View style={{ paddingTop: 12, paddingHorizontal: 12 }}>
@@ -384,43 +430,47 @@ export const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
           },
         ]}
       >
-        {/* Copy Row */}
-        <Pressable
-          onPress={() => handleAction(onCopy)}
-          style={({ pressed }) => [
-            styles.menuRow,
-            {
-              backgroundColor: pressed ? colors.primary + '15' : 'transparent',
-              borderBottomWidth: 1,
-              borderBottomColor: colors.primary + '20',
-            },
-          ]}
-        >
-          <TuiText size="sm" style={{ color: colors.foreground }}>
-            Copy
-          </TuiText>
-          <Copy size={16} color={colors.foreground} />
-        </Pressable>
+        {item.type !== 'folder' && (
+          <>
+            {/* Copy Row */}
+            <Pressable
+              onPress={() => handleAction(onCopy)}
+              style={({ pressed }) => [
+                styles.menuRow,
+                {
+                  backgroundColor: pressed ? colors.primary + '15' : 'transparent',
+                  borderBottomWidth: 1,
+                  borderBottomColor: colors.primary + '20',
+                },
+              ]}
+            >
+              <TuiText size="sm" style={{ color: colors.foreground }}>
+                Copy
+              </TuiText>
+              <Copy size={16} color={colors.foreground} />
+            </Pressable>
 
-        {/* Share Row */}
-        <Pressable
-          onPress={() => handleAction(onShare)}
-          style={({ pressed }) => [
-            styles.menuRow,
-            {
-              backgroundColor: pressed ? colors.primary + '15' : 'transparent',
-              borderBottomWidth: 1,
-              borderBottomColor: colors.primary + '20',
-            },
-          ]}
-        >
-          <TuiText size="sm" style={{ color: colors.foreground }}>
-            Share
-          </TuiText>
-          <Share2 size={16} color={colors.foreground} />
-        </Pressable>
+            {/* Share Row */}
+            <Pressable
+              onPress={() => handleAction(onShare)}
+              style={({ pressed }) => [
+                styles.menuRow,
+                {
+                  backgroundColor: pressed ? colors.primary + '15' : 'transparent',
+                  borderBottomWidth: 1,
+                  borderBottomColor: colors.primary + '20',
+                },
+              ]}
+            >
+              <TuiText size="sm" style={{ color: colors.foreground }}>
+                Share
+              </TuiText>
+              <Share2 size={16} color={colors.foreground} />
+            </Pressable>
+          </>
+        )}
 
-        {/* Edit Row — only for link/text items */}
+        {/* Edit Row — only for folders, or link/text/file items */}
         {onEdit && (
           <Pressable
             onPress={() => handleAction(onEdit)}
@@ -434,10 +484,53 @@ export const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
             ]}
           >
             <TuiText size="sm" style={{ color: colors.foreground }}>
-              Edit
+              {item.type === 'folder' ? 'Rename' : 'Edit'}
             </TuiText>
             <Pencil size={16} color={colors.foreground} />
           </Pressable>
+        )}
+
+        {/* Move to / Remove from Folder Row — only for items, not folders */}
+        {item.type !== 'folder' && (
+          item.folderId ? (
+            onRemoveFromFolder && (
+              <Pressable
+                onPress={() => handleAction(onRemoveFromFolder)}
+                style={({ pressed }) => [
+                  styles.menuRow,
+                  {
+                    backgroundColor: pressed ? colors.primary + '15' : 'transparent',
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.primary + '20',
+                  },
+                ]}
+              >
+                <TuiText size="sm" style={{ color: colors.foreground }}>
+                  Remove from Folder
+                </TuiText>
+                <Folder size={16} color={colors.foreground} />
+              </Pressable>
+            )
+          ) : (
+            onMoveToFolder && (
+              <Pressable
+                onPress={() => handleAction(onMoveToFolder)}
+                style={({ pressed }) => [
+                  styles.menuRow,
+                  {
+                    backgroundColor: pressed ? colors.primary + '15' : 'transparent',
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.primary + '20',
+                  },
+                ]}
+              >
+                <TuiText size="sm" style={{ color: colors.foreground }}>
+                  Move to Folder
+                </TuiText>
+                <FolderPlus size={16} color={colors.foreground} />
+              </Pressable>
+            )
+          )
         )}
 
         {/* Delete Row */}

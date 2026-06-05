@@ -5,6 +5,7 @@ import { TuiContainer } from '../components/tui-container';
 import { TuiText } from '../components/tui-text';
 import { DumpItem } from '../utils/storage';
 import { useTheme } from '../theme/theme-provider';
+import { FolderItem } from '../components/folder-item';
 
 interface TextsScreenProps {
   sortedItems: DumpItem[];
@@ -14,6 +15,8 @@ interface TextsScreenProps {
   onLongPress?: (item: DumpItem, bounds: { x: number; y: number; width: number; height: number }) => void;
   editingItemId: string | null;
   searchQuery?: string;
+  expandedFolders: Record<string, boolean>;
+  setExpandedFolders: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
 }
 
 interface TextItemProps {
@@ -76,6 +79,8 @@ export const TextsScreen: React.FC<TextsScreenProps> = ({
   onLongPress,
   editingItemId,
   searchQuery,
+  expandedFolders,
+  setExpandedFolders,
 }) => {
   const { colors } = useTheme();
 
@@ -90,19 +95,58 @@ export const TextsScreen: React.FC<TextsScreenProps> = ({
     );
   }
 
+  // Filter top-level items: items without folderId
+  const topLevelItems = sortedItems.filter((item) => !item.folderId);
+
   return (
     <>
-      {sortedItems.map((item) => (
-        <TextItem
-          key={item.id}
-          item={item}
-          isSelected={isSelectionMode && selectedIds.has(item.id)}
-          isSelectionMode={isSelectionMode}
-          toggleSelect={toggleSelect}
-          onLongPress={onLongPress}
-          isEditing={editingItemId === item.id}
-        />
-      ))}
+      {topLevelItems.map((item) => {
+        if (item.type === 'folder') {
+          let folderName = 'New Folder';
+          try {
+            folderName = JSON.parse(item.value).name || 'New Folder';
+          } catch {}
+          
+          const children = sortedItems.filter((child) => child.folderId === item.id);
+          const isExpanded = !!expandedFolders[item.id];
+          
+          return (
+            <FolderItem
+              key={item.id}
+              id={item.id}
+              name={folderName}
+              count={children.length}
+              isExpanded={isExpanded}
+              onToggleExpand={() => setExpandedFolders((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
+              onLongPress={(bounds) => onLongPress?.(item, bounds)}
+            >
+              {children.map((child) => (
+                <TextItem
+                  key={child.id}
+                  item={child}
+                  isSelected={isSelectionMode && selectedIds.has(child.id)}
+                  isSelectionMode={isSelectionMode}
+                  toggleSelect={toggleSelect}
+                  onLongPress={onLongPress}
+                  isEditing={editingItemId === child.id}
+                />
+              ))}
+            </FolderItem>
+          );
+        }
+
+        return (
+          <TextItem
+            key={item.id}
+            item={item}
+            isSelected={isSelectionMode && selectedIds.has(item.id)}
+            isSelectionMode={isSelectionMode}
+            toggleSelect={toggleSelect}
+            onLongPress={onLongPress}
+            isEditing={editingItemId === item.id}
+          />
+        );
+      })}
     </>
   );
 };
