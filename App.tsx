@@ -16,6 +16,7 @@ import {
   Image as RNImage,
   RefreshControl,
   Animated as RNAnimated,
+  Linking,
 } from 'react-native';
 import { Image } from 'expo-image';
 import Animated, {
@@ -50,7 +51,6 @@ import {
   CheckSquare,
   Trash2,
   Check,
-  Share2,
   ListChecks,
   ArrowLeft,
   X,
@@ -59,14 +59,15 @@ import {
   MoreHorizontal,
   Folder,
   FolderPlus,
+  Share as LucideShare,
 } from 'lucide-react-native';
+import RNShare from 'react-native-share';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Clipboard from 'expo-clipboard';
 import * as MediaLibrary from 'expo-media-library';
-import RNShare from 'react-native-share';
 
 import { ThemeProvider, useTheme } from './src/theme/theme-provider';
 import { TuiHeader } from './src/components/tui-header';
@@ -83,6 +84,9 @@ import { TabButton } from './src/components/tab-button';
 import { ContextMenuOverlay } from './src/components/context-menu-overlay';
 import { FullscreenPhotoViewer } from './src/components/fullscreen-photo-viewer';
 import { SplashIcon } from './src/components/splash-icon';
+import { parseShareUrl, processSharedItem, ParsedShare } from './src/utils/share-receiver';
+import { ShareImportSheet } from './src/components/share-import-sheet';
+import { TuiDrawer } from './src/components/tui-drawer';
 
 // Bottom bar transition settings (manually customize duration/delay here)
 const BAR_SLIDE_DURATION = 100; // milliseconds
@@ -139,6 +143,155 @@ function MainApp() {
 
   const [imageSizes, setImageSizes] = useState<Record<string, { width: number; height: number }>>({});
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+
+  const [pendingShare, setPendingShare] = useState<ParsedShare | null>(null);
+  const [isShareSheetOpen, setIsShareSheetOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!isShareSheetOpen) {
+      const timer = setTimeout(() => {
+        setPendingShare(null);
+      }, 250);
+      return () => clearTimeout(timer);
+    }
+  }, [isShareSheetOpen]);
+
+  // Animated values for iOS-style deck transition (parallax scaleout)
+  const isDrawerOpen = isPhotoSheetOpen || isShareSheetOpen;
+  const drawerProgressAnim = useRef(new RNAnimated.Value(0)).current;
+
+  const screenScaleAnim = drawerProgressAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0.93],
+  });
+  const screenTranslateYAnim = drawerProgressAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 12],
+  });
+  const screenBorderRadiusAnim = drawerProgressAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 16],
+  });
+
+  useEffect(() => {
+    // Only animate drawerProgressAnim for the photo sheet.
+    // The share sheet drawer progress is driven natively by TuiDrawer itself.
+    if (isPhotoSheetOpen) {
+      RNAnimated.spring(drawerProgressAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 50,
+        useNativeDriver: false,
+      }).start();
+    } else if (!isShareSheetOpen) {
+      RNAnimated.spring(drawerProgressAnim, {
+        toValue: 0,
+        friction: 8,
+        tension: 50,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [isPhotoSheetOpen]);
+
+  const handleDeepLink = async (url: string | null) => {
+    if (!url) return;
+    Keyboard.dismiss();
+    mainInputRef.current?.blur();
+    editInputRef.current?.blur();
+    const parsed = parseShareUrl(url);
+    if (parsed) {
+      if (parsed.type === 'link') {
+        try {
+          const { preFetchLinkMetadata } = require('./src/components/link-preview');
+          await preFetchLinkMetadata(parsed.value);
+        } catch (err) {
+          console.warn('[App] Failed to pre-fetch metadata:', err);
+        }
+      }
+      // Open the custom slide-up import sheet drawer
+      setPendingShare(parsed);
+      setIsShareSheetOpen(true);
+    }
+  };
+
+  useEffect(() => {
+    const subscription = Linking.addEventListener('url', ({ url }) => {
+      handleDeepLink(url);
+    });
+
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        handleDeepLink(url);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [items]);
+
+  const showDevShareMenu = () => {
+    Keyboard.dismiss();
+    mainInputRef.current?.blur();
+    editInputRef.current?.blur();
+    Alert.alert(
+      '[DEV] Simulate Share',
+      'Select a share type to simulate:',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Simulate Link',
+          onPress: () => {
+            handleDeepLink('boothub://share?type=link&value=https%3A%2F%2Fnews.ycombinator.com');
+          },
+        },
+        {
+          text: 'Simulate Text',
+          onPress: () => {
+            handleDeepLink('boothub://share?type=text&value=Hello%20world%20from%20simulated%20share!');
+          },
+        },
+        {
+          text: 'Simulate Photo (assets/image.png)',
+          onPress: async () => {
+            try {
+              const assetSource = RNImage.resolveAssetSource(require('./assets/image.png'));
+              const assetUri = assetSource.uri;
+              console.log('[Simulate Share] Resolved assetUri:', assetUri);
+              handleDeepLink(`boothub://share?type=photo&value=${encodeURIComponent(assetUri)}`);
+            } catch (err) {
+              console.error(err);
+            }
+          },
+        },
+        {
+          text: 'Simulate Link with Preview',
+          onPress: () => {
+            handleDeepLink('boothub://share?type=link&value=https%3A%2F%2Fwww.instagram.com%2Freel%2FDZA1N5AIpjG%2F');
+          },
+        },
+        {
+          text: 'Simulate Long Text',
+          onPress: () => {
+            const longText = 'This is a very long text dump to test how the share import sheet renders multi-line content. It should be displayed safely within its container and wrap correctly without overflowing or pushing other elements out of the viewport. Let\'s make sure that everything stays completely within bounds!';
+            handleDeepLink(`boothub://share?type=text&value=${encodeURIComponent(longText)}`);
+          },
+        },
+        {
+          text: 'Simulate File (Dummy PDF)',
+          onPress: async () => {
+            try {
+              const dummyUri = `${FileSystem.documentDirectory}dummy_document.pdf`;
+              await FileSystem.writeAsStringAsync(dummyUri, 'dummy pdf content');
+              handleDeepLink(`boothub://share?type=file&value=${encodeURIComponent(dummyUri)}&name=dummy_document.pdf&size=1234&mimeType=application/pdf`);
+            } catch (err) {
+              console.error(err);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const getActiveExpandedFolder = () => {
     const activeTabFolders = items.filter((x) => {
@@ -535,25 +688,39 @@ function MainApp() {
   const handleShareItem = async (item: DumpItem) => {
     setContextMenuPhoto(null);
     try {
-      if (item.type === 'photo') {
+      const actualType = getActualType(item.value, item.type);
+      if (actualType === 'photo') {
         const resolvedUri = await resolveToLocalFileUri(item.value);
-        const isSharingAvailable = await Sharing.isAvailableAsync();
-        if (isSharingAvailable) {
-          await Sharing.shareAsync(ensureFileUri(resolvedUri));
+        if (Platform.OS === 'ios') {
+          const isPng = resolvedUri.toLowerCase().endsWith('.png');
+          const mimeType = isPng ? 'image/png' : 'image/jpeg';
+          const base64 = await FileSystem.readAsStringAsync(resolvedUri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          await Share.share({
+            url: `data:${mimeType};base64,${base64}`,
+          });
         } else {
-          await Share.share({ message: item.value });
+          await Sharing.shareAsync(ensureFileUri(resolvedUri));
         }
-      } else if (item.type === 'file') {
+      } else if (actualType === 'file') {
         try {
           const fileObj = JSON.parse(item.value);
           const fileUri = ensureFileUri(fileObj.uri);
-          const isSharingAvailable = await Sharing.isAvailableAsync();
-          if (isSharingAvailable && fileUri) {
-            await Sharing.shareAsync(fileUri);
-          } else if (fileUri) {
-            await RNShare.open({ url: fileUri });
-          } else {
-            Alert.alert('Share Error', 'Sharing is not available for this file.');
+          try {
+            await RNShare.open({
+              url: fileUri,
+              type: fileObj.mimeType || undefined,
+            });
+          } catch (err) {
+            const isSharingAvailable = await Sharing.isAvailableAsync();
+            if (isSharingAvailable && fileUri) {
+              await Sharing.shareAsync(fileUri, {
+                mimeType: fileObj.mimeType || undefined,
+              });
+            } else {
+              Alert.alert('Share Error', 'Sharing is not available for this file.');
+            }
           }
         } catch (e: any) {
           const isCancelError = /user did not share|cancel|dismiss/i.test(e?.message || String(e));
@@ -561,9 +728,13 @@ function MainApp() {
             Alert.alert('Share Error', e?.message || String(e));
           }
         }
-      } else if (item.type === 'link') {
-        // Use the `url` field so apps like Messenger receive a real URL, not just text
-        await Share.share({ url: item.value, message: item.value });
+      } else if (actualType === 'link') {
+        // Fix duplicate link bug: share only url on iOS, and only message on Android
+        if (Platform.OS === 'ios') {
+          await Share.share({ url: item.value });
+        } else {
+          await Share.share({ message: item.value });
+        }
       } else {
         await Share.share({ message: item.value });
       }
@@ -609,76 +780,7 @@ function MainApp() {
     );
   };
 
-  const handleBulkShare = async () => {
-    if (selectedIds.size === 0) return;
-    const selectedItems = items.filter((item) => selectedIds.has(item.id));
 
-    try {
-      // 1. Separate file/photo paths from text/link items
-      const fileUris: string[] = [];
-      const links = selectedItems.filter((item) => item.type === 'link');
-      const texts = selectedItems.filter((item) => item.type === 'text');
-
-      for (const item of selectedItems) {
-        if (item.type === 'file') {
-          try {
-            const fileObj = JSON.parse(item.value);
-            if (fileObj.uri) {
-              fileUris.push(ensureFileUri(fileObj.uri));
-            }
-          } catch (err) {
-            console.warn('Failed to parse file object value:', err);
-          }
-        } else if (item.type === 'photo') {
-          const resolvedUri = await resolveToLocalFileUri(item.value);
-          fileUris.push(ensureFileUri(resolvedUri));
-        }
-      }
-
-      // 2. If we have any file/photo URIs, share them as actual files
-      if (fileUris.length > 0) {
-        if (fileUris.length === 1) {
-          const isSharingAvailable = await Sharing.isAvailableAsync();
-          if (isSharingAvailable) {
-            await Sharing.shareAsync(fileUris[0]);
-          } else {
-            await RNShare.open({ url: fileUris[0] });
-          }
-        } else {
-          // Share multiple files
-          await RNShare.open({ urls: fileUris });
-        }
-      } else {
-        // For links: always pass the `url` field so Messenger and other apps receive
-        // a real URL object (not just plain text). Pass all links as message too.
-        const shareMessage = selectedItems.map((item) => item.value).join('\n');
-        const firstLink = links[0]?.value;
-
-        if (links.length === 1 && texts.length === 0) {
-          // Single link — cleanest share: just url + message identical
-          await Share.share({ url: firstLink, message: firstLink });
-        } else if (firstLink) {
-          // Multiple items including at least one link
-          await Share.share({ url: firstLink, message: shareMessage });
-        } else {
-          // Pure text items
-          await Share.share({ message: shareMessage });
-        }
-      }
-
-      // Deselect items and exit selection mode after triggering share
-      setSelectedIds(new Set());
-      setIsSelectionMode(false);
-    } catch (e: any) {
-      // Clean up selection state even if user cancels out of the share dialog
-      setSelectedIds(new Set());
-      setIsSelectionMode(false);
-      const isCancelError = /user did not share|cancel|dismiss/i.test(e?.message || String(e));
-      if (isCancelError) return;
-      console.error('Sharing failed:', e);
-      Alert.alert('Share Error', e?.message || String(e));
-    }
-  };
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
@@ -720,14 +822,128 @@ function MainApp() {
     );
   };
 
+  const handleBulkShare = async () => {
+    if (selectedIds.size === 0) return;
+    const selectedItems = items.filter((item) => selectedIds.has(item.id));
+
+    try {
+      // 1. Separate file/photo paths from text/link items
+      const fileUris: string[] = [];
+      const links = selectedItems.filter((item) => item.type === 'link');
+      const texts = selectedItems.filter((item) => item.type === 'text');
+
+      for (const item of selectedItems) {
+        if (item.type === 'file') {
+          try {
+            const fileObj = JSON.parse(item.value);
+            if (fileObj.uri) {
+              fileUris.push(ensureFileUri(fileObj.uri));
+            }
+          } catch (err) {
+            console.warn('Failed to parse file object value:', err);
+          }
+        } else if (item.type === 'photo') {
+          const resolvedUri = await resolveToLocalFileUri(item.value);
+          if (Platform.OS === 'ios') {
+            const isPng = resolvedUri.toLowerCase().endsWith('.png');
+            const mimeType = isPng ? 'image/png' : 'image/jpeg';
+            const base64 = await FileSystem.readAsStringAsync(resolvedUri, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+            fileUris.push(`data:${mimeType};base64,${base64}`);
+          } else {
+            fileUris.push(ensureFileUri(resolvedUri));
+          }
+        }
+      }
+
+      // 2. If we have any file/photo URIs, share them
+      if (fileUris.length > 0) {
+        try {
+          if (fileUris.length === 1) {
+            const isPng = fileUris[0].toLowerCase().endsWith('.png') || fileUris[0].startsWith('data:image/png');
+            const mimeType = isPng ? 'image/png' : 'image/jpeg';
+            if (fileUris[0].startsWith('data:')) {
+              await Share.share({ url: fileUris[0] });
+            } else {
+              await RNShare.open({
+                url: fileUris[0],
+                type: mimeType,
+              });
+            }
+          } else {
+            // Share multiple files
+            await RNShare.open({ urls: fileUris });
+          }
+        } catch (err) {
+          // Fallback if RNShare is not compiled
+          const firstFile = fileUris[0];
+          if (firstFile.startsWith('data:')) {
+            await Share.share({ url: firstFile });
+          } else {
+            const isSharingAvailable = await Sharing.isAvailableAsync();
+            if (isSharingAvailable) {
+              await Sharing.shareAsync(firstFile);
+            } else {
+              Alert.alert('Share Error', 'Sharing is not available.');
+            }
+          }
+        }
+      } else {
+        // For links: always pass the `url` field so Messenger and other apps receive
+        // a real URL object (not just plain text). Pass all links as message too.
+        const shareMessage = selectedItems.map((item) => item.value).join('\n');
+        const firstLink = links[0]?.value;
+
+        if (links.length === 1 && texts.length === 0) {
+          // Single link — cleanest share: just url on iOS, message on Android
+          if (Platform.OS === 'ios') {
+            await Share.share({ url: firstLink });
+          } else {
+            await Share.share({ message: firstLink });
+          }
+        } else if (firstLink) {
+          // Multiple items including at least one link
+          if (Platform.OS === 'ios') {
+            await Share.share({ url: firstLink, message: shareMessage });
+          } else {
+            await Share.share({ message: shareMessage });
+          }
+        } else {
+          // Pure text items
+          await Share.share({ message: shareMessage });
+        }
+      }
+
+      // Deselect items and exit selection mode after triggering share
+      setSelectedIds(new Set());
+      setIsSelectionMode(false);
+    } catch (e: any) {
+      // Clean up selection state even if user cancels out of the share dialog
+      setSelectedIds(new Set());
+      setIsSelectionMode(false);
+      const isCancelError = /user did not share|cancel|dismiss/i.test(e?.message || String(e));
+      if (isCancelError) return;
+      console.error('Sharing failed:', e);
+      Alert.alert('Share Error', e?.message || String(e));
+    }
+  };
+
   const handleShareActivePhoto = async () => {
     if (!activeFullscreenPhoto) return;
     try {
-      const isSharingAvailable = await Sharing.isAvailableAsync();
-      if (isSharingAvailable) {
-        await Sharing.shareAsync(ensureFileUri(activeFullscreenPhoto.value));
+      const resolvedUri = await resolveToLocalFileUri(activeFullscreenPhoto.value);
+      if (Platform.OS === 'ios') {
+        const isPng = resolvedUri.toLowerCase().endsWith('.png');
+        const mimeType = isPng ? 'image/png' : 'image/jpeg';
+        const base64 = await FileSystem.readAsStringAsync(resolvedUri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        await Share.share({
+          url: `data:${mimeType};base64,${base64}`,
+        });
       } else {
-        await Share.share({ message: activeFullscreenPhoto.value });
+        await Sharing.shareAsync(ensureFileUri(resolvedUri));
       }
     } catch (e: any) {
       const isCancelError = /user did not share|cancel|dismiss/i.test(e?.message || String(e));
@@ -854,6 +1070,7 @@ function MainApp() {
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editText, setEditText] = useState<string>('');
   const editInputRef = useRef<TextInput>(null);
+  const mainInputRef = useRef<TextInput>(null);
 
   const [toast, setToast] = useState<{ label: string; caption: string } | null>(null);
   const toastOpacity = useSharedValue(0);
@@ -1261,8 +1478,20 @@ function MainApp() {
   return (
     // No KeyboardAvoidingView — the Animated.View spacer below handles it
     // natively via Reanimated's useAnimatedKeyboard shared value.
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <SafeAreaView
+    <View style={{ flex: 1, backgroundColor: '#000000' }}>
+      <RNAnimated.View
+        style={{
+          flex: 1,
+          backgroundColor: colors.background,
+          transform: [
+            { scale: screenScaleAnim },
+            { translateY: screenTranslateYAnim },
+          ],
+          borderRadius: screenBorderRadiusAnim,
+          overflow: 'hidden',
+        }}
+      >
+        <SafeAreaView
         style={[
           styles.safeArea,
           { backgroundColor: colors.background }
@@ -1292,30 +1521,7 @@ function MainApp() {
           <View style={styles.sectionHeaderRow}>
             {renderSearchBar()}
             <View style={styles.headerActions}>
-              {isSelectionMode && (
-                <Animated.View style={subButtonStyle}>
-                  <Pressable
-                    onPress={handleToggleSelectAll}
-                    style={({ pressed }) => {
-                      const allSelected = sortedItems.length > 0 && sortedItems.every((item) => selectedIds.has(item.id));
-                      return [
-                        styles.headerActionBtn,
-                        {
-                          borderColor: colors.primary,
-                          backgroundColor: allSelected
-                            ? colors.primary + '25'
-                            : pressed
-                              ? colors.primary + '15'
-                              : 'transparent',
-                          width: 48,
-                        },
-                      ];
-                    }}
-                  >
-                    <ListChecks size={16} color={colors.primary} />
-                  </Pressable>
-                </Animated.View>
-              )}
+
 
               {!isSelectionMode && (
                 <Animated.View style={subButtonStyle}>
@@ -1555,6 +1761,32 @@ function MainApp() {
           </ScrollView>
         </ScrollView>
 
+        {/* DEV Simulate Share Button */}
+        {__DEV__ && (
+          <Pressable
+            onPress={showDevShareMenu}
+            style={({ pressed }) => [
+              {
+                position: 'absolute',
+                bottom: 110,
+                right: 20,
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: '#FF3B30',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10000,
+                borderWidth: 1.5,
+                borderColor: '#000000',
+                transform: [{ scale: pressed ? 0.95 : 1 }],
+              }
+            ]}
+          >
+            <TuiText size="xs" style={{ color: '#FFF', fontWeight: 'bold' }}>DEV</TuiText>
+          </Pressable>
+        )}
+
         {/* Fullscreen Photo Overlay with native horizontal paging and swipe-down-to-close */}
         {activeFullscreenPhotoIndex !== null && activeFullscreenPhoto && (
           <FullscreenPhotoViewer
@@ -1583,21 +1815,46 @@ function MainApp() {
         >
           {isSelectionMode ? (
             <View style={[styles.bottomBarRow, { justifyContent: 'space-between', alignItems: 'center' }]}>
-              <Pressable
-                onPress={handleBulkShare}
-                disabled={selectedIds.size === 0}
-                hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
-                style={({ pressed }) => [
-                  styles.iconBtn,
-                  {
-                    borderColor: colors.primary,
-                    backgroundColor: pressed ? colors.primary + '25' : 'transparent',
-                    opacity: selectedIds.size === 0 ? 0.4 : 1,
-                  },
-                ]}
-              >
-                <Share2 size={16} color={colors.primary} />
-              </Pressable>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                {/* Select All */}
+                <Pressable
+                  onPress={handleToggleSelectAll}
+                  hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+                  style={({ pressed }) => {
+                    const allSelected = sortedItems.length > 0 && sortedItems.every((item) => selectedIds.has(item.id));
+                    return [
+                      styles.iconBtn,
+                      {
+                        borderColor: colors.primary,
+                        backgroundColor: allSelected
+                          ? colors.primary + '25'
+                          : pressed
+                            ? colors.primary + '15'
+                            : 'transparent',
+                      },
+                    ];
+                  }}
+                >
+                  <ListChecks size={16} color={colors.primary} />
+                </Pressable>
+
+                {/* Bulk Share */}
+                <Pressable
+                  onPress={handleBulkShare}
+                  disabled={selectedIds.size === 0}
+                  hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+                  style={({ pressed }) => [
+                    styles.iconBtn,
+                    {
+                      borderColor: colors.primary,
+                      backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+                      opacity: selectedIds.size === 0 ? 0.4 : 1,
+                    },
+                  ]}
+                >
+                  <LucideShare size={16} color={colors.primary} />
+                </Pressable>
+              </View>
 
               <TuiText
                 size="sm"
@@ -1723,6 +1980,7 @@ function MainApp() {
 
               {/* Text Input */}
               <TextInput
+                ref={mainInputRef}
                 style={[
                   styles.input,
                   {
@@ -1842,6 +2100,38 @@ function MainApp() {
         )}
       </Animated.View>
 
+      {/* Import Share Drawer using TuiDrawer */}
+      {pendingShare && (
+        <TuiDrawer
+          visible={isShareSheetOpen}
+          onClose={() => setIsShareSheetOpen(false)}
+          title={`Save shared ${pendingShare.type}`}
+          progressAnim={drawerProgressAnim}
+        >
+          <ShareImportSheet
+            parsedShare={pendingShare}
+            folders={items}
+            onCancel={() => setIsShareSheetOpen(false)}
+            onSave={async (folderId) => {
+              setIsShareSheetOpen(false);
+              const processed = await processSharedItem(pendingShare);
+              if (processed) {
+                const updatedList = await getItems();
+                if (folderId && updatedList.length > 0) {
+                  // Bind folderId to the newly added item (index 0)
+                  const finalUpdated = await setItemFolder(updatedList[0].id, folderId);
+                  setItems(finalUpdated);
+                } else {
+                  setItems(updatedList);
+                }
+                switchTab(processed.type);
+                showToast('Saved!', processed.label);
+              }
+            }}
+          />
+        </TuiDrawer>
+      )}
+
       {/* Context Menu Overlay */}
       {contextMenuPhoto && (
         <ContextMenuOverlay
@@ -1898,6 +2188,7 @@ function MainApp() {
           )}
         </RNAnimated.View>
       )}
+      </RNAnimated.View>
     </View>
   );
 }

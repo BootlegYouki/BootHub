@@ -150,7 +150,9 @@ const FileItem: React.FC<FileItemProps> = ({
       const fileUri = ensureFileUri(fileInfo.uri);
       const isAvailable = await Sharing.isAvailableAsync();
       if (isAvailable && fileUri) {
-        await Sharing.shareAsync(fileUri);
+        await Sharing.shareAsync(fileUri, {
+          mimeType: fileInfo.mimeType || undefined,
+        });
       }
     } catch (e) {
       console.error('Failed to open local file:', e);

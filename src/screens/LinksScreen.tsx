@@ -1,9 +1,9 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { View, StyleSheet, UIManager, findNodeHandle } from 'react-native';
 
 import { TuiContainer } from '../components/tui-container';
 import { TuiText } from '../components/tui-text';
-import { LinkPreview } from '../components/link-preview';
+import { LinkPreview, previewCache, PreviewData } from '../components/link-preview';
 import { DumpItem } from '../utils/storage';
 import { useTheme } from '../theme/theme-provider';
 import { formatBreakAll, handleOpenUrl } from '../utils/helpers';
@@ -51,6 +51,14 @@ const LinkItem: React.FC<LinkItemProps> = ({
     }
   };
 
+  const [previewData, setPreviewData] = useState<PreviewData | null>(() => previewCache.get(item.value) || null);
+
+  useEffect(() => {
+    setPreviewData(previewCache.get(item.value) || null);
+  }, [item.value]);
+
+  const hasPhotoAndCaption = !!(previewData && previewData.image && previewData.title);
+
   return (
     <View ref={itemRef}>
       <TuiContainer
@@ -71,17 +79,19 @@ const LinkItem: React.FC<LinkItemProps> = ({
         }
         onLongPress={!isSelectionMode && !isEditing ? handleLongPress : undefined}
       >
-        <View style={styles.urlPadding} pointerEvents="none">
-          <TuiText
-            size="md"
-            weight="bold"
-            style={{ color: colors.primary, textDecorationLine: 'underline' }}
-          >
-            {formatBreakAll(item.value)}
-          </TuiText>
-        </View>
+        {!hasPhotoAndCaption && (
+          <View style={styles.urlPadding} pointerEvents="none">
+            <TuiText
+              size="md"
+              weight="bold"
+              style={{ color: colors.primary, textDecorationLine: 'underline' }}
+            >
+              {formatBreakAll(item.value)}
+            </TuiText>
+          </View>
+        )}
         <View pointerEvents="none">
-          <LinkPreview url={item.value} />
+          <LinkPreview url={item.value} hideDivider={hasPhotoAndCaption} onLoad={setPreviewData} />
         </View>
       </TuiContainer>
     </View>

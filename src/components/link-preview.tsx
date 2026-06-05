@@ -13,6 +13,8 @@ export interface PreviewData {
 
 interface LinkPreviewProps {
   url: string;
+  hideDivider?: boolean;
+  onLoad?: (data: PreviewData | null) => void;
 }
 
 // In-memory cache to prevent multiple fetches of the same URL in a single session
@@ -65,7 +67,86 @@ const isDirectImageUrl = (url: string) => {
   );
 };
 
-export const LinkPreview: React.FC<LinkPreviewProps> = ({ url }) => {
+export const preFetchLinkMetadata = async (url: string): Promise<PreviewData | null> => {
+  // 1. Check in-memory cache
+  if (previewCache.has(url)) {
+    return previewCache.get(url) || null;
+  }
+
+  // 2. Handle direct image
+  if (isDirectImageUrl(url)) {
+    const filename = url.substring(url.lastIndexOf('/') + 1).split('?')[0];
+    const directData: PreviewData = {
+      image: url,
+      title: filename || 'Direct Image',
+      description: 'Direct Image Link',
+    };
+    previewCache.set(url, directData);
+    return directData;
+  }
+
+  // 3. Check AsyncStorage cache
+  const cacheKey = getStorageKeyForUrl(url);
+  try {
+    const cachedRaw = await AsyncStorage.getItem(cacheKey);
+    if (cachedRaw) {
+      const parsed = JSON.parse(cachedRaw) as PreviewData;
+      previewCache.set(url, parsed);
+      return parsed;
+    }
+  } catch (e) {
+    console.warn('Failed to read persistent preview cache in prefetch:', e);
+  }
+
+  // 4. Scrape webpage
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1'
+      }
+    });
+    const html = await response.text();
+
+    const metaTags = extractMetaTags(html);
+    
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    const htmlTitle = titleMatch ? decodeHtmlEntities(titleMatch[1].trim()) : null;
+    const ogTitle = metaTags['og:title'] || metaTags['twitter:title'];
+    const title = ogTitle ? decodeHtmlEntities(ogTitle) : htmlTitle;
+    
+    const ogDesc = metaTags['og:description'] || metaTags['twitter:description'] || metaTags['description'];
+    const description = ogDesc ? decodeHtmlEntities(ogDesc) : null;
+    
+    const ogImage = metaTags['og:image'] || metaTags['twitter:image'];
+    const image = ogImage ? decodeHtmlEntities(ogImage) : null;
+
+    const parsedData: PreviewData = {
+      image,
+      title,
+      description,
+    };
+
+    const isValidData = !!(parsedData.image || parsedData.title);
+    const finalData = isValidData ? parsedData : null;
+
+    previewCache.set(url, finalData);
+
+    if (finalData) {
+      try {
+        await AsyncStorage.setItem(cacheKey, JSON.stringify(finalData));
+      } catch (e) {
+        console.warn('Failed to save to persistent cache in prefetch:', e);
+      }
+    }
+    return finalData;
+  } catch (err) {
+    console.warn('Failed to load link preview in prefetch for:', url, err);
+    previewCache.set(url, null);
+    return null;
+  }
+};
+
+export const LinkPreview: React.FC<LinkPreviewProps> = ({ url, hideDivider = false, onLoad }) => {
   const { colors, isDark } = useTheme();
   const [loading, setLoading] = useState<boolean>(() => {
     return !previewCache.has(url);
@@ -96,6 +177,10 @@ export const LinkPreview: React.FC<LinkPreviewProps> = ({ url }) => {
     inputRange: [0, 1],
     outputRange: [0.25, 0.65],
   });
+
+  useEffect(() => {
+    onLoad?.(data);
+  }, [data, onLoad]);
 
   useEffect(() => {
     let active = true;
@@ -211,7 +296,9 @@ export const LinkPreview: React.FC<LinkPreviewProps> = ({ url }) => {
   if (loading) {
     return (
       <View style={styles.previewWrapper}>
-        <View style={[styles.sectionDivider, { backgroundColor: dividerColor }]} />
+        {!hideDivider && (
+          <View style={[styles.sectionDivider, { backgroundColor: dividerColor }]} />
+        )}
         <Animated.View 
           style={[
             styles.imageSection, 
@@ -261,7 +348,9 @@ export const LinkPreview: React.FC<LinkPreviewProps> = ({ url }) => {
   return (
     <View style={styles.previewWrapper}>
       {/* 1. Divider line below the Link URL */}
-      <View style={[styles.sectionDivider, { backgroundColor: dividerColor }]} />
+      {!hideDivider && (
+        <View style={[styles.sectionDivider, { backgroundColor: dividerColor }]} />
+      )}
 
       {/* 2. Edge-to-edge Image Section */}
       {data.image && (

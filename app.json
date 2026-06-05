@@ -11,6 +11,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
+    "scheme": "boothub",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.bootlegyouki.boothub",
@@ -36,6 +37,28 @@
         {
           "photosPermission": "Allow BootHub to access your photos to save and display dumped images.",
           "savePhotosPermission": "Allow BootHub to save images to your library."
+        }
+      ],
+      [
+        "expo-share-extension",
+        {
+          "activationRules": [
+            {
+              "type": "image",
+              "max": 10
+            },
+            {
+              "type": "file",
+              "max": 10
+            },
+            {
+              "type": "url",
+              "max": 1
+            },
+            {
+              "type": "text"
+            }
+          ]
         }
       ]
     ]

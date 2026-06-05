@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -14,7 +14,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Copy, Share2, Pencil, Trash2, Folder, FolderPlus } from 'lucide-react-native';
+import { Copy, Share, Pencil, Trash2, Folder, FolderPlus } from 'lucide-react-native';
 
 import { useTheme } from '../theme/theme-provider';
 import { TuiText } from './tui-text';
@@ -51,6 +51,12 @@ export const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
   const { item, bounds } = contextMenuPhoto;
+
+  const [size, setSize] = useState<{ width: number; height: number } | null>(() => imageSizes[item.id] || null);
+
+  useEffect(() => {
+    setSize(imageSizes[item.id] || null);
+  }, [item.id, imageSizes]);
 
   const isPhoto = item.type === 'photo';
   // Photos: grow in (0.9 → 1.0) — zoom reveal
@@ -101,8 +107,8 @@ export const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
   let previewLeft: number;
 
   if (item.type === 'photo') {
-    const size = imageSizes[item.id];
-    const r = size ? size.width / size.height : 1.0;
+    const activeSize = size;
+    const r = activeSize ? activeSize.width / activeSize.height : 1.0;
     previewWidth = maxPreviewWidth;
     previewHeight = maxPreviewWidth / r;
     if (previewHeight > maxPreviewHeight) {
@@ -271,6 +277,14 @@ export const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
             }}
             contentFit="contain"
             transition={0}
+            onLoad={(e) => {
+              if (!size) {
+                const { width, height } = e.source;
+                if (width > 0 && height > 0) {
+                  setSize({ width, height });
+                }
+              }
+            }}
           />
         ) : (
           /* TuiContainer replica — exact card size, no label */
@@ -465,7 +479,7 @@ export const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
               <TuiText size="sm" style={{ color: colors.foreground }}>
                 Share
               </TuiText>
-              <Share2 size={16} color={colors.foreground} />
+              <Share size={16} color={colors.foreground} />
             </Pressable>
           </>
         )}

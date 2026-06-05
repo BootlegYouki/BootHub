@@ -16,7 +16,7 @@ import Animated, {
   interpolate,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Share2, Trash2 } from 'lucide-react-native';
+import { ArrowLeft, Share, Trash2 } from 'lucide-react-native';
 
 import { useTheme } from '../theme/theme-provider';
 import { TuiText } from './tui-text';
@@ -588,7 +588,7 @@ export const FullscreenPhotoViewer: React.FC<FullscreenPhotoViewerProps> = ({
               },
             ]}
           >
-            <Share2 size={16} color={colors.primary} />
+            <Share size={16} color={colors.primary} />
           </Pressable>
 
           <Pressable

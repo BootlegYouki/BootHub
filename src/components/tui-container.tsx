@@ -42,6 +42,8 @@ export const TuiContainer: React.FC<TuiContainerProps> = ({
 
   const scale = useSharedValue(1);
 
+  const showLegend = !!(label || badge);
+
   const animatedPressableStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: scale.value }],
@@ -84,51 +86,68 @@ export const TuiContainer: React.FC<TuiContainerProps> = ({
       <View style={[styles.borderLeft, { backgroundColor: borderColor, opacity: borderOpacity }]} />
       <View style={[styles.borderRight, { backgroundColor: borderColor, opacity: borderOpacity }]} />
       <View style={[styles.borderBottom, { backgroundColor: borderColor, opacity: borderOpacity }]} />
-      <View style={[styles.borderTopLeft, { backgroundColor: borderColor, opacity: borderOpacity }]} />
-      <View 
-        style={[
-          styles.borderTopRight, 
-          { 
-            backgroundColor: borderColor, 
-            opacity: borderOpacity,
-            left: 12 + legendWidth,
-          }
-        ]} 
-      />
+      
+      {showLegend ? (
+        <>
+          <View style={[styles.borderTopLeft, { backgroundColor: borderColor, opacity: borderOpacity }]} />
+          <View 
+            style={[
+              styles.borderTopRight, 
+              { 
+                backgroundColor: borderColor, 
+                opacity: borderOpacity,
+                left: 12 + legendWidth,
+              }
+            ]} 
+          />
+        </>
+      ) : (
+        <View 
+          style={[
+            styles.borderTopSolid, 
+            { 
+              backgroundColor: borderColor, 
+              opacity: borderOpacity,
+            }
+          ]} 
+        />
+      )}
 
       {/* Legend Container */}
-      <View
-        onLayout={(e) => setLegendWidth(e.nativeEvent.layout.width)}
-        style={[
-          styles.legendWrapper,
-          {
-            backgroundColor: 'transparent',
-          },
-        ]}
-      >
-        <TuiText weight="bold" size={labelSize} style={{ color: colors.primary }}>
-          {label}
-        </TuiText>
-        {badge && (
-          <Pressable
-            disabled={!onBadgePress}
-            onPress={onBadgePress}
-            style={({ pressed }) => [
-              styles.badgeContainer,
-              {
-                borderColor: colors.primary,
-                backgroundColor: pressed 
-                  ? colors.primary + '30' 
-                  : (isDark ? colors.primary + '15' : colors.primary + '10'),
-              },
-            ]}
-          >
-            <TuiText size="sm" weight="bold" style={{ color: colors.primary }}>
-              {badge}
-            </TuiText>
-          </Pressable>
-        )}
-      </View>
+      {showLegend && (
+        <View
+          onLayout={(e) => setLegendWidth(e.nativeEvent.layout.width)}
+          style={[
+            styles.legendWrapper,
+            {
+              backgroundColor: 'transparent',
+            },
+          ]}
+        >
+          <TuiText weight="bold" size={labelSize} style={{ color: colors.primary }}>
+            {label}
+          </TuiText>
+          {badge && (
+            <Pressable
+              disabled={!onBadgePress}
+              onPress={onBadgePress}
+              style={({ pressed }) => [
+                styles.badgeContainer,
+                {
+                  borderColor: colors.primary,
+                  backgroundColor: pressed 
+                    ? colors.primary + '30' 
+                    : (isDark ? colors.primary + '15' : colors.primary + '10'),
+                },
+              ]}
+            >
+              <TuiText size="sm" weight="bold" style={{ color: colors.primary }}>
+                {badge}
+              </TuiText>
+            </Pressable>
+          )}
+        </View>
+      )}
 
       {/* Main Content */}
       <View style={[styles.content, contentStyle]}>{children}</View>
@@ -179,6 +198,14 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     right: 0,
+    height: 1.5,
+    zIndex: 5,
+  },
+  borderTopSolid: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
     height: 1.5,
     zIndex: 5,
   },

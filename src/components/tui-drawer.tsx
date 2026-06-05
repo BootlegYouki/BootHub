@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, Modal, Pressable, Animated, Dimensions, Keyboard, Easing } from 'react-native';
+import { View, StyleSheet, Modal, Pressable, Animated, Dimensions, Keyboard, Easing, PanResponder } from 'react-native';
 import { useTheme } from '../theme/theme-provider';
 import { TuiText } from './tui-text';
 
@@ -18,6 +18,7 @@ interface TuiDrawerProps {
   title: string;
   children: React.ReactNode;
   keyboardOffset?: number;
+  progressAnim?: Animated.Value;
 }
 
 export const TuiDrawer: React.FC<TuiDrawerProps> = ({
@@ -26,6 +27,7 @@ export const TuiDrawer: React.FC<TuiDrawerProps> = ({
   title,
   children,
   keyboardOffset = 0,
+  progressAnim,
 }) => {
   const { colors, isDark } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
@@ -33,20 +35,72 @@ export const TuiDrawer: React.FC<TuiDrawerProps> = ({
   const [cardHeight, setCardHeight] = useState(300);
   const [legendWidth, setLegendWidth] = useState(0);
 
-  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+  const activeAnim = useRef(progressAnim || new Animated.Value(0)).current;
   const nudgeAnim = useRef(new Animated.Value(0)).current;
+
+  const slideAnim = activeAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [cardHeight || 300, 0],
+  });
+
+  const latest = useRef({ cardHeight, onClose });
+  latest.current = { cardHeight, onClose };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        return Math.abs(gestureState.dy) > 2;
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        if (gestureState.dy > 0) {
+          const { cardHeight: currentHeight } = latest.current;
+          const dragProgress = 1 - (gestureState.dy / (currentHeight || 300));
+          activeAnim.setValue(Math.max(0, Math.min(1, dragProgress)));
+        }
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        if (Math.abs(gestureState.dy) < 10 && Math.abs(gestureState.dx) < 10) {
+          Keyboard.dismiss();
+          return;
+        }
+
+        const { cardHeight: currentHeight, onClose: currentOnClose } = latest.current;
+
+        if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+          Animated.timing(activeAnim, {
+            toValue: 0,
+            duration: 150,
+            easing: Easing.out(Easing.ease),
+            useNativeDriver: true,
+          }).start(() => {
+            currentOnClose();
+          });
+        } else {
+          Animated.spring(activeAnim, {
+            toValue: 1,
+            ...SPRING_CONFIG_OPEN,
+          }).start();
+        }
+      },
+      onPanResponderTerminate: () => {
+        Animated.spring(activeAnim, {
+          toValue: 1,
+          ...SPRING_CONFIG_OPEN,
+        }).start();
+      },
+    })
+  ).current;
 
   const borderTopLeftWidth = Math.max(0, (cardWidth - legendWidth) / 2);
   const borderTopRightLeft = Math.max(0, (cardWidth + legendWidth) / 2);
 
-  // Interpolate backdrop opacity dynamically based on slide position
-  const backdropOpacity = slideAnim.interpolate({
-    inputRange: [0, cardHeight || 300],
-    outputRange: [0.65, 0],
+  // Interpolate backdrop opacity dynamically based on active progress
+  const backdropOpacity = activeAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 0.65],
     extrapolate: 'clamp',
   });
-
-
 
   // Sync nudge animation when keyboardOffset changes
   useEffect(() => {
@@ -62,15 +116,15 @@ export const TuiDrawer: React.FC<TuiDrawerProps> = ({
   useEffect(() => {
     if (visible) {
       setModalVisible(true);
-      slideAnim.setValue(cardHeight || 300);
-      Animated.spring(slideAnim, {
-        toValue: 0,
+      activeAnim.setValue(0);
+      Animated.spring(activeAnim, {
+        toValue: 1,
         ...SPRING_CONFIG_OPEN,
       }).start();
     } else if (modalVisible) {
-      Animated.timing(slideAnim, {
-        toValue: cardHeight || 300,
-        duration: 200,
+      Animated.timing(activeAnim, {
+        toValue: 0,
+        duration: 150,
         easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       }).start(() => {
@@ -113,8 +167,17 @@ export const TuiDrawer: React.FC<TuiDrawerProps> = ({
               }
             ]}
           >
-            {/* Dismiss keyboard when clicking empty space inside the drawer */}
-            <Pressable style={StyleSheet.absoluteFill} onPress={Keyboard.dismiss} />
+            {/* Background tap/drag capture area */}
+            <View 
+              {...panResponder.panHandlers}
+              style={StyleSheet.absoluteFill}
+            />
+
+            {/* Drag handle header zone */}
+            <View
+              {...panResponder.panHandlers}
+              style={styles.dragZone}
+            />
 
             {/* Custom Segmented Borders: only the top has a border to act as the shelf boundary */}
             <View style={[styles.borderTopLeft, { backgroundColor: borderAccent, width: borderTopLeftWidth }]} />
@@ -162,6 +225,14 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 40,
     position: 'relative',
+  },
+  dragZone: {
+    position: 'absolute',
+    top: -25,
+    left: 0,
+    right: 0,
+    height: 50,
+    zIndex: 110,
   },
 
   borderTopLeft: {
