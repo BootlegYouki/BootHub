@@ -32,7 +32,46 @@ jobs:
       - name: Expo Prebuild (Generate iOS folder with dev client)
         run: npx expo prebuild --platform ios --clean --no-install
 
-      - name: Install CocoaPods
+      - name: Disable Xcode Code Signing
+        run: |
+          python3 -c '
+          import os, re
+          proj_path = "ios/BootHub.xcodeproj/project.pbxproj"
+          if os.path.exists(proj_path):
+              with open(proj_path, "r") as f:
+                  content = f.read()
+              content = re.sub(r"DEVELOPMENT_TEAM\s*=\s*[^;]+;", "DEVELOPMENT_TEAM = \"\";", content)
+              content = re.sub(r"CODE_SIGN_IDENTITY\s*=\s*[^;]+;", "CODE_SIGN_IDENTITY = \"\";", content)
+              content = re.sub(r"CODE_SIGNING_REQUIRED\s*=\s*[^;]+;", "CODE_SIGNING_REQUIRED = NO;", content)
+              content = re.sub(r"CODE_SIGNING_ALLOWED\s*=\s*[^;]+;", "CODE_SIGNING_ALLOWED = NO;", content)
+              content = re.sub(r"PROVISIONING_PROFILE_SPECIFIER\s*=\s*[^;]+;", "PROVISIONING_PROFILE_SPECIFIER = \"\";", content)
+              content = re.sub(r"PROVISIONING_PROFILE\s*=\s*[^;]+;", "PROVISIONING_PROFILE = \"\";", content)
+              
+              config_section_match = re.search(r"/\* Begin XCBuildConfiguration section \*/(.*?)/\* End XCBuildConfiguration section \*/", content, re.DOTALL)
+              if config_section_match:
+                  config_section = config_section_match.group(1)
+                  new_config_section = config_section
+                  settings_blocks = re.findall(r"buildSettings\s*=\s*\{([^\}]+)\}", config_section, re.DOTALL)
+                  for block in settings_blocks:
+                      new_block = block
+                      keys_to_inject = {
+                          "CODE_SIGNING_ALLOWED": "NO",
+                          "CODE_SIGNING_REQUIRED": "NO",
+                          "CODE_SIGN_IDENTITY": "\"\"",
+                          "DEVELOPMENT_TEAM": "\"\"",
+                          "PROVISIONING_PROFILE_SPECIFIER": "\"\"",
+                      }
+                      for key, val in keys_to_inject.items():
+                          if key not in block:
+                              new_block += f"\n\t\t\t\t{key} = {val};"
+                      new_config_section = new_config_section.replace(block, new_block)
+                  content = content.replace(config_section, new_config_section)
+              with open(proj_path, "w") as f:
+                  f.write(content)
+              print("Xcode project code signing disabled successfully.")
+          '
+
+      - name: Disable CocoaPods Code Signing
         run: |
           python3 -c '
           import os
@@ -47,6 +86,9 @@ jobs:
                       f.write(content)
                   print("Podfile updated successfully to disable code signing.")
           '
+
+      - name: Install CocoaPods
+        run: |
           cd ios
           pod install
 
