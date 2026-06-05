@@ -292,13 +292,13 @@
       "norm_label": "eslint.config.js"
     },
     {
-      "label": "index.share.ts",
+      "label": "index.share.js",
       "file_type": "code",
-      "source_file": "index.share.ts",
+      "source_file": "index.share.js",
       "source_location": "L1",
-      "id": "index_share_ts",
+      "id": "index_share_js",
       "community": 5,
-      "norm_label": "index.share.ts"
+      "norm_label": "index.share.js"
     },
     {
       "label": "index.ts",
@@ -4235,12 +4235,12 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
-      "source_file": "index.share.ts",
+      "source_file": "index.share.js",
       "source_location": "L2",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "index_share_ts",
-      "target": "shareextension_tsx"
+      "source": "index_share_js",
+      "target": "shareextension_tsx",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -9326,5 +9326,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "1759e658c5b9976c797cbb2a5f74628e6064bef2"
+  "built_at_commit": "27cb70738ceb116c0d57f82a4ca5afa7fe0afd58"
 }
