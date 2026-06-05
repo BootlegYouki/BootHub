@@ -40,6 +40,8 @@ jobs:
           if os.path.exists(proj_path):
               with open(proj_path, "r") as f:
                   content = f.read()
+              
+              # 1. Global overrides
               content = re.sub(r"DEVELOPMENT_TEAM\s*=\s*[^;]+;", "DEVELOPMENT_TEAM = \"\";", content)
               content = re.sub(r"CODE_SIGN_IDENTITY\s*=\s*[^;]+;", "CODE_SIGN_IDENTITY = \"\";", content)
               content = re.sub(r"CODE_SIGNING_REQUIRED\s*=\s*[^;]+;", "CODE_SIGNING_REQUIRED = NO;", content)
@@ -47,29 +49,37 @@ jobs:
               content = re.sub(r"PROVISIONING_PROFILE_SPECIFIER\s*=\s*[^;]+;", "PROVISIONING_PROFILE_SPECIFIER = \"\";", content)
               content = re.sub(r"PROVISIONING_PROFILE\s*=\s*[^;]+;", "PROVISIONING_PROFILE = \"\";", content)
               
-              config_section_match = re.search(r"/\* Begin XCBuildConfiguration section \*/(.*?)/\* End XCBuildConfiguration section \*/", content, re.DOTALL)
-              if config_section_match:
-                  config_section = config_section_match.group(1)
-                  new_config_section = config_section
-                  settings_blocks = re.findall(r"buildSettings\s*=\s*\{([^\}]+)\}", config_section, re.DOTALL)
-                  for block in settings_blocks:
-                      new_block = block
-                      keys_to_inject = {
-                          "CODE_SIGNING_ALLOWED": "NO",
-                          "CODE_SIGNING_REQUIRED": "NO",
-                          "CODE_SIGN_IDENTITY": "\"\"",
-                          "DEVELOPMENT_TEAM": "\"\"",
-                          "PROVISIONING_PROFILE_SPECIFIER": "\"\"",
-                      }
-                      for key, val in keys_to_inject.items():
-                          if key not in block:
-                              new_block += f"\n\t\t\t\t{key} = {val};"
-                      new_config_section = new_config_section.replace(block, new_block)
-                  content = content.replace(config_section, new_config_section)
+              # 2. Block-level injection
+              def replace_settings(match):
+                  block = match.group(1)
+                  indent_match = re.search(r"(\n\s*)$", block)
+                  indent = indent_match.group(1) if indent_match else "\n\t\t\t\t"
+                  
+                  keys_to_inject = {
+                      "CODE_SIGNING_ALLOWED": "NO",
+                      "CODE_SIGNING_REQUIRED": "NO",
+                      "CODE_SIGN_IDENTITY": "\"\"",
+                      "DEVELOPMENT_TEAM": "\"\"",
+                      "PROVISIONING_PROFILE_SPECIFIER": "\"\""
+                  }
+                  
+                  cleaned_block = block
+                  if indent_match:
+                      cleaned_block = block[:-len(indent_match.group(1))]
+                      
+                  for key, val in keys_to_inject.items():
+                      if key not in cleaned_block:
+                          cleaned_block += f"\n\t\t\t\t{key} = {val};"
+                          
+                  return f"buildSettings = {{{cleaned_block}{indent}}};"
+              
+              content = re.sub(r"buildSettings\s*=\s*\{(.*?)\};", replace_settings, content, flags=re.DOTALL)
+              
               with open(proj_path, "w") as f:
                   f.write(content)
               print("Xcode project code signing disabled successfully.")
           '
+
 
       - name: Disable CocoaPods Code Signing
         run: |
