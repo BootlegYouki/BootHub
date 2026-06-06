@@ -6,11 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/splash-icon-monochrome.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#F4F4F5"
-    },
+
     "scheme": "boothub",
     "ios": {
       "supportsTablet": true,

@@ -118,6 +118,16 @@ export const FullscreenPhotoViewer: React.FC<FullscreenPhotoViewerProps> = ({
   const controlsVisible = useRef<boolean>(true);
   const hasZoomedIn = useRef<boolean>(false);
 
+  // Keep a ref to the latest active photo so the stale-closure PanResponder
+  // can always read the current value without being re-created on every render.
+  const activeFullscreenPhotoRef = useRef(activeFullscreenPhoto);
+  useEffect(() => {
+    activeFullscreenPhotoRef.current = activeFullscreenPhoto;
+  });
+
+  // Mutable ref that always points to the latest handleCloseFullscreen.
+  const handleCloseRef = useRef<() => void>(() => {});
+
   // Initialize transition targets
   useEffect(() => {
     if (!hasZoomedIn.current && activeFullscreenPhoto && startBounds) {
@@ -216,10 +226,13 @@ export const FullscreenPhotoViewer: React.FC<FullscreenPhotoViewerProps> = ({
   };
 
   const handleCloseFullscreen = () => {
-    if (!activeFullscreenPhoto) return;
+    // Read from ref so that the stale-closure PanResponder always gets the
+    // photo that is *currently* displayed, not the one that was tapped first.
+    const photo = activeFullscreenPhotoRef.current;
+    if (!photo) return;
 
     if (measurePhotoRef.current) {
-      measurePhotoRef.current(activeFullscreenPhoto.id, (gridBounds) => {
+      measurePhotoRef.current(photo.id, (gridBounds) => {
         const fallbackBounds = {
           x: windowWidth / 2 - 50,
           y: windowHeight / 2 - 50,
@@ -228,7 +241,7 @@ export const FullscreenPhotoViewer: React.FC<FullscreenPhotoViewerProps> = ({
         };
 
         const targetBounds = gridBounds || fallbackBounds;
-        const currentBounds = calculateFullscreenImageBounds(activeFullscreenPhoto, imageSizes);
+        const currentBounds = calculateFullscreenImageBounds(photo, imageSizes);
 
         const currentYOffset = translateY.value;
         startX.value = targetBounds.x;
@@ -256,6 +269,9 @@ export const FullscreenPhotoViewer: React.FC<FullscreenPhotoViewerProps> = ({
       translateY.value = 0;
     }
   };
+
+  // Keep the ref in sync every render so PanResponder always calls the latest version.
+  handleCloseRef.current = handleCloseFullscreen;
 
   const panResponder = useRef(
     PanResponder.create({
@@ -285,7 +301,7 @@ export const FullscreenPhotoViewer: React.FC<FullscreenPhotoViewerProps> = ({
       },
       onPanResponderRelease: (evt, gestureState) => {
         if (gestureState.dy > 120) {
-          handleCloseFullscreen();
+          handleCloseRef.current();
         } else {
           translateY.value = withTiming(0, { duration: 200 });
         }

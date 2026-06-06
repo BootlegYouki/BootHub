@@ -186,13 +186,76 @@ export const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
   const cardVerticalCenter = bounds.y + bounds.height / 2;
   let previewTop = cardVerticalCenter - previewHeight / 2;
 
-  const isFolder = item.type === 'folder';
-  let menuHeight = 220; // Default height for 5 rows
-  if (isFolder) {
-    menuHeight = 88; // Folders only have 2 rows (Rename, Delete)
-  } else if (isPhoto) {
-    menuHeight = 176; // Photos have 4 rows (Copy, Share, Move, Delete)
+  // Define menu rows dynamically
+  const menuRows: { label: string; action: () => void; icon: React.ReactNode; isDestructive?: boolean }[] = [];
+
+  if (item.type !== 'folder') {
+    menuRows.push({
+      label: 'Copy',
+      action: onCopy,
+      icon: <Copy size={16} color={colors.foreground} />,
+    });
+    menuRows.push({
+      label: 'Share',
+      action: onShare,
+      icon: <Share size={16} color={colors.foreground} />,
+    });
   }
+
+  if (onEdit) {
+    menuRows.push({
+      label: item.type === 'folder' ? 'Rename' : 'Edit',
+      action: onEdit,
+      icon: <Pencil size={16} color={colors.foreground} />,
+    });
+  }
+
+  // Move / Remove options
+  if (item.type === 'folder') {
+    if (onMoveToFolder) {
+      menuRows.push({
+        label: 'Move to Folder',
+        action: onMoveToFolder,
+        icon: <FolderPlus size={16} color={colors.foreground} />,
+      });
+    }
+    if (item.folderId && onRemoveFromFolder) {
+      menuRows.push({
+        label: 'Remove from Folder',
+        action: onRemoveFromFolder,
+        icon: <Folder size={16} color={colors.foreground} />,
+      });
+    }
+  } else {
+    // Non-folders
+    if (item.folderId) {
+      if (onRemoveFromFolder) {
+        menuRows.push({
+          label: 'Remove from Folder',
+          action: onRemoveFromFolder,
+          icon: <Folder size={16} color={colors.foreground} />,
+        });
+      }
+    } else {
+      if (onMoveToFolder) {
+        menuRows.push({
+          label: 'Move to Folder',
+          action: onMoveToFolder,
+          icon: <FolderPlus size={16} color={colors.foreground} />,
+        });
+      }
+    }
+  }
+
+  // Delete
+  menuRows.push({
+    label: 'Delete',
+    action: onDelete,
+    icon: <Trash2 size={16} color={colors.destructive || '#EF4444'} />,
+    isDestructive: true,
+  });
+
+  const menuHeight = menuRows.length * 44;
   
   const spaceAbove = previewTop - insets.top;
   const spaceBelow = screenHeight - insets.bottom - (previewTop + previewHeight);
@@ -444,124 +507,30 @@ export const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
           },
         ]}
       >
-        {item.type !== 'folder' && (
-          <>
-            {/* Copy Row */}
+        {menuRows.map((row, index) => {
+          const isLast = index === menuRows.length - 1;
+          return (
             <Pressable
-              onPress={() => handleAction(onCopy)}
+              key={row.label}
+              onPress={() => handleAction(row.action)}
               style={({ pressed }) => [
                 styles.menuRow,
                 {
-                  backgroundColor: pressed ? colors.primary + '15' : 'transparent',
-                  borderBottomWidth: 1,
-                  borderBottomColor: colors.primary + '20',
+                  backgroundColor: pressed
+                    ? (row.isDestructive ? (colors.destructive || '#EF4444') + '15' : colors.primary + '15')
+                    : 'transparent',
+                  borderBottomWidth: isLast ? 0 : 1,
+                  borderBottomColor: isLast ? 'transparent' : colors.primary + '20',
                 },
               ]}
             >
-              <TuiText size="sm" style={{ color: colors.foreground }}>
-                Copy
+              <TuiText size="sm" style={{ color: row.isDestructive ? (colors.destructive || '#EF4444') : colors.foreground }}>
+                {row.label}
               </TuiText>
-              <Copy size={16} color={colors.foreground} />
+              {row.icon}
             </Pressable>
-
-            {/* Share Row */}
-            <Pressable
-              onPress={() => handleAction(onShare)}
-              style={({ pressed }) => [
-                styles.menuRow,
-                {
-                  backgroundColor: pressed ? colors.primary + '15' : 'transparent',
-                  borderBottomWidth: 1,
-                  borderBottomColor: colors.primary + '20',
-                },
-              ]}
-            >
-              <TuiText size="sm" style={{ color: colors.foreground }}>
-                Share
-              </TuiText>
-              <Share size={16} color={colors.foreground} />
-            </Pressable>
-          </>
-        )}
-
-        {/* Edit Row — only for folders, or link/text/file items */}
-        {onEdit && (
-          <Pressable
-            onPress={() => handleAction(onEdit)}
-            style={({ pressed }) => [
-              styles.menuRow,
-              {
-                backgroundColor: pressed ? colors.primary + '15' : 'transparent',
-                borderBottomWidth: 1,
-                borderBottomColor: colors.primary + '20',
-              },
-            ]}
-          >
-            <TuiText size="sm" style={{ color: colors.foreground }}>
-              {item.type === 'folder' ? 'Rename' : 'Edit'}
-            </TuiText>
-            <Pencil size={16} color={colors.foreground} />
-          </Pressable>
-        )}
-
-        {/* Move to / Remove from Folder Row — only for items, not folders */}
-        {item.type !== 'folder' && (
-          item.folderId ? (
-            onRemoveFromFolder && (
-              <Pressable
-                onPress={() => handleAction(onRemoveFromFolder)}
-                style={({ pressed }) => [
-                  styles.menuRow,
-                  {
-                    backgroundColor: pressed ? colors.primary + '15' : 'transparent',
-                    borderBottomWidth: 1,
-                    borderBottomColor: colors.primary + '20',
-                  },
-                ]}
-              >
-                <TuiText size="sm" style={{ color: colors.foreground }}>
-                  Remove from Folder
-                </TuiText>
-                <Folder size={16} color={colors.foreground} />
-              </Pressable>
-            )
-          ) : (
-            onMoveToFolder && (
-              <Pressable
-                onPress={() => handleAction(onMoveToFolder)}
-                style={({ pressed }) => [
-                  styles.menuRow,
-                  {
-                    backgroundColor: pressed ? colors.primary + '15' : 'transparent',
-                    borderBottomWidth: 1,
-                    borderBottomColor: colors.primary + '20',
-                  },
-                ]}
-              >
-                <TuiText size="sm" style={{ color: colors.foreground }}>
-                  Move to Folder
-                </TuiText>
-                <FolderPlus size={16} color={colors.foreground} />
-              </Pressable>
-            )
-          )
-        )}
-
-        {/* Delete Row */}
-        <Pressable
-          onPress={() => handleAction(onDelete)}
-          style={({ pressed }) => [
-            styles.menuRow,
-            {
-              backgroundColor: pressed ? (colors.destructive || '#EF4444') + '15' : 'transparent',
-            },
-          ]}
-        >
-          <TuiText size="sm" style={{ color: colors.destructive || '#EF4444' }}>
-            Delete
-          </TuiText>
-          <Trash2 size={16} color={colors.destructive || '#EF4444'} />
-        </Pressable>
+          );
+        })}
       </Animated.View>
     </View>
   );

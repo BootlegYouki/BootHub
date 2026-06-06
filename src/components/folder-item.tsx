@@ -14,6 +14,9 @@ interface FolderItemProps {
   onLongPress: (bounds: { x: number; y: number; width: number; height: number }) => void;
   children?: React.ReactNode;
   childrenContainerStyle?: any;
+  isSelected?: boolean;
+  isSelectionMode?: boolean;
+  onPress?: () => void;
 }
 
 export const FolderItem: React.FC<FolderItemProps> = ({
@@ -25,8 +28,11 @@ export const FolderItem: React.FC<FolderItemProps> = ({
   onLongPress,
   children,
   childrenContainerStyle,
+  isSelected = false,
+  isSelectionMode = false,
+  onPress,
 }) => {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const folderRef = useRef<View>(null);
 
   const handleLongPress = () => {
@@ -38,16 +44,28 @@ export const FolderItem: React.FC<FolderItemProps> = ({
     }
   };
 
+  const handlePress = () => {
+    if (isSelectionMode && onPress) {
+      onPress();
+    } else {
+      onToggleExpand();
+    }
+  };
+
   return (
     <View ref={folderRef} style={styles.container}>
       <Pressable
-        onPress={onToggleExpand}
-        onLongPress={handleLongPress}
+        onPress={handlePress}
+        onLongPress={!isSelectionMode ? handleLongPress : undefined}
         style={({ pressed }) => [
           styles.folderHeader,
           {
-            borderColor: colors.primary,
-            backgroundColor: pressed ? colors.primary + '15' : colors.card,
+            borderColor: isSelected ? colors.primary : colors.primary + (isDark ? '40' : '26'),
+            backgroundColor: pressed
+              ? colors.primary + '15'
+              : isSelected
+              ? (isDark ? '#27272A' : '#E4E4E7')
+              : colors.card,
           },
         ]}
       >
@@ -65,10 +83,12 @@ export const FolderItem: React.FC<FolderItemProps> = ({
           </TuiText>
         </View>
         
-        {isExpanded ? (
-          <ChevronDown size={18} color={colors.primary} />
-        ) : (
-          <ChevronRight size={18} color={colors.primary} />
+        {!isSelectionMode && (
+          isExpanded ? (
+            <ChevronDown size={18} color={colors.primary} />
+          ) : (
+            <ChevronRight size={18} color={colors.primary} />
+          )
         )}
       </Pressable>
 

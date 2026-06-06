@@ -160,13 +160,13 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\app.json": {
-    "mtime": 1780721707.7104938,
-    "ast_hash": "0cf1ba7d2da34d458561f009af241ea3",
+    "mtime": 1780727542.8717437,
+    "ast_hash": "72345a601a346cee6a151f45a722d778",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\App.tsx": {
-    "mtime": 1780722399.4072719,
-    "ast_hash": "e36295eb54e49f956c64851194596f78",
+    "mtime": 1780736289.526779,
+    "ast_hash": "9167213f0da1863cfbfc7c30ffee6a97",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\eslint.config.js": {
@@ -180,8 +180,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\package.json": {
-    "mtime": 1780722396.9691095,
-    "ast_hash": "4a494a99786b0a0ebf2063259f79c3a9",
+    "mtime": 1780724385.6056573,
+    "ast_hash": "3b60d10c568665808070e76268ba2f81",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\tsconfig.json": {
@@ -330,23 +330,23 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\utils\\storage.ts": {
-    "mtime": 1780626635.9369028,
-    "ast_hash": "0e26e08f559e60dd1c28177d815b6afc",
+    "mtime": 1780728558.7544465,
+    "ast_hash": "f051366b1107320640482a9982243b41",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\LinksScreen.tsx": {
-    "mtime": 1780642001.3472795,
-    "ast_hash": "ac657e9293a693e8e6d2800e88504d83",
+    "mtime": 1780728515.2933488,
+    "ast_hash": "0541fda8fca36e23cd25dcf88014f54c",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\PhotosScreen.tsx": {
-    "mtime": 1780626972.2998261,
-    "ast_hash": "fa8dfbe28dcaf9da6017c39bcf36f532",
+    "mtime": 1780731021.9464908,
+    "ast_hash": "130604ececf98941618ff3a832457276",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\TextsScreen.tsx": {
-    "mtime": 1780626679.5336864,
-    "ast_hash": "1f9e535f5573303759bb35ab6d967eab",
+    "mtime": 1780728520.899516,
+    "ast_hash": "0de07ccbd375aea6416c9dc03705f132",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\utils\\helpers.ts": {
@@ -360,23 +360,23 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\photo-picker-sheet.tsx": {
-    "mtime": 1780561828.2708623,
-    "ast_hash": "3ded8a1378224de7140ddafc4b76894f",
+    "mtime": 1780730506.837935,
+    "ast_hash": "206ad5850533f45d5787238a1a702dc2",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\sidestore.json": {
-    "mtime": 1780721707.7171383,
-    "ast_hash": "f3f1b2b222fa9c094e9428aa057e5908",
+    "mtime": 1780726740.5076082,
+    "ast_hash": "30c6ab61765322edfa492a555299a82b",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\FilesScreen.tsx": {
-    "mtime": 1780643546.3468263,
-    "ast_hash": "0844b00469703bfc7b0b52058ee5c14d",
+    "mtime": 1780728533.923577,
+    "ast_hash": "42e4c7308576d43f3da11b0429670967",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\context-menu-overlay.tsx": {
-    "mtime": 1780643119.8714945,
-    "ast_hash": "d64ac1083c425e7b32c5edabae63daf3",
+    "mtime": 1780735872.4269557,
+    "ast_hash": "d5f4294aa13b70ac8409cd9f306741d3",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\tab-button.tsx": {
@@ -385,13 +385,13 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\fullscreen-photo-viewer.tsx": {
-    "mtime": 1780642959.175259,
-    "ast_hash": "7234cc89d0739f621d79605a54317e55",
+    "mtime": 1780732401.8241022,
+    "ast_hash": "dd8eb9f0abf5cdba02940c9ae9a8f2f3",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\folder-item.tsx": {
-    "mtime": 1780626333.132277,
-    "ast_hash": "5b812b2d027cc2f15bb0497c30a4c2a8",
+    "mtime": 1780728508.450414,
+    "ast_hash": "87579240f8f58964a5170d924bcbe749",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\metro.config.js": {
@@ -425,18 +425,53 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\assets\\adaptive-icon-monochrome.png": {
-    "mtime": 1780716999.5504017,
-    "ast_hash": "0aeec528f80ac08913677469a1dc54a3",
+    "mtime": 1780726883.640746,
+    "ast_hash": "c91be5d85a38784e036e4cfceb30bc7f",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\assets\\adaptive-icon.png": {
-    "mtime": 1780716999.5448499,
-    "ast_hash": "c0045d2eab048c06163505d61d7d62fb",
+    "mtime": 1780726883.6396515,
+    "ast_hash": "c91be5d85a38784e036e4cfceb30bc7f",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\assets\\favicon.png": {
     "mtime": 1780716999.828669,
     "ast_hash": "b96b70beac2ffdf8fddfedefab95b8ff",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\assets\\splash-icon-monochrome.png": {
+    "mtime": 1780726883.6331308,
+    "ast_hash": "23e7c2c9aa2bc82340e092819df52e5b",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\assets\\splash-icon.png": {
+    "mtime": 1780726883.629047,
+    "ast_hash": "23e7c2c9aa2bc82340e092819df52e5b",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\empty-folder.tsx": {
+    "mtime": 1780728235.287451,
+    "ast_hash": "816038a1f302aee2c0f0c5b73f07b45e",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\folder-header.tsx": {
+    "mtime": 1780728229.424082,
+    "ast_hash": "f58b095cb6be7b76afabc98b4d388050",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\utils\\folder-navigation.ts": {
+    "mtime": 1780728291.0628588,
+    "ast_hash": "aedc7fb24a59656588836dd8b5d8a339",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\context\\animation-lock.tsx": {
+    "mtime": 1780731925.5459654,
+    "ast_hash": "e7f1566493746d55bd53da6eeff77ba3",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\components\\folder-picker-sheet.tsx": {
+    "mtime": 1780735375.0127213,
+    "ast_hash": "8fa29f0e3d3bd4683aa7429cc5dcb1a0",
     "semantic_hash": ""
   }
 }

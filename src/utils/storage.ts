@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system/legacy';
 
 export type DumpType = 'link' | 'text' | 'photo' | 'file' | 'folder';
 
@@ -48,7 +49,7 @@ export const addItem = async (type: DumpType, value: string, folderId?: string):
     const dateStr = `${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${now.getFullYear()}`;
     const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
     const label = `${dateStr} @ ${timeStr}`;
-
+ 
     const newItem: DumpItem = {
       id: Date.now().toString(),
       type,
@@ -66,18 +67,81 @@ export const addItem = async (type: DumpType, value: string, folderId?: string):
   }
 };
 
-export const deleteItem = async (id: string): Promise<DumpItem[]> => {
+export const deleteItem = async (id: string, deleteContents = false): Promise<DumpItem[]> => {
   try {
     const currentItems = await getItems();
-    const updated = currentItems
-      .filter((item) => item.id !== id)
-      .map((item) => {
-        if (item.folderId === id) {
-          const { folderId, ...rest } = item;
-          return rest;
+    const targetItem = currentItems.find((item) => item.id === id);
+    if (!targetItem) return currentItems;
+
+    let updated: DumpItem[] = [];
+
+    // Local helper to delete file from disk
+    const deleteFileFromDisk = async (value: string) => {
+      try {
+        const fileObj = JSON.parse(value);
+        if (fileObj.uri && fileObj.uri.startsWith('file://')) {
+          await FileSystem.deleteAsync(fileObj.uri, { idempotent: true });
         }
-        return item;
-      });
+      } catch (err) {
+        // Fallback for raw URIs
+        try {
+          if (value.startsWith('file://')) {
+            await FileSystem.deleteAsync(value, { idempotent: true });
+          }
+        } catch {}
+      }
+    };
+
+    if (targetItem.type === 'folder') {
+      if (deleteContents) {
+        // Recursive child ID retrieval
+        const getRecursiveChildren = (items: DumpItem[], folderId: string): DumpItem[] => {
+          let children: DumpItem[] = [];
+          const directChildren = items.filter((item) => item.folderId === folderId);
+          for (const child of directChildren) {
+            children.push(child);
+            if (child.type === 'folder') {
+              children = [...children, ...getRecursiveChildren(items, child.id)];
+            }
+          }
+          return children;
+        };
+
+        const childrenToDelete = getRecursiveChildren(currentItems, id);
+        const idsToDelete = new Set([id, ...childrenToDelete.map((x) => x.id)]);
+
+        // Delete all files among the deleted children from disk
+        for (const child of childrenToDelete) {
+          if (child.type === 'file') {
+            await deleteFileFromDisk(child.value);
+          }
+        }
+
+        updated = currentItems.filter((item) => !idsToDelete.has(item.id));
+      } else {
+        // Keep contents: move children to parent folderId of the deleted folder
+        const parentFolderId = targetItem.folderId;
+        updated = currentItems
+          .filter((item) => item.id !== id)
+          .map((item) => {
+            if (item.folderId === id) {
+              if (parentFolderId === undefined) {
+                const { folderId, ...rest } = item;
+                return rest as DumpItem;
+              }
+              return { ...item, folderId: parentFolderId };
+            }
+            return item;
+          });
+      }
+    } else {
+      // Normal item deletion
+      if (targetItem.type === 'file') {
+        await deleteFileFromDisk(targetItem.value);
+      }
+      updated = currentItems.filter((item) => item.id !== id);
+    }
+
     await saveItems(updated);
     return updated;
   } catch (e) {

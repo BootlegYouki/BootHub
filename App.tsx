@@ -10,6 +10,7 @@ import {
   Keyboard,
   Share,
   Alert,
+  ActionSheetIOS,
   FlatList,
   PanResponder,
   Dimensions,
@@ -86,6 +87,8 @@ import { FullscreenPhotoViewer } from './src/components/fullscreen-photo-viewer'
 import { parseShareUrl, processSharedItem, ParsedShare } from './src/utils/share-receiver';
 import { ShareImportSheet } from './src/components/share-import-sheet';
 import { TuiDrawer } from './src/components/tui-drawer';
+import { FolderPickerSheet } from './src/components/folder-picker-sheet';
+import { AnimationLockProvider, useAnimationLock } from './src/context/animation-lock';
 import * as SplashScreen from 'expo-splash-screen';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -100,6 +103,7 @@ const BAR_FADE_DELAY = 100;     // milliseconds
 
 function MainApp() {
   const { colors, isDark, setThemeMode, themeLoaded } = useTheme();
+  const { isLocked, lock, locked } = useAnimationLock();
   const [fontsLoaded] = useFonts({ JetBrainsMono_400Regular, JetBrainsMono_700Bold });
 
   const [dataLoaded, setDataLoaded] = useState(false);
@@ -133,12 +137,20 @@ function MainApp() {
   const photoSheetHeight = useSharedValue(0);
   const [activeFullscreenPhotoIndex, setActiveFullscreenPhotoIndex] = useState<number | null>(null);
   const [zoomStartBounds, setZoomStartBounds] = useState<PhotoLayout | null>(null);
+  // The scoped list of photos used for swiping in the fullscreen viewer.
+  // Only contains actual photo items from the same folder context the user tapped from.
+  const [fullscreenPhotoSet, setFullscreenPhotoSet] = useState<DumpItem[]>([]);
+  // Controls the vertical pop-up action menu in selection mode
+  const [selectionMenuOpen, setSelectionMenuOpen] = useState(false);
 
   const [imageSizes, setImageSizes] = useState<Record<string, { width: number; height: number }>>({});
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
 
   const [pendingShare, setPendingShare] = useState<ParsedShare | null>(null);
   const [isShareSheetOpen, setIsShareSheetOpen] = useState<boolean>(false);
+  const [isMoveDrawerOpen, setIsMoveDrawerOpen] = useState<boolean>(false);
+  const [moveDrawerItems, setMoveDrawerItems] = useState<DumpItem[]>([]);
+  const [isMoveDrawerMounted, setIsMoveDrawerMounted] = useState<boolean>(false);
 
   useEffect(() => {
     if (!isShareSheetOpen) {
@@ -149,8 +161,18 @@ function MainApp() {
     }
   }, [isShareSheetOpen]);
 
+  useEffect(() => {
+    if (!isMoveDrawerOpen) {
+      const timer = setTimeout(() => {
+        setIsMoveDrawerMounted(false);
+      }, 250);
+      return () => clearTimeout(timer);
+    } else {
+      setIsMoveDrawerMounted(true);
+    }
+  }, [isMoveDrawerOpen]);
+
   // Animated values for iOS-style deck transition (parallax scaleout)
-  const isDrawerOpen = isPhotoSheetOpen || isShareSheetOpen;
   const drawerProgressAnim = useRef(new RNAnimated.Value(0)).current;
 
   const screenScaleAnim = drawerProgressAnim.interpolate({
@@ -165,26 +187,6 @@ function MainApp() {
     inputRange: [0, 1],
     outputRange: [0, 16],
   });
-
-  useEffect(() => {
-    // Only animate drawerProgressAnim for the photo sheet.
-    // The share sheet drawer progress is driven natively by TuiDrawer itself.
-    if (isPhotoSheetOpen) {
-      RNAnimated.spring(drawerProgressAnim, {
-        toValue: 1,
-        friction: 8,
-        tension: 50,
-        useNativeDriver: false,
-      }).start();
-    } else if (!isShareSheetOpen) {
-      RNAnimated.spring(drawerProgressAnim, {
-        toValue: 0,
-        friction: 8,
-        tension: 50,
-        useNativeDriver: false,
-      }).start();
-    }
-  }, [isPhotoSheetOpen]);
 
   const handleDeepLink = async (url: string | null) => {
     if (!url) return;
@@ -313,15 +315,47 @@ function MainApp() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearchFocused, setIsSearchFocused] = useState<boolean>(false);
   const [isFooterFocused, setIsFooterFocused] = useState<boolean>(false);
+  const [topHeaderHeight, setTopHeaderHeight] = useState<number>(200);
+  const [topBackdropHeight, setTopBackdropHeight] = useState<number>(100);
 
   const [headerMenuExpanded, setHeaderMenuExpanded] = useState<boolean>(false);
   const headerMenuAnimation = useSharedValue(0);
+  const folderPlusAnimation = useSharedValue(1);
 
   const toggleHeaderMenu = () => {
     const next = !headerMenuExpanded;
     setHeaderMenuExpanded(next);
     headerMenuAnimation.value = withTiming(next ? 1 : 0, { duration: 180 });
+    if (!next) {
+      setIsSelectionMode(false);
+      setSelectedIds(new Set());
+      folderPlusAnimation.value = 0;
+    } else {
+      folderPlusAnimation.value = isSelectionMode ? 0 : 1;
+    }
   };
+
+  useEffect(() => {
+    if (headerMenuExpanded) {
+      folderPlusAnimation.value = withTiming(isSelectionMode ? 0 : 1, { duration: 180 });
+    }
+  }, [isSelectionMode, headerMenuExpanded]);
+
+  const folderPlusButtonStyle = useAnimatedStyle(() => {
+    const combinedProgress = headerMenuAnimation.value * folderPlusAnimation.value;
+    const scale = interpolate(combinedProgress, [0, 1], [0, 1]);
+    const opacity = interpolate(combinedProgress, [0, 1], [0, 1]);
+    const width = interpolate(combinedProgress, [0, 1], [0, 48]);
+    const marginRight = interpolate(combinedProgress, [0, 1], [0, 8]);
+
+    return {
+      width,
+      marginRight,
+      opacity,
+      transform: [{ scale }],
+      overflow: 'hidden',
+    };
+  });
 
   const subButtonStyle = useAnimatedStyle(() => {
     const scale = interpolate(headerMenuAnimation.value, [0, 1], [0, 1]);
@@ -346,20 +380,46 @@ function MainApp() {
   // Pre-fetch image sizes in background
   useEffect(() => {
     const photos = items.filter((item) => item.type === 'photo');
-    photos.forEach((photo) => {
+    photos.forEach(async (photo) => {
       if (!imageSizes[photo.id]) {
-        RNImage.getSize(
-          ensureFileUri(photo.value),
-          (width: number, height: number) => {
+        const uri = photo.value;
+        if (uri.startsWith('ph://')) {
+          try {
+            const assetId = uri.slice(5);
+            const assetInfo = await MediaLibrary.getAssetInfoAsync(assetId);
+            if (assetInfo) {
+              setImageSizes((prev) => {
+                if (prev[photo.id]) return prev;
+                return { ...prev, [photo.id]: { width: assetInfo.width, height: assetInfo.height } };
+              });
+            } else {
+              throw new Error('Asset info returned null');
+            }
+          } catch (error: any) {
+            console.warn(`Failed to get size for photo ${photo.id}:`, error);
             setImageSizes((prev) => {
               if (prev[photo.id]) return prev;
-              return { ...prev, [photo.id]: { width, height } };
+              return { ...prev, [photo.id]: { width: 100, height: 100 } };
             });
-          },
-          (error: any) => {
-            console.warn(`Failed to get size for photo ${photo.id}:`, error);
           }
-        );
+        } else {
+          RNImage.getSize(
+            ensureFileUri(uri),
+            (width: number, height: number) => {
+              setImageSizes((prev) => {
+                if (prev[photo.id]) return prev;
+                return { ...prev, [photo.id]: { width, height } };
+              });
+            },
+            (error: any) => {
+              console.warn(`Failed to get size for photo ${photo.id}:`, error);
+              setImageSizes((prev) => {
+                if (prev[photo.id]) return prev;
+                return { ...prev, [photo.id]: { width: 100, height: 100 } };
+              });
+            }
+          );
+        }
       }
     });
   }, [items]);
@@ -505,17 +565,19 @@ function MainApp() {
   };
 
   const switchTab = (tab: DumpType) => {
+    if (isLocked()) return;
     setActiveTab(tab);
     scrollToTab(tab, false);
   };
 
 
   const activeFullscreenPhoto =
-    activeFullscreenPhotoIndex !== null && activeFullscreenPhotoIndex >= 0 && activeFullscreenPhotoIndex < sortedItems.length
-      ? sortedItems[activeFullscreenPhotoIndex]
+    activeFullscreenPhotoIndex !== null && activeFullscreenPhotoIndex >= 0 && activeFullscreenPhotoIndex < fullscreenPhotoSet.length
+      ? fullscreenPhotoSet[activeFullscreenPhotoIndex]
       : null;
 
   const handleToggleSelectAll = () => {
+    if (isLocked()) return;
     if (sortedItems.length === 0) return;
     const allSelected = sortedItems.every((item) => selectedIds.has(item.id));
     setSelectedIds((prev) => {
@@ -602,6 +664,7 @@ function MainApp() {
   useEffect(() => {
     if (!isSelectionMode) {
       setSelectedIds(new Set());
+      setSelectionMenuOpen(false);
     } else {
       setActiveFullscreenPhotoIndex(null);
     }
@@ -742,40 +805,103 @@ function MainApp() {
 
   const handleDeleteItem = async (item: DumpItem) => {
     setContextMenuPhoto(null);
-    Alert.alert(
-      'Delete Item',
-      'Are you sure you want to delete this item?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              if (item.type === 'file') {
+    if (item.type === 'folder') {
+      let folderName = 'Folder';
+      try {
+        folderName = JSON.parse(item.value).name || 'Folder';
+      } catch {}
+
+      const hasChildren = items.some((x) => x.folderId === item.id);
+
+      if (hasChildren) {
+        // Folder has items — ask whether to keep or delete them
+        Alert.alert(
+          `Delete Folder: "${folderName}"`,
+          'Do you want to delete all items inside this folder too?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'No, Keep Items',
+              onPress: async () => {
                 try {
-                  const fileObj = JSON.parse(item.value);
-                  if (fileObj.uri && fileObj.uri.startsWith('file://')) {
-                    await FileSystem.deleteAsync(fileObj.uri, { idempotent: true });
-                  }
-                } catch (err) {
-                  console.warn('Failed to delete file from disk:', err);
+                  const updatedList = await deleteItem(item.id, false);
+                  setItems(updatedList);
+                } catch (e) {
+                  console.error(e);
                 }
+              },
+            },
+            {
+              text: 'Yes, Delete All',
+              style: 'destructive',
+              onPress: async () => {
+                try {
+                  const updatedList = await deleteItem(item.id, true);
+                  setItems(updatedList);
+                } catch (e) {
+                  console.error(e);
+                }
+              },
+            },
+          ]
+        );
+      } else {
+        // Empty folder — simple confirmation
+        Alert.alert(
+          `Delete "${folderName}"?`,
+          'This folder is empty. Delete it?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Delete',
+              style: 'destructive',
+              onPress: async () => {
+                try {
+                  const updatedList = await deleteItem(item.id, false);
+                  setItems(updatedList);
+                } catch (e) {
+                  console.error(e);
+                }
+              },
+            },
+          ]
+        );
+      }
+    } else {
+      Alert.alert(
+        'Delete Item',
+        'Are you sure you want to delete this item?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                if (item.type === 'file') {
+                  try {
+                    const fileObj = JSON.parse(item.value);
+                    if (fileObj.uri && fileObj.uri.startsWith('file://')) {
+                      await FileSystem.deleteAsync(fileObj.uri, { idempotent: true });
+                    }
+                  } catch (err) {
+                    console.warn('Failed to delete file from disk:', err);
+                  }
+                }
+                const updatedList = await deleteItem(item.id);
+                setItems(updatedList);
+              } catch (e) {
+                console.error(e);
               }
-              const updatedList = await deleteItem(item.id);
-              setItems(updatedList);
-            } catch (e) {
-              console.error(e);
-            }
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
-
-
   const handleBulkDelete = async () => {
+    if (isLocked()) return;
     if (selectedIds.size === 0) return;
     const count = selectedIds.size;
     Alert.alert(
@@ -801,7 +927,7 @@ function MainApp() {
                     console.warn('Failed to delete bulk file from disk:', err);
                   }
                 }
-                updatedList = await deleteItem(id);
+                updatedList = await deleteItem(id, true);
               }
               setItems(updatedList);
               setSelectedIds(new Set());
@@ -816,6 +942,7 @@ function MainApp() {
   };
 
   const handleBulkShare = async () => {
+    if (isLocked()) return;
     if (selectedIds.size === 0) return;
     const selectedItems = items.filter((item) => selectedIds.has(item.id));
 
@@ -922,6 +1049,16 @@ function MainApp() {
     }
   };
 
+  const handleBulkMoveToFolder = () => {
+    if (isLocked()) return;
+    if (selectedIds.size === 0) return;
+    setSelectionMenuOpen(false);
+
+    const moving = items.filter((x) => selectedIds.has(x.id));
+    setMoveDrawerItems(moving);
+    setIsMoveDrawerOpen(true);
+  };
+
   const handleShareActivePhoto = async () => {
     if (!activeFullscreenPhoto) return;
     try {
@@ -972,8 +1109,23 @@ function MainApp() {
   };
 
   const handlePhotoPress = (item: DumpItem, startBounds: PhotoLayout) => {
+    // Immediately kill keyboard + blur any focused input before the zoom starts
+    Keyboard.dismiss();
+    mainInputRef.current?.blur();
+    editInputRef.current?.blur();
+    searchInputRef.current?.blur();
+    setIsFooterFocused(false);
+    // Engage global Do-Not-Disturb lock for the duration of the zoom transition
+    lock(700);
     setZoomStartBounds(startBounds);
-    const index = sortedPhotoItems.findIndex((x) => x.id === item.id);
+    // Build the swipe-set: only actual photo (non-folder) items that share the
+    // same folderId as the tapped photo. This prevents folders from appearing
+    // in the pager and stops photos from crossing folder boundaries.
+    const scopedPhotos = sortedPhotoItems.filter(
+      (x) => x.type !== 'folder' && x.folderId === item.folderId
+    );
+    setFullscreenPhotoSet(scopedPhotos);
+    const index = scopedPhotos.findIndex((x) => x.id === item.id);
     if (index !== -1) {
       setActiveFullscreenPhotoIndex(index);
     }
@@ -997,40 +1149,54 @@ function MainApp() {
 
   const handleMoveToFolder = (item: DumpItem) => {
     setContextMenuPhoto(null);
-    // Find all folders belonging to the active tab
-    const tabFolders = items.filter((x) => {
-      if (x.type !== 'folder') return false;
-      try {
-        const obj = JSON.parse(x.value);
-        return obj.tab === activeTab;
-      } catch {}
-      return false;
-    });
+    setMoveDrawerItems([item]);
+    setIsMoveDrawerOpen(true);
+  };
 
-    if (tabFolders.length === 0) {
-      Alert.alert('No Folders', 'Create a folder first.');
-      return;
-    }
+  const handleCancelMoveDrawer = () => {
+    setIsMoveDrawerOpen(false);
+    setSelectedIds(new Set());
+    setIsSelectionMode(false);
+  };
 
-    const options = tabFolders.map((f) => {
-      let name = 'Folder';
-      try {
-        name = JSON.parse(f.value).name;
-      } catch {}
-      return {
-        text: name,
-        onPress: () => handleSetItemFolder(item.id, f.id),
+  const handleConfirmMove = async (targetFolderId: string | undefined) => {
+    try {
+      let updatedList = items;
+      for (const item of moveDrawerItems) {
+        updatedList = await setItemFolder(item.id, targetFolderId);
+      }
+      setItems(updatedList);
+      setSelectedIds(new Set());
+      setIsSelectionMode(false);
+      setIsMoveDrawerOpen(false);
+
+      const getPathForToast = (fid: string | undefined): string => {
+        if (!fid) return 'Root';
+        const folder = items.find((x) => x.id === fid);
+        if (!folder) return 'Folder';
+        const getPath = (f: DumpItem, visited?: Set<string>): string => {
+          const actualVisited = visited instanceof Set ? visited : new Set<string>();
+          let name = 'Folder';
+          try {
+            name = JSON.parse(f.value).name;
+          } catch {}
+          if (f.folderId && !actualVisited.has(f.folderId)) {
+            actualVisited.add(f.folderId);
+            const parent = items.find((x) => x.id === f.folderId);
+            if (parent) return `${getPath(parent, actualVisited)} > ${name}`;
+          }
+          return name;
+        };
+        return getPath(folder);
       };
-    });
 
-    Alert.alert(
-      'Move to Folder',
-      'Select a folder to move this item to:',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        ...options,
-      ]
-    );
+      showToast(
+        targetFolderId ? 'Moved to folder' : 'Removed from folder',
+        getPathForToast(targetFolderId)
+      );
+    } catch (e) {
+      console.error('Failed to move items:', e);
+    }
   };
 
   const onRefresh = React.useCallback(async () => {
@@ -1064,6 +1230,7 @@ function MainApp() {
   const [editText, setEditText] = useState<string>('');
   const editInputRef = useRef<TextInput>(null);
   const mainInputRef = useRef<TextInput>(null);
+  const searchInputRef = useRef<TextInput>(null);
 
   const [toast, setToast] = useState<{ label: string; caption: string } | null>(null);
   const toastOpacity = useSharedValue(0);
@@ -1141,30 +1308,23 @@ function MainApp() {
         finalValue = 'New Folder';
       }
 
-      const existingNames = items
-        .filter((x) => x.type === 'folder')
-        .map((x) => {
-          try {
-            const obj = JSON.parse(x.value);
-            if (obj.tab === activeTab) {
-              return obj.name;
-            }
-          } catch {}
-          return null;
-        })
-        .filter((name): name is string => name !== null);
+      // Dedup only among siblings at the same folder level
+      const parentFolderId = getActiveExpandedFolder()?.id;
+      const siblingNames = items
+        .filter((x) => x.type === 'folder' && x.folderId === parentFolderId)
+        .map((x) => { try { return JSON.parse(x.value).name as string; } catch {} return null; })
+        .filter((n): n is string => n !== null);
 
-      if (existingNames.includes(finalValue)) {
+      if (siblingNames.includes(finalValue)) {
         let counter = 1;
-        while (existingNames.includes(`${finalValue}_${counter}`)) {
-          counter++;
-        }
+        while (siblingNames.includes(`${finalValue}_${counter}`)) counter++;
         finalValue = `${finalValue}_${counter}`;
       }
 
       try {
         const folderVal = JSON.stringify({ name: finalValue, tab: activeTab });
-        const updatedList = await addItem('folder', folderVal);
+        const folder = getActiveExpandedFolder();
+        const updatedList = await addItem('folder', folderVal, folder?.id);
         setItems(updatedList);
         showToast('Folder created!', finalValue);
       } catch (e) {
@@ -1183,24 +1343,15 @@ function MainApp() {
         finalValue = 'New Folder';
       }
 
-      const existingNames = items
-        .filter((x) => x.type === 'folder' && x.id !== id)
-        .map((x) => {
-          try {
-            const obj = JSON.parse(x.value);
-            if (obj.tab === activeTab) {
-              return obj.name;
-            }
-          } catch {}
-          return null;
-        })
-        .filter((name): name is string => name !== null);
+      // Dedup only among siblings at the same folder level
+      const siblingNames = items
+        .filter((x) => x.type === 'folder' && x.id !== id && x.folderId === item.folderId)
+        .map((x) => { try { return JSON.parse(x.value).name as string; } catch {} return null; })
+        .filter((n): n is string => n !== null);
 
-      if (existingNames.includes(finalValue)) {
+      if (siblingNames.includes(finalValue)) {
         let counter = 1;
-        while (existingNames.includes(`${finalValue}_${counter}`)) {
-          counter++;
-        }
+        while (siblingNames.includes(`${finalValue}_${counter}`)) counter++;
         finalValue = `${finalValue}_${counter}`;
       }
     } else {
@@ -1224,6 +1375,7 @@ function MainApp() {
   };
 
   const handlePickImage = () => {
+    if (isLocked()) return;
     setActiveFullscreenPhotoIndex(null);
     if (isPhotoSheetOpen) {
       setIsPhotoSheetOpen(false);
@@ -1234,6 +1386,7 @@ function MainApp() {
   };
 
   const handlePickFile = async () => {
+    if (isLocked()) return;
     try {
       setActiveFullscreenPhotoIndex(null);
       setIsPhotoSheetOpen(false);
@@ -1283,21 +1436,7 @@ function MainApp() {
 
       const folder = getActiveExpandedFolder();
       if (folder) {
-        Alert.alert(
-          'Add to Folder',
-          `Would you like to add this to the folder "${folder.name}"?`,
-          [
-            {
-              text: 'No (Add to top level)',
-              style: 'cancel',
-              onPress: () => saveFile()
-            },
-            {
-              text: 'Yes',
-              onPress: () => saveFile(folder.id)
-            }
-          ]
-        );
+        await saveFile(folder.id);
       } else {
         await saveFile();
       }
@@ -1322,27 +1461,14 @@ function MainApp() {
 
     const folder = getActiveExpandedFolder();
     if (folder) {
-      Alert.alert(
-        'Add to Folder',
-        `Would you like to add ${uris.length === 1 ? 'this photo' : `these ${uris.length} photos`} to the folder "${folder.name}"?`,
-        [
-          {
-            text: 'No (Add to top level)',
-            style: 'cancel',
-            onPress: () => savePhotos()
-          },
-          {
-            text: 'Yes',
-            onPress: () => savePhotos(folder.id)
-          }
-        ]
-      );
+      await savePhotos(folder.id);
     } else {
       await savePhotos();
     }
   };
 
   const handleSubmit = async () => {
+    if (isLocked()) return;
     Keyboard.dismiss();
     if (!inputText.trim()) return;
 
@@ -1364,21 +1490,7 @@ function MainApp() {
 
     const folder = getActiveExpandedFolder();
     if (folder) {
-      Alert.alert(
-        'Add to Folder',
-        `Would you like to add this to the folder "${folder.name}"?`,
-        [
-          {
-            text: 'No (Add to top level)',
-            style: 'cancel',
-            onPress: () => saveText()
-          },
-          {
-            text: 'Yes',
-            onPress: () => saveText(folder.id)
-          }
-        ]
-      );
+      await saveText(folder.id);
     } else {
       await saveText();
     }
@@ -1410,11 +1522,19 @@ function MainApp() {
       >
         <Search size={18} color={isSearchFocused ? colors.primary : colors.mutedForeground} style={styles.searchIcon} />
         <TextInput
+          ref={searchInputRef}
           placeholder="Search..."
           placeholderTextColor={colors.mutedForeground}
           value={searchQuery}
-          onChangeText={setSearchQuery}
+          editable={!locked}
+          onChangeText={(text) => {
+            if (isLocked()) return;
+            setSearchQuery(text);
+          }}
           onFocus={() => {
+            if (isLocked()) {
+              return;
+            }
             setIsSearchFocused(true);
             setIsFooterFocused(false);
           }}
@@ -1484,46 +1604,60 @@ function MainApp() {
       >
         <StatusBar style={isDark ? 'light' : 'dark'} />
 
-        {/* 01: HEADER */}
-        <TuiHeader
-          title="BootHub"
-          subtitle="by BootlegYouki"
-          Icon={Archive}
-          rightElement={themeToggle}
-        />
+        <View
+          onLayout={(e) => {
+            const { y, height } = e.nativeEvent.layout;
+            setTopBackdropHeight(y + height);
+          }}
+          style={{ width: '100%' }}
+        >
+          {/* 01: HEADER */}
+          <TuiHeader
+            title="BootHub"
+            subtitle="by BootlegYouki"
+            Icon={Archive}
+            rightElement={themeToggle}
+          />
 
-        {/* 02: TABS */}
-        <View style={styles.topContainer}>
-          <View style={styles.navRow}>
-            <TabButton isActive={activeTab === 'link'} onPress={() => switchTab('link')} label="Links" Icon={Link2} />
-            <TabButton isActive={activeTab === 'text'} onPress={() => switchTab('text')} label="Texts" Icon={FileText} />
-            <TabButton isActive={activeTab === 'photo'} onPress={() => switchTab('photo')} label="Photos" Icon={ImageIcon} />
-            <TabButton isActive={activeTab === 'file'} onPress={() => switchTab('file')} label="Files" Icon={Paperclip} />
+          {/* 02: TABS */}
+          <View style={[styles.topContainer, { paddingBottom: 0 }]}>
+            <View style={styles.navRow}>
+              <TabButton isActive={activeTab === 'link'} onPress={() => switchTab('link')} label="Links" Icon={Link2} />
+              <TabButton isActive={activeTab === 'text'} onPress={() => switchTab('text')} label="Texts" Icon={FileText} />
+              <TabButton isActive={activeTab === 'photo'} onPress={() => switchTab('photo')} label="Photos" Icon={ImageIcon} />
+              <TabButton isActive={activeTab === 'file'} onPress={() => switchTab('file')} label="Files" Icon={Paperclip} />
+            </View>
           </View>
+        </View>
 
+        <View
+          onLayout={(e) => {
+            const { y, height } = e.nativeEvent.layout;
+            setTopHeaderHeight(y + height);
+          }}
+          style={[styles.topContainer, { paddingTop: 0 }]}
+        >
           {/* Section header row */}
           <View style={styles.sectionHeaderRow}>
             {renderSearchBar()}
             <View style={styles.headerActions}>
 
 
-              {!isSelectionMode && (
-                <Animated.View style={subButtonStyle}>
-                  <Pressable
-                    onPress={handleCreateFolder}
-                    style={({ pressed }) => [
-                      styles.headerActionBtn,
-                      {
-                        borderColor: colors.primary,
-                        backgroundColor: pressed ? colors.primary + '25' : 'transparent',
-                        width: 48,
-                      },
-                    ]}
-                  >
-                    <FolderPlus size={16} color={colors.primary} />
-                  </Pressable>
-                </Animated.View>
-              )}
+              <Animated.View style={folderPlusButtonStyle}>
+                <Pressable
+                  onPress={handleCreateFolder}
+                  style={({ pressed }) => [
+                    styles.headerActionBtn,
+                    {
+                      borderColor: colors.primary,
+                      backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+                      width: 48,
+                    },
+                  ]}
+                >
+                  <FolderPlus size={16} color={colors.primary} />
+                </Pressable>
+              </Animated.View>
 
               <Animated.View style={subButtonStyle}>
                 <Pressable
@@ -1776,13 +1910,65 @@ function MainApp() {
           <FullscreenPhotoViewer
             activeFullscreenPhotoIndex={activeFullscreenPhotoIndex}
             setActiveFullscreenPhotoIndex={setActiveFullscreenPhotoIndex}
-            sortedItems={sortedPhotoItems}
+            sortedItems={fullscreenPhotoSet}
             startBounds={zoomStartBounds}
             imageSizes={imageSizes}
             onShare={handleShareActivePhoto}
             onDelete={handleDeleteActivePhoto}
             measurePhotoRef={measurePhotoRef}
           />
+        )}
+
+        {isFooterFocused && (
+          <Pressable
+            style={[
+              StyleSheet.absoluteFillObject,
+              {
+                zIndex: 999,
+                backgroundColor: 'transparent',
+              },
+            ]}
+            onPress={() => {
+              Keyboard.dismiss();
+              mainInputRef.current?.blur();
+              editInputRef.current?.blur();
+            }}
+          />
+        )}
+
+        {isSearchFocused && (
+          <>
+            <Pressable
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: topBackdropHeight,
+                zIndex: 1001,
+                backgroundColor: 'transparent',
+              }}
+              onPress={() => {
+                Keyboard.dismiss();
+                searchInputRef.current?.blur();
+              }}
+            />
+            <Pressable
+              style={{
+                position: 'absolute',
+                top: topHeaderHeight,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                zIndex: 1001,
+                backgroundColor: 'transparent',
+              }}
+              onPress={() => {
+                Keyboard.dismiss();
+                searchInputRef.current?.blur();
+              }}
+            />
+          </>
         )}
 
         {/* 04: BOTTOM BAR */}
@@ -1799,70 +1985,149 @@ function MainApp() {
         >
           {isSelectionMode ? (
             <View style={[styles.bottomBarRow, { justifyContent: 'space-between', alignItems: 'center' }]}>
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                {/* Select All */}
-                <Pressable
-                  onPress={handleToggleSelectAll}
-                  hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
-                  style={({ pressed }) => {
-                    const allSelected = sortedItems.length > 0 && sortedItems.every((item) => selectedIds.has(item.id));
-                    return [
-                      styles.iconBtn,
-                      {
-                        borderColor: colors.primary,
-                        backgroundColor: allSelected
-                          ? colors.primary + '25'
-                          : pressed
-                            ? colors.primary + '15'
-                            : 'transparent',
-                      },
-                    ];
-                  }}
-                >
-                  <ListChecks size={16} color={colors.primary} />
-                </Pressable>
-
-                {/* Bulk Share */}
-                <Pressable
-                  onPress={handleBulkShare}
-                  disabled={selectedIds.size === 0}
-                  hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
-                  style={({ pressed }) => [
+            {/* LEFT: Select-all */}
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <Pressable
+                onPress={handleToggleSelectAll}
+                hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+                style={({ pressed }) => {
+                  const allSelected = sortedItems.length > 0 && sortedItems.every((item) => selectedIds.has(item.id));
+                  return [
                     styles.iconBtn,
                     {
                       borderColor: colors.primary,
-                      backgroundColor: pressed ? colors.primary + '25' : 'transparent',
-                      opacity: selectedIds.size === 0 ? 0.4 : 1,
+                      backgroundColor: allSelected
+                        ? colors.primary + '25'
+                        : pressed
+                          ? colors.primary + '15'
+                          : 'transparent',
                     },
-                  ]}
-                >
-                  <LucideShare size={16} color={colors.primary} />
-                </Pressable>
-              </View>
-
-              <TuiText
-                size="sm"
-                weight="bold"
-                style={{ color: colors.primary, textAlign: 'center' }}
+                  ];
+                }}
               >
-                {selectedIds.size} selected
-              </TuiText>
+                <ListChecks size={16} color={colors.primary} />
+              </Pressable>
+            </View>
 
+            {/* CENTER: count label */}
+            <TuiText
+              size="sm"
+              weight="bold"
+              style={{ color: colors.primary, textAlign: 'center' }}
+            >
+              {selectedIds.size} selected
+            </TuiText>
+
+            {/* RIGHT: ••• menu button */}
+            <View>
+              {/* Vertical pop-up menu — appears above the ••• button */}
+              {selectionMenuOpen && (
+                <>
+                  {/* Dismiss backdrop */}
+                  <Pressable
+                    style={StyleSheet.absoluteFillObject}
+                    onPress={() => setSelectionMenuOpen(false)}
+                  />
+                  <View
+                    style={[
+                      {
+                        position: 'absolute',
+                        bottom: 60,
+                        right: 0,
+                        width: 200,
+                        borderWidth: 1.5,
+                        borderColor: colors.primary,
+                        backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
+                        zIndex: 2000,
+                        shadowColor: '#000000',
+                        shadowOffset: { width: 0, height: -4 },
+                        shadowOpacity: 0.18,
+                        shadowRadius: 8,
+                        elevation: 12,
+                        overflow: 'hidden',
+                      },
+                    ]}
+                  >
+                    {/* Share */}
+                    <Pressable
+                      onPress={() => { setSelectionMenuOpen(false); handleBulkShare(); }}
+                      disabled={selectedIds.size === 0}
+                      style={({ pressed }) => [{
+                        height: 44,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        paddingHorizontal: 16,
+                        borderBottomWidth: 1,
+                        borderBottomColor: colors.primary + '20',
+                        backgroundColor: pressed ? colors.primary + '15' : 'transparent',
+                        opacity: selectedIds.size === 0 ? 0.4 : 1,
+                      }]}
+                    >
+                      <TuiText size="sm" style={{ color: colors.foreground }}>Share</TuiText>
+                      <LucideShare size={16} color={colors.foreground} />
+                    </Pressable>
+
+                    {/* Move To */}
+                    <Pressable
+                      onPress={handleBulkMoveToFolder}
+                      disabled={selectedIds.size === 0}
+                      style={({ pressed }) => [{
+                        height: 44,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        paddingHorizontal: 16,
+                        borderBottomWidth: 1,
+                        borderBottomColor: colors.primary + '20',
+                        backgroundColor: pressed ? colors.primary + '15' : 'transparent',
+                        opacity: selectedIds.size === 0 ? 0.4 : 1,
+                      }]}
+                    >
+                      <TuiText size="sm" style={{ color: colors.foreground }}>Move To</TuiText>
+                      <FolderPlus size={16} color={colors.foreground} />
+                    </Pressable>
+
+                    {/* Delete */}
+                    <Pressable
+                      onPress={() => { setSelectionMenuOpen(false); handleBulkDelete(); }}
+                      disabled={selectedIds.size === 0}
+                      style={({ pressed }) => [{
+                        height: 44,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        paddingHorizontal: 16,
+                        backgroundColor: pressed ? (colors.destructive || '#EF4444') + '15' : 'transparent',
+                        opacity: selectedIds.size === 0 ? 0.4 : 1,
+                      }]}
+                    >
+                      <TuiText size="sm" style={{ color: colors.destructive || '#EF4444' }}>Delete</TuiText>
+                      <Trash2 size={16} color={colors.destructive || '#EF4444'} />
+                    </Pressable>
+                  </View>
+                </>
+              )}
+
+              {/* ••• trigger button */}
               <Pressable
-                onPress={handleBulkDelete}
-                disabled={selectedIds.size === 0}
+                onPress={() => setSelectionMenuOpen((prev) => !prev)}
                 hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
                 style={({ pressed }) => [
                   styles.iconBtn,
                   {
-                    borderColor: colors.destructive || '#EF4444',
-                    backgroundColor: pressed ? (colors.destructive || '#EF4444') + '25' : 'transparent',
-                    opacity: selectedIds.size === 0 ? 0.4 : 1,
+                    borderColor: selectionMenuOpen ? colors.primary : colors.primary,
+                    backgroundColor: selectionMenuOpen
+                      ? colors.primary + '25'
+                      : pressed
+                        ? colors.primary + '15'
+                        : 'transparent',
                   },
                 ]}
               >
-                <Trash2 size={16} color={colors.destructive || '#EF4444'} />
+                <MoreHorizontal size={16} color={colors.primary} />
               </Pressable>
+            </View>
             </View>
           ) : editingItemId !== null ? (
             <View style={styles.bottomBarRow}>
@@ -1891,7 +2156,11 @@ function MainApp() {
                   },
                 ]}
                 value={editText}
-                onChangeText={setEditText}
+                editable={!locked}
+                onChangeText={(text) => {
+                  if (isLocked()) return;
+                  setEditText(text);
+                }}
                 placeholder={
                   editingItemId === 'temp-new-folder' || (editingItemId && items.find(x => x.id === editingItemId)?.type === 'folder')
                     ? "Name your folder..."
@@ -1903,6 +2172,10 @@ function MainApp() {
                 multiline={true}
                 blurOnSubmit={false}
                 onFocus={() => {
+                  if (isLocked()) {
+                    editInputRef.current?.blur();
+                    return;
+                  }
                   setIsPhotoSheetOpen(false);
                   setActiveFullscreenPhotoIndex(null);
                   setIsFooterFocused(true);
@@ -1974,13 +2247,21 @@ function MainApp() {
                   },
                 ]}
                 value={inputText}
-                onChangeText={setInputText}
+                editable={!locked}
+                onChangeText={(text) => {
+                  if (isLocked()) return;
+                  setInputText(text);
+                }}
                 placeholder="Type Something"
                 placeholderTextColor={colors.mutedForeground}
                 autoCapitalize="none"
                 multiline={true}
                 blurOnSubmit={false}
                 onFocus={() => {
+                  if (isLocked()) {
+                    mainInputRef.current?.blur();
+                    return;
+                  }
                   setIsPhotoSheetOpen(false);
                   setActiveFullscreenPhotoIndex(null);
                   setIsFooterFocused(true);
@@ -2116,6 +2397,24 @@ function MainApp() {
         </TuiDrawer>
       )}
 
+      {/* Custom Move Drawer */}
+      {isMoveDrawerMounted && (
+        <TuiDrawer
+          visible={isMoveDrawerOpen}
+          onClose={handleCancelMoveDrawer}
+          title="Move to Folder"
+          progressAnim={drawerProgressAnim}
+        >
+          <FolderPickerSheet
+            items={items}
+            activeTab={activeTab}
+            movingItems={moveDrawerItems}
+            onCancel={handleCancelMoveDrawer}
+            onMove={handleConfirmMove}
+          />
+        </TuiDrawer>
+      )}
+
       {/* Context Menu Overlay */}
       {contextMenuPhoto && (
         <ContextMenuOverlay
@@ -2167,7 +2466,9 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <MainApp />
+        <AnimationLockProvider>
+          <MainApp />
+        </AnimationLockProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

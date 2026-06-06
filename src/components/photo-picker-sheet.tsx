@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   StyleSheet,
   View,
@@ -37,6 +37,14 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
   onStateChange,
 }) => {
   const { colors, isDark } = useTheme();
+
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   // Permissions state
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -106,6 +114,8 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
         ? await MediaLibrary.requestPermissionsAsync()
         : await MediaLibrary.getPermissionsAsync();
 
+      if (!isMounted.current) return;
+
       const granted = response.status === 'granted';
       setHasPermission(granted);
       setIsLimited(response.accessPrivileges === 'limited');
@@ -115,7 +125,9 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
       }
     } catch (e) {
       console.warn('Failed to check/request media library permissions:', e);
-      setHasPermission(false);
+      if (isMounted.current) {
+        setHasPermission(false);
+      }
     }
   };
 
@@ -123,6 +135,7 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
     if (isLoading) return;
     if (!reset && !hasNextPage) return;
 
+    if (!isMounted.current) return;
     setIsLoading(true);
     try {
       const fetchParams: MediaLibrary.AssetsOptions = {
@@ -136,6 +149,8 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
 
       const result = await MediaLibrary.getAssetsAsync(fetchParams);
 
+      if (!isMounted.current) return;
+
       if (reset) {
         setPhotos(result.assets);
       } else {
@@ -146,7 +161,9 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
     } catch (e) {
       console.warn('Failed to get photos:', e);
     } finally {
-      setIsLoading(false);
+      if (isMounted.current) {
+        setIsLoading(false);
+      }
     }
   };
 

@@ -12,6 +12,9 @@ import { DumpItem } from '../utils/storage';
 import { useTheme } from '../theme/theme-provider';
 import { ensureFileUri } from '../utils/helpers';
 import { FolderItem } from '../components/folder-item';
+import { useFolderNavigation, getFolderDetails } from '../utils/folder-navigation';
+import { FolderHeader } from '../components/folder-header';
+import { EmptyFolderPlaceholder } from '../components/empty-folder';
 
 export interface PhotoLayout {
   x: number;
@@ -30,6 +33,7 @@ interface PhotoItemProps {
   activePhotoId?: string | null;
   itemWidth: number;
   itemRefs: React.MutableRefObject<Record<string, any>>;
+  tappingRef: React.MutableRefObject<boolean>;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -44,10 +48,20 @@ const PhotoItem: React.FC<PhotoItemProps> = ({
   activePhotoId,
   itemWidth,
   itemRefs,
+  tappingRef,
 }) => {
   const { colors, isDark } = useTheme();
 
   const scale = useSharedValue(1);
+  // Timer that delays scale-up so it only plays during a long press, not a quick tap
+  const scaleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const cancelScaleTimer = () => {
+    if (scaleTimer.current) {
+      clearTimeout(scaleTimer.current);
+      scaleTimer.current = null;
+    }
+  };
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
@@ -64,24 +78,38 @@ const PhotoItem: React.FC<PhotoItemProps> = ({
           delete itemRefs.current[item.id];
         }
       }}
-      onPress={
-        isSelectionMode
-          ? () => toggleSelect(item.id)
-          : onPhotoPress
-          ? () => {
-              itemRefs.current[item.id]?.measureInWindow(
-                (x: number, y: number, width: number, height: number) => {
-                  if (width > 0 && height > 0) {
-                    onPhotoPress(item, { x, y, width, height });
-                  }
-                }
-              );
+      onPressIn={() => {
+        if (isSelectionMode) return;
+        // Begin scale-up after 150ms — will only fully play if finger stays down for long press.
+        // A quick tap cancels this timer before it fires.
+        cancelScaleTimer();
+        scaleTimer.current = setTimeout(() => {
+          scale.value = withTiming(1.08, { duration: 180 });
+        }, 150);
+      }}
+      onPress={() => {
+        // Quick tap: cancel scale timer (finger lifted before 150ms), no scale plays
+        cancelScaleTimer();
+        if (isSelectionMode) {
+          toggleSelect(item.id);
+          return;
+        }
+        if (!onPhotoPress) return;
+        if (tappingRef.current) return;
+        tappingRef.current = true;
+        itemRefs.current[item.id]?.measureInWindow(
+          (x: number, y: number, width: number, height: number) => {
+            if (width > 0 && height > 0) {
+              onPhotoPress(item, { x, y, width, height });
             }
-          : undefined
-      }
+            setTimeout(() => { tappingRef.current = false; }, 600);
+          }
+        );
+      }}
       onLongPress={
         !isSelectionMode && onPhotoLongPress
           ? () => {
+              // Scale is already building from the 150ms timer — trigger preview
               itemRefs.current[item.id]?.measureInWindow(
                 (x: number, y: number, width: number, height: number) => {
                   if (width > 0 && height > 0) {
@@ -93,12 +121,8 @@ const PhotoItem: React.FC<PhotoItemProps> = ({
           : undefined
       }
       delayLongPress={350}
-      onPressIn={() => {
-        if (!isSelectionMode) {
-          scale.value = withTiming(1.1, { duration: 150 });
-        }
-      }}
       onPressOut={() => {
+        cancelScaleTimer();
         scale.value = withTiming(1, { duration: 150 });
       }}
       style={[
@@ -165,6 +189,8 @@ export const PhotosScreen: React.FC<PhotosScreenProps> = ({
 }) => {
   const { colors } = useTheme();
   const itemRefs = useRef<Record<string, any>>({});
+  // Shared tap-lock: ensures only one photo can fire at a time
+  const tappingRef = useRef(false);
 
   useEffect(() => {
     if (registerMeasureFn) {
@@ -185,6 +211,81 @@ export const PhotosScreen: React.FC<PhotosScreenProps> = ({
     }
   }, [registerMeasureFn, sortedItems]);
 
+  const {
+    activeFolder,
+    activeFolderName,
+    activeFolderChildren,
+    topLevelItems,
+    handleBack,
+    handleOpenSubFolder,
+  } = useFolderNavigation(sortedItems, expandedFolders, setExpandedFolders);
+
+  // Calculate dynamic width for 3 columns with 8px gaps and 16px horizontal screen margins
+  const { width: windowWidth } = Dimensions.get('window');
+  const availableWidth = windowWidth - 32;
+  const gap = 8;
+  const itemWidth = Math.floor((availableWidth - (gap * 2)) / 3);
+
+  if (activeFolder) {
+    const folderChildren = activeFolderChildren.filter((child) => child.type === 'folder');
+    const photoChildren = activeFolderChildren.filter((child) => child.type !== 'folder');
+
+    return (
+      <View style={{ width: '100%' }}>
+        <FolderHeader
+          name={activeFolderName}
+          count={activeFolderChildren.length}
+          onBack={handleBack}
+        />
+
+        {activeFolderChildren.length === 0 ? (
+          <EmptyFolderPlaceholder />
+        ) : (
+          <>
+            {folderChildren.map((child) => {
+              const subFolderName = getFolderDetails(child).name;
+              const subChildren = sortedItems.filter((x) => x.folderId === child.id);
+              return (
+                <FolderItem
+                  key={child.id}
+                  id={child.id}
+                  name={subFolderName}
+                  count={subChildren.length}
+                  isExpanded={false}
+                  onToggleExpand={() => handleOpenSubFolder(child.id)}
+                  onLongPress={(bounds) => onPhotoLongPress?.(child, bounds)}
+                  isSelectionMode={isSelectionMode}
+                  isSelected={isSelectionMode && selectedIds.has(child.id)}
+                  onPress={() => toggleSelect(child.id)}
+                />
+              );
+            })}
+
+            {photoChildren.length > 0 && (
+              <View style={styles.gridContainer}>
+                {photoChildren.map((child) => (
+                  <PhotoItem
+                    key={child.id}
+                    item={child}
+                    isSelected={isSelectionMode && selectedIds.has(child.id)}
+                    isSelectionMode={isSelectionMode}
+                    toggleSelect={toggleSelect}
+                    onPhotoPress={onPhotoPress}
+                    onPhotoLongPress={onPhotoLongPress}
+                    activePhotoId={activePhotoId}
+                    itemWidth={itemWidth}
+                    itemRefs={itemRefs}
+                  tappingRef={tappingRef}
+                  />
+                ))}
+              </View>
+            )}
+          </>
+        )}
+      </View>
+    );
+  }
+
   if (sortedItems.length === 0) {
     return (
       <TuiText
@@ -196,24 +297,11 @@ export const PhotosScreen: React.FC<PhotosScreenProps> = ({
     );
   }
 
-  // Calculate dynamic width for 3 columns with 8px gaps and 16px horizontal screen margins
-  const { width: windowWidth } = Dimensions.get('window');
-  const availableWidth = windowWidth - 32;
-  const gap = 8;
-  const itemWidth = Math.floor((availableWidth - (gap * 2)) / 3);
-
-  // Filter top-level items: items without folderId
-  const topLevelItems = sortedItems.filter((item) => !item.folderId);
-
   return (
     <View style={styles.gridContainer}>
       {topLevelItems.map((item) => {
         if (item.type === 'folder') {
-          let folderName = 'New Folder';
-          try {
-            folderName = JSON.parse(item.value).name || 'New Folder';
-          } catch {}
-          
+          const folderName = getFolderDetails(item).name;
           const children = sortedItems.filter((child) => child.folderId === item.id);
           const isExpanded = !!expandedFolders[item.id];
           
@@ -226,6 +314,9 @@ export const PhotosScreen: React.FC<PhotosScreenProps> = ({
               isExpanded={isExpanded}
               onToggleExpand={() => setExpandedFolders((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
               onLongPress={(bounds) => onPhotoLongPress?.(item, bounds)}
+              isSelectionMode={isSelectionMode}
+              isSelected={isSelectionMode && selectedIds.has(item.id)}
+              onPress={() => toggleSelect(item.id)}
               childrenContainerStyle={{
                 flexDirection: 'row',
                 flexWrap: 'wrap',
@@ -247,6 +338,7 @@ export const PhotosScreen: React.FC<PhotosScreenProps> = ({
                   activePhotoId={activePhotoId}
                   itemWidth={itemWidth}
                   itemRefs={itemRefs}
+                  tappingRef={tappingRef}
                 />
               ))}
             </FolderItem>
@@ -265,6 +357,7 @@ export const PhotosScreen: React.FC<PhotosScreenProps> = ({
             activePhotoId={activePhotoId}
             itemWidth={itemWidth}
             itemRefs={itemRefs}
+            tappingRef={tappingRef}
           />
         );
       })}
@@ -295,3 +388,4 @@ const styles = StyleSheet.create({
     backgroundColor: '#00000010',
   },
 });
+
