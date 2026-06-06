@@ -1476,12 +1476,11 @@ function MainApp() {
           overflow: 'hidden',
         }}
       >
-        <SafeAreaView
+        <View
         style={[
           styles.safeArea,
-          { backgroundColor: colors.background }
+          { backgroundColor: colors.background, paddingTop: insets.top }
         ]}
-        edges={['top']}
       >
         <StatusBar style={isDark ? 'light' : 'dark'} />
 
@@ -2053,7 +2052,7 @@ function MainApp() {
             </View>
           )}
         </Animated.View>
-      </SafeAreaView>
+    </View>
 
       {/* Backdrop overlay for closing on tap outside (covers area above the bottom bar) */}
       {isPhotoSheetOpen && (
