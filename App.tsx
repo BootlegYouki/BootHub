@@ -83,7 +83,6 @@ import { PhotoPickerSheet } from './src/components/photo-picker-sheet';
 import { TabButton } from './src/components/tab-button';
 import { ContextMenuOverlay } from './src/components/context-menu-overlay';
 import { FullscreenPhotoViewer } from './src/components/fullscreen-photo-viewer';
-import { SplashIcon } from './src/components/splash-icon';
 import { parseShareUrl, processSharedItem, ParsedShare } from './src/utils/share-receiver';
 import { ShareImportSheet } from './src/components/share-import-sheet';
 import { TuiDrawer } from './src/components/tui-drawer';
@@ -102,27 +101,12 @@ function MainApp() {
 
   const [dataLoaded, setDataLoaded] = useState(false);
   const [isAppReady, setIsAppReady] = useState(false);
-  const [splashVisible, setSplashVisible] = useState(true);
-  const splashOpacity = useRef(new RNAnimated.Value(1)).current;
 
   useEffect(() => {
     if (fontsLoaded && dataLoaded && themeLoaded) {
       setIsAppReady(true);
     }
   }, [fontsLoaded, dataLoaded, themeLoaded]);
-
-  useEffect(() => {
-    if (isAppReady) {
-      RNAnimated.timing(splashOpacity, {
-        toValue: 0,
-        duration: 200,
-        delay: 1000,
-        useNativeDriver: true,
-      }).start(() => {
-        setSplashVisible(false);
-      });
-    }
-  }, [isAppReady]);
 
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<DumpType>('link');
@@ -1394,14 +1378,7 @@ function MainApp() {
   // Render initial dark/light splash screen until the app is ready
   if (!isAppReady) {
     const splashBg = isDark ? '#000000' : '#FFFFFF';
-    const splashIconColor = isDark ? '#FFFFFF' : '#000000';
-    return (
-      <View style={{ flex: 1, backgroundColor: splashBg, justifyContent: 'center', alignItems: 'center' }}>
-        {themeLoaded && (
-          <SplashIcon color={splashIconColor} />
-        )}
-      </View>
-    );
+    return <View style={{ flex: 1, backgroundColor: splashBg }} />;
   }
 
   const toggleTheme = () => {
@@ -2169,25 +2146,7 @@ function MainApp() {
         </Animated.View>
       )}
 
-      {splashVisible && (
-        <RNAnimated.View
-          style={[
-            StyleSheet.absoluteFill,
-            {
-              backgroundColor: isDark ? '#000000' : '#FFFFFF',
-              justifyContent: 'center',
-              alignItems: 'center',
-              opacity: splashOpacity,
-              zIndex: 99999,
-            },
-          ]}
-          pointerEvents="none"
-        >
-          {themeLoaded && (
-            <SplashIcon color={isDark ? '#FFFFFF' : '#000000'} />
-          )}
-        </RNAnimated.View>
-      )}
+
       </RNAnimated.View>
     </View>
   );
