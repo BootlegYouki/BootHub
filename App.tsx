@@ -1386,8 +1386,7 @@ function MainApp() {
 
   // Render initial dark/light splash screen until the app is ready
   if (!isAppReady) {
-    const splashBg = isDark ? '#000000' : '#FFFFFF';
-    return <View style={{ flex: 1, backgroundColor: splashBg }} />;
+    return null;
   }
 
   const toggleTheme = () => {
