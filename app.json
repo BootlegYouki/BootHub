@@ -5,11 +5,11 @@
     "version": "1.0.8",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/adaptive-icon.png",
+      "image": "./assets/adaptive-icon-monochrome.png",
       "resizeMode": "contain",
-      "backgroundColor": "#18181B"
+      "backgroundColor": "#F4F4F5"
     },
     "scheme": "boothub",
     "ios": {
@@ -38,6 +38,18 @@
     },
     "plugins": [
       "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/adaptive-icon-monochrome.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#F4F4F5",
+          "dark": {
+            "image": "./assets/adaptive-icon.png",
+            "backgroundColor": "#18181B"
+          }
+        }
+      ],
       [
         "expo-media-library",
         {
