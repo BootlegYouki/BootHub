@@ -160,13 +160,13 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\app.json": {
-    "mtime": 1780720863.498203,
-    "ast_hash": "31bc4ee7a9b498a313e16ce793659f5d",
+    "mtime": 1780721707.7104938,
+    "ast_hash": "0cf1ba7d2da34d458561f009af241ea3",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\App.tsx": {
-    "mtime": 1780719456.7021618,
-    "ast_hash": "45d2299423fc3c40e5da59cc67a03c23",
+    "mtime": 1780722399.4072719,
+    "ast_hash": "e36295eb54e49f956c64851194596f78",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\eslint.config.js": {
@@ -180,8 +180,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\package.json": {
-    "mtime": 1780719423.1978881,
-    "ast_hash": "81548162e3a51540ca453d93cf843ad6",
+    "mtime": 1780722396.9691095,
+    "ast_hash": "4a494a99786b0a0ebf2063259f79c3a9",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\tsconfig.json": {
@@ -365,8 +365,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\sidestore.json": {
-    "mtime": 1780720863.436832,
-    "ast_hash": "02a58b7462d7e8b1f89882b41c9e3694",
+    "mtime": 1780721707.7171383,
+    "ast_hash": "f3f1b2b222fa9c094e9428aa057e5908",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\FilesScreen.tsx": {
