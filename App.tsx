@@ -86,6 +86,9 @@ import { FullscreenPhotoViewer } from './src/components/fullscreen-photo-viewer'
 import { parseShareUrl, processSharedItem, ParsedShare } from './src/utils/share-receiver';
 import { ShareImportSheet } from './src/components/share-import-sheet';
 import { TuiDrawer } from './src/components/tui-drawer';
+import * as SplashScreen from 'expo-splash-screen';
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 // Bottom bar transition settings (manually customize duration/delay here)
 const BAR_SLIDE_DURATION = 100; // milliseconds
@@ -107,6 +110,12 @@ function MainApp() {
       setIsAppReady(true);
     }
   }, [fontsLoaded, dataLoaded, themeLoaded]);
+
+  useEffect(() => {
+    if (isAppReady) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [isAppReady]);
 
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<DumpType>('link');

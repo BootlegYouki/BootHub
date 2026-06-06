@@ -29,6 +29,7 @@
     "expo-media-library": "~18.2.1",
     "expo-share-extension": "^5.0.6",
     "expo-sharing": "^14.0.8",
+    "expo-splash-screen": "^56.0.10",
     "expo-status-bar": "~3.0.9",
     "lucide-react-native": "^0.475.0",
     "react": "19.1.0",
