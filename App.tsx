@@ -173,17 +173,18 @@ function MainApp() {
   }, [isMoveDrawerOpen]);
 
   // Animated values for iOS-style deck transition (parallax scaleout)
-  const drawerProgressAnim = useRef(new RNAnimated.Value(0)).current;
+  const shareDrawerProgressAnim = useRef(new RNAnimated.Value(0)).current;
+  const moveDrawerProgressAnim = useRef(new RNAnimated.Value(0)).current;
 
-  const screenScaleAnim = drawerProgressAnim.interpolate({
+  const screenScaleAnim = shareDrawerProgressAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [1, 0.93],
   });
-  const screenTranslateYAnim = drawerProgressAnim.interpolate({
+  const screenTranslateYAnim = shareDrawerProgressAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 12],
   });
-  const screenBorderRadiusAnim = drawerProgressAnim.interpolate({
+  const screenBorderRadiusAnim = shareDrawerProgressAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, 16],
   });
@@ -2371,7 +2372,7 @@ function MainApp() {
           visible={isShareSheetOpen}
           onClose={() => setIsShareSheetOpen(false)}
           title={`Save shared ${pendingShare.type}`}
-          progressAnim={drawerProgressAnim}
+          progressAnim={shareDrawerProgressAnim}
         >
           <ShareImportSheet
             parsedShare={pendingShare}
@@ -2403,7 +2404,7 @@ function MainApp() {
           visible={isMoveDrawerOpen}
           onClose={handleCancelMoveDrawer}
           title="Move to Folder"
-          progressAnim={drawerProgressAnim}
+          progressAnim={moveDrawerProgressAnim}
         >
           <FolderPickerSheet
             items={items}

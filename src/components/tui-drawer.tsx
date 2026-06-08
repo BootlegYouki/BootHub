@@ -115,6 +115,7 @@ export const TuiDrawer: React.FC<TuiDrawerProps> = ({
   // Sync animations with visible state changes
   useEffect(() => {
     if (visible) {
+      activeAnim.stopAnimation();
       setModalVisible(true);
       activeAnim.setValue(0);
       Animated.spring(activeAnim, {
@@ -122,16 +123,25 @@ export const TuiDrawer: React.FC<TuiDrawerProps> = ({
         ...SPRING_CONFIG_OPEN,
       }).start();
     } else if (modalVisible) {
+      activeAnim.stopAnimation();
       Animated.timing(activeAnim, {
         toValue: 0,
         duration: 150,
         easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       }).start(() => {
+        activeAnim.setValue(0);
         setModalVisible(false);
       });
     }
   }, [visible]);
+
+  useEffect(() => {
+    return () => {
+      activeAnim.stopAnimation();
+      activeAnim.setValue(0);
+    };
+  }, []);
 
   const borderAccent = isDark ? colors.primary : '#000000';
 
