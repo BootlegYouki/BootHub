@@ -151,6 +151,7 @@ function MainApp() {
   const [isMoveDrawerOpen, setIsMoveDrawerOpen] = useState<boolean>(false);
   const [moveDrawerItems, setMoveDrawerItems] = useState<DumpItem[]>([]);
   const [isMoveDrawerMounted, setIsMoveDrawerMounted] = useState<boolean>(false);
+  const handledInitialShareUrl = useRef<string | null>(null);
 
   useEffect(() => {
     if (!isShareSheetOpen) {
@@ -189,13 +190,19 @@ function MainApp() {
     outputRange: [0, 16],
   });
 
-  const handleDeepLink = async (url: string | null) => {
+  const handleDeepLink = async (url: string | null, source: 'initial' | 'event' = 'event') => {
     if (!url) return;
+    if (source === 'initial' && handledInitialShareUrl.current === url) {
+      return;
+    }
     Keyboard.dismiss();
     mainInputRef.current?.blur();
     editInputRef.current?.blur();
     const parsed = parseShareUrl(url);
     if (parsed) {
+      if (source === 'initial') {
+        handledInitialShareUrl.current = url;
+      }
       if (parsed.type === 'link') {
         try {
           const { preFetchLinkMetadata } = require('./src/components/link-preview');
@@ -212,19 +219,19 @@ function MainApp() {
 
   useEffect(() => {
     const subscription = Linking.addEventListener('url', ({ url }) => {
-      handleDeepLink(url);
+      handleDeepLink(url, 'event');
     });
 
     Linking.getInitialURL().then((url) => {
       if (url) {
-        handleDeepLink(url);
+        handleDeepLink(url, 'initial');
       }
     });
 
     return () => {
       subscription.remove();
     };
-  }, [items]);
+  }, []);
 
   const showDevShareMenu = () => {
     Keyboard.dismiss();
@@ -1235,12 +1242,12 @@ function MainApp() {
 
   const [toast, setToast] = useState<{ label: string; caption: string } | null>(null);
   const toastOpacity = useSharedValue(0);
-  const toastTranslateY = useSharedValue(-20);
+  const toastTranslateY = useSharedValue(20);
 
   const showToast = (label: string, caption: string) => {
     setToast({ label, caption });
     toastOpacity.value = 0;
-    toastTranslateY.value = -20;
+    toastTranslateY.value = 20;
 
     toastOpacity.value = withTiming(1, { duration: 250 }, () => {
       toastOpacity.value = withDelay(
@@ -1255,7 +1262,7 @@ function MainApp() {
     toastTranslateY.value = withTiming(0, { duration: 250 }, () => {
       toastTranslateY.value = withDelay(
         2000,
-        withTiming(-20, { duration: 250 })
+        withTiming(20, { duration: 250 })
       );
     });
   };
@@ -2437,10 +2444,11 @@ function MainApp() {
           style={[
             {
               position: 'absolute',
-              top: insets.top + 70,
+              bottom: insets.bottom + 70,
               left: 20,
               right: 20,
               zIndex: 2500,
+              alignItems: 'center',
             },
             animatedToastStyle,
           ]}
