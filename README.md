@@ -11,38 +11,38 @@ Follow these steps to initialize a new app from this template:
 ### 1. Rename the Project
 Customize the display names, slugs, package files, and GitHub release workflows:
 ```bash
-pnpm rename <NewProjectName> [custom-bundle-id]
+npm run rename -- <NewProjectName> [custom-bundle-id]
 ```
 *Example:*
 ```bash
-pnpm rename ClassScheduler
+npm run rename -- ClassScheduler
 ```
 This automatically updates configurations in `app.json`, `package.json`, and `.github/workflows/build-ios-ipa.yml` to target your new project names.
 
 ### 2. Install Dependencies
 ```bash
-pnpm install
+npm install
 ```
 
 ### 3. Launch Development Server
 ```bash
 # Run Expo Dev Server
-pnpm start
+npm start
 
 # Run specifically on iOS/Android
-pnpm ios
-pnpm android
+npm run ios
+npm run android
 ```
 
 ---
 
 ## 🛠 Available Scripts
 
-*   `pnpm rename <Name>`: Rename project files, bundle identifiers, and workflows.
-*   `pnpm typecheck`: Run the TypeScript compiler checker (`tsc --noEmit`).
-*   `pnpm lint`: Run ESLint rules.
-*   `pnpm format`: Format codebase files using Prettier.
-*   `pnpm exec graphify update .`: Sync AST definitions to the local codebase knowledge graph (`graphify-out/`).
+*   `npm run rename -- <Name>`: Rename project files, bundle identifiers, and workflows.
+*   `npm run typecheck`: Run the TypeScript compiler checker (`tsc --noEmit`).
+*   `npm run lint`: Run ESLint rules.
+*   `npm run format`: Format codebase files using Prettier.
+*   `npm exec graphify update .`: Sync AST definitions to the local codebase knowledge graph (`graphify-out/`).
 
 ---
 

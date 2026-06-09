@@ -95,4 +95,4 @@ if (fs.existsSync(workflowPath)) {
   }
 }
 
-console.log('\n\x1b[32mProject successfully renamed! Run pnpm install or typecheck to verify.\x1b[0m\n');
+console.log('\n\x1b[32mProject successfully renamed! Run npm install or typecheck to verify.\x1b[0m\n');
