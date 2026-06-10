@@ -66,6 +66,15 @@ const LinkItem: React.FC<LinkItemProps> = ({
     <View ref={itemRef}>
       <TuiContainer
         label={item.label}
+        badge={
+          item.syncState === 'pending'
+            ? 'Pending'
+            : item.syncState === 'error'
+            ? 'Error'
+            : item.syncState === 'synced'
+            ? 'Synced'
+            : undefined
+        }
         noPadding={true}
         accentBorder={isEditing || isSelected}
         style={
@@ -151,6 +160,7 @@ export const LinksScreen: React.FC<LinksScreenProps> = ({
                   isSelectionMode={isSelectionMode}
                   isSelected={isSelectionMode && selectedIds.has(child.id)}
                   onPress={() => toggleSelect(child.id)}
+                  syncState={child.syncState}
                 />
               );
             }
@@ -202,6 +212,7 @@ export const LinksScreen: React.FC<LinksScreenProps> = ({
               isSelectionMode={isSelectionMode}
               isSelected={isSelectionMode && selectedIds.has(item.id)}
               onPress={() => toggleSelect(item.id)}
+              syncState={item.syncState}
             >
               {children.map((child) => (
                 <LinkItem

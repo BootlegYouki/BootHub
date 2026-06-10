@@ -15,6 +15,7 @@ import { FolderItem } from '../components/folder-item';
 import { useFolderNavigation, getFolderDetails } from '../utils/folder-navigation';
 import { FolderHeader } from '../components/folder-header';
 import { EmptyFolderPlaceholder } from '../components/empty-folder';
+import { subscribeToUploadProgress } from '../utils/sync-engine';
 
 export interface PhotoLayout {
   x: number;
@@ -51,6 +52,20 @@ const PhotoItem: React.FC<PhotoItemProps> = ({
   tappingRef,
 }) => {
   const { colors, isDark } = useTheme();
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+
+  useEffect(() => {
+    if (item.syncState !== 'pending') {
+      setUploadProgress(0);
+      return;
+    }
+    const unsubscribe = subscribeToUploadProgress((id, progress) => {
+      if (id === item.id) {
+        setUploadProgress(progress);
+      }
+    });
+    return unsubscribe;
+  }, [item.id, item.syncState]);
 
   const scale = useSharedValue(1);
   // Timer that delays scale-up so it only plays during a long press, not a quick tap
@@ -156,6 +171,19 @@ const PhotoItem: React.FC<PhotoItemProps> = ({
           />
         )}
       </View>
+      {item.syncState === 'pending' && (
+        <View style={[styles.progressBarContainer, { backgroundColor: colors.border }]}>
+          <View
+            style={[
+              styles.progressBar,
+              {
+                backgroundColor: colors.primary,
+                width: `${Math.round(uploadProgress * 100)}%`,
+              },
+            ]}
+          />
+        </View>
+      )}
     </AnimatedPressable>
   );
 };
@@ -386,6 +414,26 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     backgroundColor: '#00000010',
+  },
+  photoSyncBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    borderWidth: 1,
+    paddingHorizontal: 3,
+    paddingVertical: 1,
+    zIndex: 10,
+  },
+  progressBarContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
   },
 });
 

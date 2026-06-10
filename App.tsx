@@ -69,7 +69,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Clipboard from 'expo-clipboard';
 import * as MediaLibrary from 'expo-media-library';
 import * as WebBrowser from 'expo-web-browser';
-import { processSyncQueue } from './src/utils/sync-engine';
+import { processSyncQueue, pullChangesFromDrive, enqueueUnsyncedLocalItems } from './src/utils/sync-engine';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -77,7 +77,7 @@ import { ThemeProvider, useTheme } from './src/theme/theme-provider';
 import { TuiHeader } from './src/components/tui-header';
 import { TuiText } from './src/components/tui-text';
 import { TuiContainer } from './src/components/tui-container';
-import { getItems, deleteItem, addItem, updateItem, addMultiplePhotos, setItemFolder, DumpItem, DumpType } from './src/utils/storage';
+import { getItems, deleteItem, addItem, updateItem, addMultiplePhotos, setItemFolder, subscribeToStorage, DumpItem, DumpType } from './src/utils/storage';
 import { ensureFileUri, getActualType, extractAudioArtwork } from './src/utils/helpers';
 import { LinksScreen } from './src/screens/LinksScreen';
 import { TextsScreen } from './src/screens/TextsScreen';
@@ -583,6 +583,14 @@ function MainApp() {
     scrollToTab(tab, false);
   };
 
+  const handleTabPress = (tab: DumpType) => {
+    if (isLocked()) return;
+    if (activeView === 'settings') {
+      setActiveView('main');
+    }
+    switchTab(tab);
+  };
+
 
   const activeFullscreenPhoto =
     activeFullscreenPhotoIndex !== null && activeFullscreenPhotoIndex >= 0 && activeFullscreenPhotoIndex < fullscreenPhotoSet.length
@@ -674,14 +682,23 @@ function MainApp() {
 
   // Dismiss keyboard when app backgrounds & trigger Google Drive sync on launch/foreground
   useEffect(() => {
+    const runSync = async () => {
+      try {
+        await enqueueUnsyncedLocalItems();
+      } catch (err) {
+        console.error('[App] Failed to enqueue unsynced local items:', err);
+      }
+      await processSyncQueue().catch((err) => console.error('[App] Sync failed:', err));
+    };
+
     // Run sync queue on startup
-    processSyncQueue().catch((err) => console.error('[App] Startup sync failed:', err));
+    runSync();
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'background') {
         Keyboard.dismiss();
       } else if (nextAppState === 'active') {
-        processSyncQueue().catch((err) => console.error('[App] Foreground sync failed:', err));
+        runSync();
       }
     });
 
@@ -740,7 +757,9 @@ function MainApp() {
     if (fileUri.startsWith('http://') || fileUri.startsWith('https://')) {
       const filename = fileUri.split('/').pop()?.split('?')[0] || 'temp_image.jpg';
       const tempFileUri = `${FileSystem.cacheDirectory}${Date.now()}_${filename}`;
-      const downloadResult = await FileSystem.downloadAsync(fileUri, tempFileUri);
+      const downloadResult = await FileSystem.downloadAsync(fileUri, tempFileUri, {
+        sessionType: FileSystem.FileSystemSessionType.FOREGROUND,
+      });
       fileUri = downloadResult.uri;
     }
 
@@ -844,29 +863,17 @@ function MainApp() {
       const hasChildren = items.some((x) => x.folderId === item.id);
 
       if (hasChildren) {
-        // Folder has items — ask whether to keep or delete them
         Alert.alert(
           `Delete Folder: "${folderName}"`,
-          'Do you want to delete all items inside this folder too?',
+          'Are you sure you want to delete this folder and all its contents?',
           [
             { text: 'Cancel', style: 'cancel' },
             {
-              text: 'No, Keep Items',
-              onPress: async () => {
-                try {
-                  const updatedList = await deleteItem(item.id, false);
-                  setItems(updatedList);
-                } catch (e) {
-                  console.error(e);
-                }
-              },
-            },
-            {
-              text: 'Yes, Delete All',
+              text: 'Delete',
               style: 'destructive',
               onPress: async () => {
                 try {
-                  const updatedList = await deleteItem(item.id, true);
+                  const updatedList = await deleteItem(item.id);
                   setItems(updatedList);
                 } catch (e) {
                   console.error(e);
@@ -876,7 +883,6 @@ function MainApp() {
           ]
         );
       } else {
-        // Empty folder — simple confirmation
         Alert.alert(
           `Delete "${folderName}"?`,
           'This folder is empty. Delete it?',
@@ -887,7 +893,7 @@ function MainApp() {
               style: 'destructive',
               onPress: async () => {
                 try {
-                  const updatedList = await deleteItem(item.id, false);
+                  const updatedList = await deleteItem(item.id);
                   setItems(updatedList);
                 } catch (e) {
                   console.error(e);
@@ -957,7 +963,7 @@ function MainApp() {
                     console.warn('Failed to delete bulk file from disk:', err);
                   }
                 }
-                updatedList = await deleteItem(id, true);
+                updatedList = await deleteItem(id);
               }
               setItems(updatedList);
               setSelectedIds(new Set());
@@ -1232,6 +1238,8 @@ function MainApp() {
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
     try {
+      await pullChangesFromDrive();
+      await processSyncQueue();
       const data = await getItems();
       setItems(data);
     } catch (e) {
@@ -1253,6 +1261,17 @@ function MainApp() {
       }
     };
     loadItems();
+
+    const unsubscribe = subscribeToStorage(async () => {
+      try {
+        const data = await getItems();
+        setItems(data);
+      } catch (e) {
+        console.error('Failed to reload items on storage change:', e);
+      }
+    });
+
+    return unsubscribe;
   }, []);
 
   const [inputText, setInputText] = useState<string>('');
@@ -1610,49 +1629,6 @@ function MainApp() {
     </Pressable>
   );
 
-  if (activeView === 'settings') {
-    return (
-      <View style={{ flex: 1, backgroundColor: '#000000' }}>
-        <RNAnimated.View
-          style={{
-            flex: 1,
-            backgroundColor: colors.background,
-            transform: [
-              { scale: screenScaleAnim },
-              { translateY: screenTranslateYAnim },
-            ],
-            borderRadius: screenBorderRadiusAnim,
-            overflow: 'hidden',
-          }}
-        >
-          <View style={[styles.safeArea, { backgroundColor: colors.background, paddingTop: insets.top }]}>
-            <StatusBar style={isDark ? 'light' : 'dark'} />
-            <TuiHeader
-              title="BootHub"
-              subtitle="by BootlegYouki"
-              Icon={Archive}
-              rightElement={
-                <Pressable
-                  onPress={() => setActiveView('main')}
-                  style={({ pressed }) => [
-                    styles.themeToggleBtn,
-                    {
-                      borderColor: colors.primary,
-                      backgroundColor: pressed ? colors.primary + '25' : 'transparent',
-                    },
-                  ]}
-                >
-                  <X size={16} color={colors.primary} />
-                </Pressable>
-              }
-            />
-            <SettingsScreen />
-          </View>
-        </RNAnimated.View>
-      </View>
-    );
-  }
-
   return (
     // No KeyboardAvoidingView — the Animated.View spacer below handles it
     // natively via Reanimated's useAnimatedKeyboard shared value.
@@ -1695,13 +1671,18 @@ function MainApp() {
           {/* 02: TABS */}
           <View style={[styles.topContainer, { paddingBottom: 0 }]}>
             <View style={styles.navRow}>
-              <TabButton isActive={activeTab === 'link'} onPress={() => switchTab('link')} label="Links" Icon={Link2} />
-              <TabButton isActive={activeTab === 'text'} onPress={() => switchTab('text')} label="Texts" Icon={FileText} />
-              <TabButton isActive={activeTab === 'photo'} onPress={() => switchTab('photo')} label="Photos" Icon={ImageIcon} />
-              <TabButton isActive={activeTab === 'file'} onPress={() => switchTab('file')} label="Files" Icon={Paperclip} />
+              <TabButton isActive={activeView === 'main' && activeTab === 'link'} onPress={() => handleTabPress('link')} label="Links" Icon={Link2} />
+              <TabButton isActive={activeView === 'main' && activeTab === 'text'} onPress={() => handleTabPress('text')} label="Texts" Icon={FileText} />
+              <TabButton isActive={activeView === 'main' && activeTab === 'photo'} onPress={() => handleTabPress('photo')} label="Photos" Icon={ImageIcon} />
+              <TabButton isActive={activeView === 'main' && activeTab === 'file'} onPress={() => handleTabPress('file')} label="Files" Icon={Paperclip} />
             </View>
           </View>
         </View>
+
+        {activeView === 'settings' ? (
+          <SettingsScreen />
+        ) : (
+          <>
 
         <View
           onLayout={(e) => {
@@ -1808,6 +1789,9 @@ function MainApp() {
           showsHorizontalScrollIndicator={false}
           scrollEventThrottle={16}
           keyboardShouldPersistTaps="handled"
+          onLayout={() => {
+            scrollToTab(activeTab, false);
+          }}
           // Update active tab mid-drag ONLY while user's finger is actively dragging.
           // Guarding with isTabScrollingRef prevents flicker during momentum scrolls
           // and programmatic scrollTo animations triggered by tab button presses.
@@ -1951,9 +1935,11 @@ function MainApp() {
             />
           </ScrollView>
         </ScrollView>
+        </>
+      )}
 
         {/* DEV Simulate Share Button */}
-        {__DEV__ && (
+        {__DEV__ && activeView === 'main' && (
           <Pressable
             onPress={showDevShareMenu}
             style={({ pressed }) => [
@@ -1992,7 +1978,7 @@ function MainApp() {
           />
         )}
 
-        {isFooterFocused && (
+        {isFooterFocused && activeView === 'main' && (
           <Pressable
             style={[
               StyleSheet.absoluteFillObject,
@@ -2009,7 +1995,7 @@ function MainApp() {
           />
         )}
 
-        {isSearchFocused && (
+        {isSearchFocused && activeView === 'main' && (
           <>
             <Pressable
               style={{
@@ -2045,17 +2031,18 @@ function MainApp() {
         )}
 
         {/* 04: BOTTOM BAR */}
-        <Animated.View
-          pointerEvents={activeFullscreenPhotoIndex !== null ? 'none' : 'auto'}
-          style={[
-            styles.bottomBar,
-            {
-              backgroundColor: colors.background,
-              zIndex: activeFullscreenPhotoIndex !== null ? 0 : 1000,
-            },
-            animatedBottomBarStyle,
-          ]}
-        >
+        {activeView === 'main' && (
+          <Animated.View
+            pointerEvents={activeFullscreenPhotoIndex !== null ? 'none' : 'auto'}
+            style={[
+              styles.bottomBar,
+              {
+                backgroundColor: colors.background,
+                zIndex: activeFullscreenPhotoIndex !== null ? 0 : 1000,
+              },
+              animatedBottomBarStyle,
+            ]}
+          >
           {isSelectionMode ? (
             <View style={[styles.bottomBarRow, { justifyContent: 'space-between', alignItems: 'center' }]}>
             {/* LEFT: Select-all */}
@@ -2406,6 +2393,7 @@ function MainApp() {
             </View>
           )}
         </Animated.View>
+        )}
     </View>
 
       {/* Backdrop overlay for closing on tap outside (covers area above the bottom bar) */}
@@ -2518,7 +2506,7 @@ function MainApp() {
             animatedToastStyle,
           ]}
         >
-          <TuiContainer label={toast.label} accentBorder={true}>
+          <TuiContainer label={toast.label} accentBorder={true} style={{ paddingTop: 18, paddingBottom: 16 }}>
             <TuiText size="sm" style={{ color: colors.foreground }} numberOfLines={2}>
               {toast.caption}
             </TuiText>
@@ -2553,7 +2541,7 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   loaderContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  scrollContent: { paddingHorizontal: 16, paddingBottom: 10 },
+  scrollContent: { paddingHorizontal: 16, paddingTop: 5, paddingBottom: 10 },
   bottomBar: { paddingHorizontal: 16, paddingVertical: 12 },
   bottomBarRow: { flexDirection: 'row', alignItems: 'flex-end', width: '100%' },
   input: {

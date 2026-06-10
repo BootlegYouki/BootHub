@@ -16,8 +16,9 @@ import {
   getGoogleUserInfo,
   exchangeCodeForTokens,
   getRedirectScheme,
+  fetchAllMetadataFromDrive,
 } from '../utils/google-drive';
-import { subscribeToSyncStatus, processSyncQueue, getSyncQueue, SyncStatus } from '../utils/sync-engine';
+import { subscribeToSyncStatus, processSyncQueue, getSyncQueue, saveSyncQueue, enqueueUnsyncedLocalItems, pullChangesFromDrive, SyncStatus, clearSyncError, updateSyncStatus } from '../utils/sync-engine';
 
 interface SettingsScreenProps {}
 
@@ -42,11 +43,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
       clientId: getClientId(),
-      scopes: ['https://www.googleapis.com/auth/drive.file'],
-      redirectUri: AuthSession.makeRedirectUri({
-        scheme: getRedirectScheme(),
-        path: 'oauth2redirect',
-      }),
+      scopes: [
+        'https://www.googleapis.com/auth/drive.file',
+        'openid',
+        'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/userinfo.profile'
+      ],
+      redirectUri: `${getRedirectScheme()}:/oauth2redirect`,
       extraParams: {
         access_type: 'offline',
         prompt: 'consent',
@@ -85,7 +88,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
 
   // Handle Google OAuth authorization code redirect response
   React.useEffect(() => {
-    if (response?.type === 'success' && response.authentication) {
+    if (response?.type === 'success') {
       const exchangeCode = async () => {
         setIsAuthLoading(true);
         try {
@@ -95,10 +98,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
             throw new Error('Authorization response parameters are invalid.');
           }
 
-          const redirectUri = AuthSession.makeRedirectUri({
-            scheme: getRedirectScheme(),
-            path: 'oauth2redirect',
-          });
+          const redirectUri = `${getRedirectScheme()}:/oauth2redirect`;
           const tokens = await exchangeCodeForTokens(code, codeVerifier, redirectUri);
           const info = await fetchUserInfo(tokens.access_token);
           
@@ -106,12 +106,76 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
           
           setIsSignedIn(true);
           setUserInfo(info);
+          clearSyncError();
           
-          // Trigger initial sync run to mirror existing items
-          processSyncQueue();
+          // Check for reconnection sync conflict:
+          // If we have offline DELETE tasks, and Google Drive actually has items, prompt the user.
+          const queue = await getSyncQueue();
+          const hasPendingDeletions = queue.some((t) => t.action === 'DELETE');
+          let handledConflict = false;
+
+          if (hasPendingDeletions) {
+            try {
+              const remoteFiles = await fetchAllMetadataFromDrive(tokens.access_token);
+              if (remoteFiles && remoteFiles.length > 0) {
+                handledConflict = true;
+                Alert.alert(
+                  'Sync Conflict Detected',
+                  `You deleted some items on this phone while disconnected, but they still exist on Google Drive. Would you like to restore them to this device or remove them from Google Drive?`,
+                  [
+                    {
+                      text: 'Restore to Device',
+                      onPress: async () => {
+                        updateSyncStatus({ isSyncing: true, error: null });
+                        try {
+                          // Clear DELETE tasks to cancel deletions
+                          const currentQueue = await getSyncQueue();
+                          const filteredQueue = currentQueue.filter((t) => t.action !== 'DELETE');
+                          await saveSyncQueue(filteredQueue);
+                          
+                          // Download items from Google Drive back to the device
+                          await pullChangesFromDrive();
+                        } catch (pullErr) {
+                          console.error('Failed to restore files from Drive on conflict:', pullErr);
+                          Alert.alert('Sync Error', 'Failed to pull changes from Google Drive.');
+                        } finally {
+                          // Process remaining queue tasks
+                          processSyncQueue();
+                        }
+                      },
+                    },
+                    {
+                      text: 'Remove from Drive',
+                      style: 'destructive',
+                      onPress: () => {
+                        updateSyncStatus({ isSyncing: true, error: null });
+                        // Let the queue process deletions normally on Drive
+                        processSyncQueue();
+                      },
+                    },
+                  ],
+                  { cancelable: false }
+                );
+              }
+            } catch (queryErr) {
+              console.warn('Failed to query Drive for conflict check:', queryErr);
+            }
+          }
+
+          if (!handledConflict) {
+            // Scan and enqueue any pre-existing local items for upload
+            await enqueueUnsyncedLocalItems().catch((err) => {
+              console.error('Failed to enqueue unsynced local items on sign-in:', err);
+            });
+            // Trigger initial sync run to mirror existing items
+            processSyncQueue();
+          }
         } catch (err: any) {
           console.error('Failed to complete Google OAuth exchange:', err);
-          Alert.alert('Authentication Error', err.message || String(err));
+          const details = err.response?.data 
+            ? JSON.stringify(err.response.data) 
+            : (err.message || String(err));
+          Alert.alert('Authentication Error', details);
         } finally {
           setIsAuthLoading(false);
         }
@@ -197,7 +261,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
               {/* User Account Identity */}
               <View style={styles.userRow}>
                 {userInfo?.picture ? (
-                  <Image source={{ uri: userInfo.picture }} style={styles.avatar} />
+                  <Image source={{ uri: userInfo.picture }} style={[styles.avatar, { borderColor: colors.primary, borderWidth: 1 }]} />
                 ) : (
                   <View style={[styles.avatarPlaceholder, { borderColor: colors.primary }]}>
                     <TuiText size="sm" weight="bold" style={{ color: colors.primary }}>
@@ -213,37 +277,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                 </View>
               </View>
 
-              {/* Live Sync Status Info */}
-              <View style={[styles.statusBox, { borderColor: colors.border, backgroundColor: colors.background }]}>
-                {syncStatus.isSyncing ? (
-                  <View style={styles.statusRow}>
-                    <ActivityIndicator size="small" color={colors.primary} style={styles.smallSpinner} />
-                    <TuiText size="sm">Synchronizing data...</TuiText>
-                  </View>
-                ) : syncStatus.error ? (
-                  <TuiText size="sm" style={{ color: colors.destructive || '#ef4444' }}>
-                    {syncStatus.error}
-                  </TuiText>
-                ) : (
-                  <View>
-                    <TuiText size="sm">
-                      Sync Status: <TuiText size="sm" weight="bold" style={{ color: colors.primary }}>Up to date</TuiText>
-                    </TuiText>
-                    {syncStatus.lastSynced && (
-                      <TuiText size="xs" variant="muted" style={styles.timeLabel}>
-                        Last Synced: {syncStatus.lastSynced}
-                      </TuiText>
-                    )}
-                  </View>
-                )}
-
-                {pendingQueueCount > 0 && (
-                  <TuiText size="xs" style={[styles.backlogText, { color: colors.primary }]}>
-                    {pendingQueueCount} operation{pendingQueueCount > 1 ? 's' : ''} queued offline
-                  </TuiText>
-                )}
-              </View>
-
               {/* Sync Action Buttons */}
               <View style={styles.actionRow}>
                 <View style={styles.actionCol}>
@@ -253,7 +286,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                     style={styles.syncBtn}
                     disabled={syncStatus.isSyncing}
                   >
-                    Sync Now
+                    {syncStatus.isSyncing ? 'Syncing...' : 'Sync Now'}
                   </TuiButton>
                 </View>
                 <View style={styles.actionCol}>
@@ -262,6 +295,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                     variant="outline"
                     style={styles.syncBtn}
                     loading={isAuthLoading}
+                    disabled={syncStatus.isSyncing}
                   >
                     Disconnect
                   </TuiButton>
@@ -336,12 +370,10 @@ const styles = StyleSheet.create({
   avatar: {
     width: 44,
     height: 44,
-    borderRadius: 22,
   },
   avatarPlaceholder: {
     width: 44,
     height: 44,
-    borderRadius: 22,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -349,26 +381,6 @@ const styles = StyleSheet.create({
   userDetails: {
     marginLeft: 12,
     flex: 1,
-  },
-  statusBox: {
-    borderWidth: 1,
-    borderRadius: 4,
-    padding: 12,
-    marginBottom: 16,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  smallSpinner: {
-    marginRight: 8,
-  },
-  timeLabel: {
-    marginTop: 4,
-  },
-  backlogText: {
-    marginTop: 6,
-    fontWeight: 'bold',
   },
   actionRow: {
     flexDirection: 'row',

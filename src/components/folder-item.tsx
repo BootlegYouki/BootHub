@@ -17,6 +17,7 @@ interface FolderItemProps {
   isSelected?: boolean;
   isSelectionMode?: boolean;
   onPress?: () => void;
+  syncState?: 'synced' | 'pending' | 'error';
 }
 
 export const FolderItem: React.FC<FolderItemProps> = ({
@@ -31,6 +32,7 @@ export const FolderItem: React.FC<FolderItemProps> = ({
   isSelected = false,
   isSelectionMode = false,
   onPress,
+  syncState,
 }) => {
   const { colors, isDark } = useTheme();
   const folderRef = useRef<View>(null);

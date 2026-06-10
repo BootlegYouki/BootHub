@@ -99,16 +99,16 @@ export const isUserSignedIn = async (): Promise<boolean> => {
 
 export const refreshAccessToken = async (refreshToken: string): Promise<string> => {
   try {
-    const params = new URLSearchParams();
-    params.append('client_id', getClientId());
-    params.append('refresh_token', refreshToken);
-    params.append('grant_type', 'refresh_token');
+    const tokenResponse = await AuthSession.refreshAsync(
+      {
+        clientId: getClientId(),
+        refreshToken,
+      },
+      discovery
+    );
 
-    const res = await axios.post(discovery.tokenEndpoint, params.toString(), {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    });
-
-    const { access_token, expires_in } = res.data;
+    const access_token = tokenResponse.accessToken;
+    const expires_in = tokenResponse.expiresIn || 3600;
     await SecureStore.setItemAsync(SECURE_KEYS.ACCESS_TOKEN, access_token);
     const expiresAt = Date.now() + expires_in * 1000;
     await SecureStore.setItemAsync(SECURE_KEYS.EXPIRES_AT, String(expiresAt));
@@ -157,17 +157,23 @@ export const exchangeCodeForTokens = async (
   codeVerifier: string,
   redirectUri: string
 ): Promise<any> => {
-  const params = new URLSearchParams();
-  params.append('code', code);
-  params.append('client_id', getClientId());
-  params.append('redirect_uri', redirectUri);
-  params.append('grant_type', 'authorization_code');
-  params.append('code_verifier', codeVerifier);
+  const tokenResponse = await AuthSession.exchangeCodeAsync(
+    {
+      clientId: getClientId(),
+      code,
+      redirectUri,
+      extraParams: {
+        code_verifier: codeVerifier,
+      },
+    },
+    discovery
+  );
 
-  const res = await axios.post(discovery.tokenEndpoint, params.toString(), {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-  });
-  return res.data;
+  return {
+    access_token: tokenResponse.accessToken,
+    refresh_token: tokenResponse.refreshToken || undefined,
+    expires_in: tokenResponse.expiresIn,
+  };
 };
 
 // ─── Google Drive Operations ────────────────────────────────────────────────
@@ -221,7 +227,8 @@ export const uploadJsonToDrive = async (
   parentFolderId: string,
   filename: string,
   content: string,
-  existingDriveFileId?: string
+  existingDriveFileId?: string,
+  signal?: AbortSignal
 ): Promise<string> => {
   let fileId = existingDriveFileId;
 
@@ -239,6 +246,7 @@ export const uploadJsonToDrive = async (
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
+        signal,
       }
     );
     fileId = metaRes.data.id;
@@ -257,6 +265,7 @@ export const uploadJsonToDrive = async (
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
+      signal,
     }
   );
 
@@ -274,7 +283,10 @@ export const uploadBinaryToDrive = async (
   filename: string,
   localFileUri: string,
   mimeType: string,
-  existingDriveFileId?: string
+  existingDriveFileId?: string,
+  onUploadTaskCreated?: (task: FileSystem.UploadTask) => void,
+  signal?: AbortSignal,
+  onProgress?: (progress: number) => void
 ): Promise<string> => {
   let fileId = existingDriveFileId;
 
@@ -292,6 +304,7 @@ export const uploadBinaryToDrive = async (
           Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
+        signal,
       }
     );
     fileId = metaRes.data.id;
@@ -301,19 +314,40 @@ export const uploadBinaryToDrive = async (
     throw new Error('Failed to create or resolve Google Drive file ID for binary file.');
   }
 
-  // Step 2: Upload raw content using expo-file-system
+  // Step 2: Upload raw content using expo-file-system createUploadTask (cancellable)
   const uploadUrl = `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`;
-  const uploadResult = await FileSystem.uploadAsync(uploadUrl, localFileUri, {
-    httpMethod: 'PATCH',
-    uploadType: FileSystemUploadType.BINARY_CONTENT,
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': mimeType || 'application/octet-stream',
+  
+  const uploadTask = FileSystem.createUploadTask(
+    uploadUrl,
+    localFileUri,
+    {
+      httpMethod: 'PATCH',
+      uploadType: FileSystemUploadType.BINARY_CONTENT,
+      sessionType: FileSystem.FileSystemSessionType.FOREGROUND,
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': mimeType || 'application/octet-stream',
+      },
     },
-  });
+    (data) => {
+      if (onProgress && data.totalBytesExpectedToSend > 0) {
+        const progress = data.totalBytesSent / data.totalBytesExpectedToSend;
+        onProgress(progress);
+      }
+    }
+  );
 
-  if (uploadResult.status < 200 || uploadResult.status >= 300) {
-    throw new Error(`Google Drive media upload failed with status ${uploadResult.status}: ${uploadResult.body}`);
+  if (onUploadTaskCreated) {
+    onUploadTaskCreated(uploadTask);
+  }
+
+  const uploadResult = await uploadTask.uploadAsync();
+
+  if (!uploadResult || uploadResult.status < 200 || uploadResult.status >= 300) {
+    if (!uploadResult) {
+      throw new Error('Upload task was cancelled or aborted');
+    }
+    throw new Error(`Google Drive media upload failed with status ${uploadResult?.status ?? 'unknown'}: ${uploadResult?.body ?? 'no body'}`);
   }
 
   return fileId;
@@ -327,3 +361,116 @@ export const deleteFileFromDrive = async (accessToken: string, driveFileId: stri
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 };
+
+/**
+ * Searches for a subfolder by name under a parent folder. If not found, creates it.
+ */
+export const getOrCreateSubFolder = async (
+  accessToken: string,
+  parentFolderId: string,
+  folderName: string
+): Promise<string> => {
+  const escapedName = folderName.replace(/'/g, "\\'");
+  const query = `name='${escapedName}' and '${parentFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+  
+  const searchRes = await axios.get(
+    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id)`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
+
+  const files = searchRes.data.files || [];
+  if (files.length > 0) {
+    return files[0].id;
+  }
+
+  const createRes = await axios.post(
+    'https://www.googleapis.com/drive/v3/files',
+    {
+      name: folderName,
+      mimeType: 'application/vnd.google-apps.folder',
+      parents: [parentFolderId],
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  return createRes.data.id;
+};
+
+/**
+ * Ensures a Google Drive file resides in the target parent folder. Moves it if necessary.
+ */
+export const ensureFileParent = async (
+  accessToken: string,
+  fileId: string,
+  targetParentId: string
+): Promise<void> => {
+  const res = await axios.get(
+    `https://www.googleapis.com/drive/v3/files/${fileId}?fields=parents`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
+  
+  const parents = res.data.parents || [];
+  if (!parents.includes(targetParentId)) {
+    const removeParents = parents.join(',');
+    await axios.patch(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?addParents=${targetParentId}&removeParents=${removeParents}`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }
+    );
+  }
+};
+
+/**
+ * Fetches all json metadata files from Google Drive recursively.
+ */
+export const fetchAllMetadataFromDrive = async (
+  accessToken: string
+): Promise<any[]> => {
+  const query = `mimeType='application/json' and name contains 'item_' and trashed=false`;
+  let allFiles: any[] = [];
+  let pageToken: string | undefined = undefined;
+
+  do {
+    const url: string = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
+      query
+    )}&fields=nextPageToken,files(id,name,parents)&pageSize=100${
+      pageToken ? `&pageToken=${pageToken}` : ''
+    }`;
+
+    const res: any = await axios.get(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    const files = res.data.files || [];
+    allFiles = [...allFiles, ...files];
+    pageToken = res.data.nextPageToken;
+  } while (pageToken);
+
+  return allFiles;
+};
+
+/**
+ * Downloads the JSON content of a file from Google Drive.
+ */
+export const downloadJsonContent = async (
+  accessToken: string,
+  fileId: string
+): Promise<any> => {
+  const res = await axios.get(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  return res.data;
+};
+
+

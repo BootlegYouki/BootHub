@@ -131,17 +131,25 @@ export const TuiContainer: React.FC<TuiContainerProps> = ({
             <Pressable
               disabled={!onBadgePress}
               onPress={onBadgePress}
-              style={({ pressed }) => [
-                styles.badgeContainer,
-                {
-                  borderColor: colors.primary,
-                  backgroundColor: pressed 
-                    ? colors.primary + '30' 
-                    : (isDark ? colors.primary + '15' : colors.primary + '10'),
-                },
-              ]}
+              style={({ pressed }) => {
+                const isError = badge === 'ERROR';
+                const baseColor = isError ? '#EF4444' : colors.primary;
+                return [
+                  styles.badgeContainer,
+                  {
+                    borderColor: baseColor,
+                    backgroundColor: pressed
+                      ? baseColor + '30'
+                      : (isDark ? baseColor + '15' : baseColor + '10'),
+                  },
+                ];
+              }}
             >
-              <TuiText size="sm" weight="bold" style={{ color: colors.primary }}>
+              <TuiText
+                size="sm"
+                weight="bold"
+                style={{ color: badge === 'ERROR' ? '#EF4444' : colors.primary }}
+              >
                 {badge}
               </TuiText>
             </Pressable>
