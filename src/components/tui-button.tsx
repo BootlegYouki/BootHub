@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, ViewStyle, ActivityIndicator } from 'react-native';
 import { useTheme } from '../theme/theme-provider';
 import { TuiText } from './tui-text';
 
@@ -9,6 +9,7 @@ interface TuiButtonProps {
   style?: ViewStyle;
   variant?: 'default' | 'accent' | 'destructive' | 'outline';
   disabled?: boolean;
+  loading?: boolean;
 }
 
 export const TuiButton: React.FC<TuiButtonProps> = ({
@@ -17,6 +18,7 @@ export const TuiButton: React.FC<TuiButtonProps> = ({
   style,
   variant = 'default',
   disabled = false,
+  loading = false,
 }) => {
   const { colors, isDark } = useTheme();
 
@@ -29,38 +31,40 @@ export const TuiButton: React.FC<TuiButtonProps> = ({
       };
     }
 
+    const isButtonPressed = pressed && !loading;
+
     // Monochromatic button colors with inversion logic on press
     switch (variant) {
       case 'accent':
         return {
-          bg: pressed ? 'transparent' : colors.primary,
+          bg: isButtonPressed ? 'transparent' : colors.primary,
           border: colors.primary,
-          text: pressed ? colors.primary : colors.primaryForeground,
+          text: isButtonPressed ? colors.primary : colors.primaryForeground,
         };
       case 'destructive':
         return {
-          bg: pressed ? 'transparent' : colors.destructive,
+          bg: isButtonPressed ? 'transparent' : colors.destructive,
           border: colors.destructive,
-          text: pressed ? colors.destructive : '#FFFFFF',
+          text: isButtonPressed ? colors.destructive : '#FFFFFF',
         };
       case 'outline':
         return {
-          bg: pressed ? colors.primary + '15' : 'transparent',
+          bg: isButtonPressed ? colors.primary + '15' : 'transparent',
           border: colors.primary,
           text: colors.primary,
         };
       default:
         return {
-          bg: pressed ? colors.primary : 'transparent',
+          bg: isButtonPressed ? colors.primary : 'transparent',
           border: colors.primary,
-          text: pressed ? colors.primaryForeground : colors.foreground,
+          text: isButtonPressed ? colors.primaryForeground : colors.foreground,
         };
     }
   };
 
   return (
     <Pressable
-      disabled={disabled}
+      disabled={disabled || loading}
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
@@ -72,15 +76,19 @@ export const TuiButton: React.FC<TuiButtonProps> = ({
       ]}
     >
       {({ pressed }) => (
-        <TuiText
-          weight="bold"
-          style={{
-            color: getColors(pressed).text,
-            textAlign: 'center',
-          }}
-        >
-          {children}
-        </TuiText>
+        loading ? (
+          <ActivityIndicator size="small" color={getColors(pressed).text} />
+        ) : (
+          <TuiText
+            weight="bold"
+            style={{
+              color: getColors(pressed).text,
+              textAlign: 'center',
+            }}
+          >
+            {children}
+          </TuiText>
+        )
       )}
     </Pressable>
   );

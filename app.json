@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "scheme": "boothub",
+    "scheme": ["boothub", "tuitemplatenative"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.bootlegyouki.boothub",
@@ -26,7 +26,15 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "monochromeImage": "./assets/adaptive-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -74,7 +82,31 @@
             }
           ]
         }
-      ]
-    ]
+      ],
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "targetName": "BootHubShareExtension",
+                  "bundleIdentifier": "com.bootlegyouki.boothub.ShareExtension",
+                  "entitlements": {
+                    "com.apple.security.application-groups": [
+                      "group.com.bootlegyouki.boothub"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "a05b49b3-4a8a-4030-b3d4-73f6a4e4ce0b"
+      },
+      "appleApplicationGroup": "group.com.bootlegyouki.boothub"
+    }
   }
 }

@@ -42,8 +42,6 @@ import {
 import {
   Inbox,
   Archive,
-  Sun,
-  Moon,
   Link2,
   FileText,
   Image as ImageIcon,
@@ -60,6 +58,7 @@ import {
   MoreHorizontal,
   Folder,
   FolderPlus,
+  Settings,
   Share as LucideShare,
 } from 'lucide-react-native';
 import RNShare from 'react-native-share';
@@ -69,6 +68,10 @@ import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Clipboard from 'expo-clipboard';
 import * as MediaLibrary from 'expo-media-library';
+import * as WebBrowser from 'expo-web-browser';
+import { processSyncQueue } from './src/utils/sync-engine';
+
+WebBrowser.maybeCompleteAuthSession();
 
 import { ThemeProvider, useTheme } from './src/theme/theme-provider';
 import { TuiHeader } from './src/components/tui-header';
@@ -80,6 +83,7 @@ import { LinksScreen } from './src/screens/LinksScreen';
 import { TextsScreen } from './src/screens/TextsScreen';
 import { PhotosScreen, PhotoLayout } from './src/screens/PhotosScreen';
 import { FilesScreen } from './src/screens/FilesScreen';
+import { SettingsScreen } from './src/screens/SettingsScreen';
 import { PhotoPickerSheet } from './src/components/photo-picker-sheet';
 import { TabButton } from './src/components/tab-button';
 import { ContextMenuOverlay } from './src/components/context-menu-overlay';
@@ -151,6 +155,7 @@ function MainApp() {
   const [isMoveDrawerOpen, setIsMoveDrawerOpen] = useState<boolean>(false);
   const [moveDrawerItems, setMoveDrawerItems] = useState<DumpItem[]>([]);
   const [isMoveDrawerMounted, setIsMoveDrawerMounted] = useState<boolean>(false);
+  const [activeView, setActiveView] = useState<'main' | 'settings'>('main');
   const handledInitialShareUrl = useRef<string | null>(null);
 
   useEffect(() => {
@@ -667,6 +672,23 @@ function MainApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Dismiss keyboard when app backgrounds & trigger Google Drive sync on launch/foreground
+  useEffect(() => {
+    // Run sync queue on startup
+    processSyncQueue().catch((err) => console.error('[App] Startup sync failed:', err));
+
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'background') {
+        Keyboard.dismiss();
+      } else if (nextAppState === 'active') {
+        processSyncQueue().catch((err) => console.error('[App] Foreground sync failed:', err));
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   // Clear selected IDs when leaving selection mode
   useEffect(() => {
@@ -1569,24 +1591,67 @@ function MainApp() {
     );
   };
 
-  const themeToggle = (
+  const settingsButton = (
     <Pressable
-      onPress={toggleTheme}
+      onPress={() => setActiveView('settings')}
       style={({ pressed }) => [
         styles.themeToggleBtn,
         {
           borderColor: colors.primary,
-          backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+          backgroundColor: activeView === 'settings'
+            ? colors.primary + '25'
+            : pressed
+              ? colors.primary + '25'
+              : 'transparent',
         },
       ]}
     >
-      {isDark ? (
-        <Sun size={16} color={colors.primary} />
-      ) : (
-        <Moon size={16} color={colors.primary} />
-      )}
+      <Settings size={16} color={colors.primary} />
     </Pressable>
   );
+
+  if (activeView === 'settings') {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#000000' }}>
+        <RNAnimated.View
+          style={{
+            flex: 1,
+            backgroundColor: colors.background,
+            transform: [
+              { scale: screenScaleAnim },
+              { translateY: screenTranslateYAnim },
+            ],
+            borderRadius: screenBorderRadiusAnim,
+            overflow: 'hidden',
+          }}
+        >
+          <View style={[styles.safeArea, { backgroundColor: colors.background, paddingTop: insets.top }]}>
+            <StatusBar style={isDark ? 'light' : 'dark'} />
+            <TuiHeader
+              title="BootHub"
+              subtitle="by BootlegYouki"
+              Icon={Archive}
+              rightElement={
+                <Pressable
+                  onPress={() => setActiveView('main')}
+                  style={({ pressed }) => [
+                    styles.themeToggleBtn,
+                    {
+                      borderColor: colors.primary,
+                      backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+                    },
+                  ]}
+                >
+                  <X size={16} color={colors.primary} />
+                </Pressable>
+              }
+            />
+            <SettingsScreen />
+          </View>
+        </RNAnimated.View>
+      </View>
+    );
+  }
 
   return (
     // No KeyboardAvoidingView — the Animated.View spacer below handles it
@@ -1624,7 +1689,7 @@ function MainApp() {
             title="BootHub"
             subtitle="by BootlegYouki"
             Icon={Archive}
-            rightElement={themeToggle}
+            rightElement={settingsButton}
           />
 
           {/* 02: TABS */}

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
+import { enqueueSyncTask, processSyncQueue } from './sync-engine';
 
 export type DumpType = 'link' | 'text' | 'photo' | 'file' | 'folder';
 
@@ -9,6 +10,9 @@ export interface DumpItem {
   label: string; // Timestamp label, e.g. "06-04-2026 @ 10m ago"
   value: string; // The URL, raw text, or local/remote image URI, or JSON for files/folders
   folderId?: string;
+  syncState?: 'synced' | 'pending' | 'error';
+  driveFileId?: string;
+  driveMetaFileId?: string;
 }
 
 const STORAGE_KEY = '@boothub_dump_items';
@@ -56,10 +60,17 @@ export const addItem = async (type: DumpType, value: string, folderId?: string):
       label,
       value,
       ...(folderId ? { folderId } : {}),
+      syncState: 'pending',
     };
 
     const updated = [newItem, ...currentItems];
     await saveItems(updated);
+
+    // Enqueue UPLOAD sync task
+    enqueueSyncTask('UPLOAD', newItem.id, type, { fileUri: type === 'photo' || type === 'file' ? value : undefined })
+      .then(() => processSyncQueue())
+      .catch((e) => console.error('Failed to schedule item upload:', e));
+
     return updated;
   } catch (e) {
     console.error('Failed to add item:', e);
@@ -118,6 +129,20 @@ export const deleteItem = async (id: string, deleteContents = false): Promise<Du
         }
 
         updated = currentItems.filter((item) => !idsToDelete.has(item.id));
+        await saveItems(updated);
+
+        // Enqueue deletion tasks for Google Drive sync
+        const deleteTasks = [targetItem, ...childrenToDelete].map((item) =>
+          enqueueSyncTask('DELETE', item.id, item.type, {
+            driveMetaFileId: item.driveMetaFileId,
+            driveFileId: item.driveFileId,
+          })
+        );
+
+        Promise.all(deleteTasks)
+          .then(() => processSyncQueue())
+          .catch((e) => console.error('Failed to sync deletions:', e));
+
       } else {
         // Keep contents: move children to parent folderId of the deleted folder
         const parentFolderId = targetItem.folderId;
@@ -127,12 +152,26 @@ export const deleteItem = async (id: string, deleteContents = false): Promise<Du
             if (item.folderId === id) {
               if (parentFolderId === undefined) {
                 const { folderId, ...rest } = item;
-                return rest as DumpItem;
+                return { ...rest, syncState: 'pending' as const } as DumpItem;
               }
-              return { ...item, folderId: parentFolderId };
+              return { ...item, folderId: parentFolderId, syncState: 'pending' as const };
             }
             return item;
           });
+        await saveItems(updated);
+
+        // Enqueue delete task for folder
+        await enqueueSyncTask('DELETE', id, 'folder', {
+          driveMetaFileId: targetItem.driveMetaFileId,
+        });
+
+        // Enqueue updates for children that shifted to parent folder level
+        const childrenToUpdate = currentItems.filter((item) => item.folderId === id);
+        await Promise.all(
+          childrenToUpdate.map((child) => enqueueSyncTask('UPDATE', child.id, child.type))
+        );
+
+        processSyncQueue().catch((e) => console.error('Failed to run sync after folder removal:', e));
       }
     } else {
       // Normal item deletion
@@ -140,9 +179,17 @@ export const deleteItem = async (id: string, deleteContents = false): Promise<Du
         await deleteFileFromDisk(targetItem.value);
       }
       updated = currentItems.filter((item) => item.id !== id);
+      await saveItems(updated);
+
+      // Enqueue delete task for file/link/text
+      await enqueueSyncTask('DELETE', id, targetItem.type, {
+        driveMetaFileId: targetItem.driveMetaFileId,
+        driveFileId: targetItem.driveFileId,
+      });
+
+      processSyncQueue().catch((e) => console.error('Failed to run sync after item deletion:', e));
     }
 
-    await saveItems(updated);
     return updated;
   } catch (e) {
     console.error('Failed to delete item:', e);
@@ -153,31 +200,45 @@ export const deleteItem = async (id: string, deleteContents = false): Promise<Du
 export const updateItem = async (id: string, value: string): Promise<DumpItem[]> => {
   try {
     const currentItems = await getItems();
+    const targetItem = currentItems.find((item) => item.id === id);
+    if (!targetItem) return currentItems;
+
     const updated = currentItems.map((item) => {
       if (item.id === id) {
+        let finalValue = value;
         if (item.type === 'file') {
           try {
             const fileObj = JSON.parse(item.value);
             fileObj.name = value;
-            return { ...item, value: JSON.stringify(fileObj) };
+            finalValue = JSON.stringify(fileObj);
           } catch {
-            return { ...item, value };
+            finalValue = value;
           }
         }
         if (item.type === 'folder') {
           try {
             const folderObj = JSON.parse(item.value);
             folderObj.name = value;
-            return { ...item, value: JSON.stringify(folderObj) };
+            finalValue = JSON.stringify(folderObj);
           } catch {
-            return { ...item, value };
+            finalValue = value;
           }
         }
-        return { ...item, value };
+        return {
+          ...item,
+          value: finalValue,
+          syncState: 'pending' as const,
+        };
       }
       return item;
     });
     await saveItems(updated);
+
+    // Enqueue update task
+    enqueueSyncTask('UPDATE', id, targetItem.type)
+      .then(() => processSyncQueue())
+      .catch((e) => console.error('Failed to schedule item update:', e));
+
     return updated;
   } catch (e) {
     console.error('Failed to update item:', e);
@@ -201,10 +262,19 @@ export const addMultiplePhotos = async (uris: string[], folderId?: string): Prom
       label,
       value: uri,
       ...(folderId ? { folderId } : {}),
+      syncState: 'pending',
     }));
 
     const updated = [...newItems, ...currentItems];
     await saveItems(updated);
+
+    // Enqueue upload task for each photo
+    Promise.all(
+      newItems.map((item) => enqueueSyncTask('UPLOAD', item.id, 'photo', { fileUri: item.value }))
+    )
+      .then(() => processSyncQueue())
+      .catch((e) => console.error('Failed to schedule batch photo uploads:', e));
+
     return updated;
   } catch (e) {
     console.error('Failed to add multiple photos:', e);
@@ -215,17 +285,26 @@ export const addMultiplePhotos = async (uris: string[], folderId?: string): Prom
 export const setItemFolder = async (id: string, folderId: string | undefined): Promise<DumpItem[]> => {
   try {
     const currentItems = await getItems();
+    const targetItem = currentItems.find((item) => item.id === id);
+    if (!targetItem) return currentItems;
+
     const updated = currentItems.map((item) => {
       if (item.id === id) {
         if (folderId === undefined) {
           const { folderId: _, ...rest } = item;
-          return rest;
+          return { ...rest, syncState: 'pending' as const } as DumpItem;
         }
-        return { ...item, folderId };
+        return { ...item, folderId, syncState: 'pending' as const };
       }
       return item;
     });
     await saveItems(updated);
+
+    // Enqueue update task
+    enqueueSyncTask('UPDATE', id, targetItem.type)
+      .then(() => processSyncQueue())
+      .catch((e) => console.error('Failed to schedule folder change update:', e));
+
     return updated;
   } catch (e) {
     console.error('Failed to set item folder:', e);
