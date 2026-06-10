@@ -2653,7 +2653,7 @@
       "label": "SECURE_KEYS",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L16",
+      "source_location": "L15",
       "id": "utils_google_drive_secure_keys",
       "community": 8,
       "norm_label": "secure_keys"
@@ -2662,7 +2662,7 @@
       "label": "discovery",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L23",
+      "source_location": "L22",
       "id": "utils_google_drive_discovery",
       "community": 8,
       "norm_label": "discovery"
@@ -2671,7 +2671,7 @@
       "label": "getClientId()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L29",
+      "source_location": "L28",
       "id": "utils_google_drive_getclientid",
       "community": 8,
       "norm_label": "getclientid()"
@@ -2680,7 +2680,7 @@
       "label": "getRedirectScheme()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L39",
+      "source_location": "L38",
       "id": "utils_google_drive_getredirectscheme",
       "community": 8,
       "norm_label": "getredirectscheme()"
@@ -2689,7 +2689,7 @@
       "label": "GoogleUserInfo",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L52",
+      "source_location": "L51",
       "id": "utils_google_drive_googleuserinfo",
       "community": 8,
       "norm_label": "googleuserinfo"
@@ -2698,7 +2698,7 @@
       "label": "saveAuthSession()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L58",
+      "source_location": "L57",
       "id": "utils_google_drive_saveauthsession",
       "community": 8,
       "norm_label": "saveauthsession()"
@@ -2707,7 +2707,7 @@
       "label": "clearAuthSession()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L75",
+      "source_location": "L74",
       "id": "utils_google_drive_clearauthsession",
       "community": 8,
       "norm_label": "clearauthsession()"
@@ -2716,7 +2716,7 @@
       "label": "getGoogleUserInfo()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L82",
+      "source_location": "L81",
       "id": "utils_google_drive_getgoogleuserinfo",
       "community": 8,
       "norm_label": "getgoogleuserinfo()"
@@ -2725,7 +2725,7 @@
       "label": "isUserSignedIn()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L91",
+      "source_location": "L90",
       "id": "utils_google_drive_isusersignedin",
       "community": 8,
       "norm_label": "isusersignedin()"
@@ -2734,7 +2734,7 @@
       "label": "refreshAccessToken()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L100",
+      "source_location": "L99",
       "id": "utils_google_drive_refreshaccesstoken",
       "community": 8,
       "norm_label": "refreshaccesstoken()"
@@ -2743,7 +2743,7 @@
       "label": "getValidAccessToken()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L123",
+      "source_location": "L122",
       "id": "utils_google_drive_getvalidaccesstoken",
       "community": 8,
       "norm_label": "getvalidaccesstoken()"
@@ -2752,7 +2752,7 @@
       "label": "fetchUserInfo()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L144",
+      "source_location": "L143",
       "id": "utils_google_drive_fetchuserinfo",
       "community": 8,
       "norm_label": "fetchuserinfo()"
@@ -2761,7 +2761,7 @@
       "label": "exchangeCodeForTokens()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L155",
+      "source_location": "L154",
       "id": "utils_google_drive_exchangecodefortokens",
       "community": 8,
       "norm_label": "exchangecodefortokens()"
@@ -2770,7 +2770,7 @@
       "label": "getOrCreateSyncFolder()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L181",
+      "source_location": "L180",
       "id": "utils_google_drive_getorcreatesyncfolder",
       "community": 8,
       "norm_label": "getorcreatesyncfolder()"
@@ -2779,7 +2779,7 @@
       "label": "DriveUploadResponse",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L216",
+      "source_location": "L215",
       "id": "utils_google_drive_driveuploadresponse",
       "community": 8,
       "norm_label": "driveuploadresponse"
@@ -2788,7 +2788,7 @@
       "label": "uploadJsonToDrive()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L225",
+      "source_location": "L224",
       "id": "utils_google_drive_uploadjsontodrive",
       "community": 8,
       "norm_label": "uploadjsontodrive()"
@@ -2797,7 +2797,7 @@
       "label": "uploadBinaryToDrive()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L280",
+      "source_location": "L279",
       "id": "utils_google_drive_uploadbinarytodrive",
       "community": 8,
       "norm_label": "uploadbinarytodrive()"
@@ -2806,7 +2806,7 @@
       "label": "deleteFileFromDrive()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L359",
+      "source_location": "L358",
       "id": "utils_google_drive_deletefilefromdrive",
       "community": 8,
       "norm_label": "deletefilefromdrive()"
@@ -2815,7 +2815,7 @@
       "label": "getOrCreateSubFolder()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L368",
+      "source_location": "L367",
       "id": "utils_google_drive_getorcreatesubfolder",
       "community": 8,
       "norm_label": "getorcreatesubfolder()"
@@ -2824,7 +2824,7 @@
       "label": "ensureFileParent()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L409",
+      "source_location": "L408",
       "id": "utils_google_drive_ensurefileparent",
       "community": 8,
       "norm_label": "ensurefileparent()"
@@ -2833,7 +2833,7 @@
       "label": "fetchAllMetadataFromDrive()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L437",
+      "source_location": "L436",
       "id": "utils_google_drive_fetchallmetadatafromdrive",
       "community": 8,
       "norm_label": "fetchallmetadatafromdrive()"
@@ -2842,7 +2842,7 @@
       "label": "downloadJsonContent()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L466",
+      "source_location": "L465",
       "id": "utils_google_drive_downloadjsoncontent",
       "community": 8,
       "norm_label": "downloadjsoncontent()"
@@ -10717,9 +10717,9 @@
       "source_file": "src/screens/SettingsScreen.tsx",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_screens_settingsscreen_tsx",
-      "target": "utils_sync_engine_updatesyncstatus",
-      "confidence_score": 1.0
+      "target": "utils_sync_engine_updatesyncstatus"
     },
     {
       "relation": "calls",
@@ -13274,5 +13274,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "13fb11efa4d6909eeace8b0b0810f3111a2e60c0"
+  "built_at_commit": "5c25365a482c317dfba7ae18d0168c856e63460d"
 }

@@ -7,7 +7,6 @@ import { FileSystemUploadType } from 'expo-file-system/legacy';
 
 // Google OAuth client IDs - loaded dynamically from environment variables
 export const CLIENT_ID_IOS = process.env.EXPO_PUBLIC_CLIENT_ID_IOS || '';
-export const CLIENT_ID_DEV_IOS = process.env.EXPO_PUBLIC_CLIENT_ID_DEV_IOS || '';
 export const CLIENT_ID_ANDROID = process.env.EXPO_PUBLIC_CLIENT_ID_ANDROID || '';
 export const CLIENT_ID_WEB = process.env.EXPO_PUBLIC_CLIENT_ID_WEB || '';
 
@@ -28,7 +27,7 @@ export const discovery = {
 
 export const getClientId = (): string => {
   if (Platform.OS === 'ios') {
-    return __DEV__ ? (CLIENT_ID_DEV_IOS || CLIENT_ID_IOS) : CLIENT_ID_IOS;
+    return CLIENT_ID_IOS;
   }
   if (Platform.OS === 'android') {
     return CLIENT_ID_ANDROID || CLIENT_ID_WEB;
