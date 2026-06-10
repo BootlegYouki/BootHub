@@ -68,10 +68,17 @@ export const addItem = async (type: DumpType, value: string, folderId?: string):
     const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
     const label = `${dateStr} @ ${timeStr}`;
  
+    let itemLabel = label;
+    if (type === 'folder') {
+      try {
+        itemLabel = JSON.parse(value).name || label;
+      } catch {}
+    }
+
     const newItem: DumpItem = {
       id: Date.now().toString(),
       type,
-      label,
+      label: itemLabel,
       value,
       ...(folderId ? { folderId } : {}),
       syncState: 'pending',
@@ -208,8 +215,13 @@ export const updateItem = async (id: string, value: string): Promise<DumpItem[]>
             finalValue = value;
           }
         }
+        let finalLabel = item.label;
+        if (item.type === 'folder') {
+          finalLabel = value;
+        }
         return {
           ...item,
+          label: finalLabel,
           value: finalValue,
           syncState: 'pending' as const,
         };
