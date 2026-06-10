@@ -6,9 +6,9 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { FileSystemUploadType } from 'expo-file-system/legacy';
 
 // Google OAuth client IDs - loaded dynamically from environment variables
-export const CLIENT_ID_IOS = process.env.EXPO_PUBLIC_CLIENT_ID_IOS || '';
+export const CLIENT_ID_IOS = process.env.EXPO_PUBLIC_CLIENT_ID_IOS || '384181018496-0iagia0c6tcmllboc6rhtijqsnnaj8se.apps.googleusercontent.com';
 export const CLIENT_ID_ANDROID = process.env.EXPO_PUBLIC_CLIENT_ID_ANDROID || '';
-export const CLIENT_ID_WEB = process.env.EXPO_PUBLIC_CLIENT_ID_WEB || '';
+export const CLIENT_ID_WEB = process.env.EXPO_PUBLIC_CLIENT_ID_WEB || '384181018496-urhk02dv8iemvgu9ivj0upncdruhs9gg.apps.googleusercontent.com';
 
 export const REDIRECT_SCHEME = 'boothub';
 

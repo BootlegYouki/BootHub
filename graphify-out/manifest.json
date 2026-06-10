@@ -150,8 +150,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\app.json": {
-    "mtime": 1781072028.7746344,
-    "ast_hash": "da106383d953da2e3002228b4418d2be",
+    "mtime": 1781087130.046488,
+    "ast_hash": "b5f6b7c51a9de3897e13ef9bfc745638",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\App.tsx": {
@@ -355,8 +355,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\sidestore.json": {
-    "mtime": 1780972392.2891243,
-    "ast_hash": "07637c9c4975f026ec4de48ce5cff3ae",
+    "mtime": 1781087130.0475223,
+    "ast_hash": "0d2bb380eb4e6f165a34127cdc8e2050",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\FilesScreen.tsx": {
@@ -470,8 +470,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\utils\\google-drive.ts": {
-    "mtime": 1781084645.7269714,
-    "ast_hash": "7cbb3be942fa50fc226577ed13962216",
+    "mtime": 1781087187.434948,
+    "ast_hash": "827d31bc1ab9d4a89bac2ae675c6f78a",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\utils\\sync-engine.ts": {
