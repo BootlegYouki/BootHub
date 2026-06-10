@@ -358,7 +358,7 @@
       "label": "App()",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L2527",
+      "source_location": "L2528",
       "id": "boothub_app_app",
       "community": 0,
       "norm_label": "app()"
@@ -367,7 +367,7 @@
       "label": "styles",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L2541",
+      "source_location": "L2542",
       "id": "boothub_app_styles",
       "community": 0,
       "norm_label": "styles"
@@ -1206,7 +1206,7 @@
       "source_file": "src/components/context-menu-overlay.tsx",
       "source_location": "L27",
       "id": "components_context_menu_overlay_contextmenuoverlayprops",
-      "community": 2,
+      "community": 23,
       "norm_label": "contextmenuoverlayprops"
     },
     {
@@ -1332,7 +1332,7 @@
       "source_file": "src/components/folder-picker-sheet.tsx",
       "source_location": "L1",
       "id": "src_components_folder_picker_sheet_tsx",
-      "community": 27,
+      "community": 23,
       "norm_label": "folder-picker-sheet.tsx"
     },
     {
@@ -1341,7 +1341,7 @@
       "source_file": "src/components/folder-picker-sheet.tsx",
       "source_location": "L17",
       "id": "components_folder_picker_sheet_folderpickersheetprops",
-      "community": 27,
+      "community": 23,
       "norm_label": "folderpickersheetprops"
     },
     {
@@ -1350,7 +1350,7 @@
       "source_file": "src/components/folder-picker-sheet.tsx",
       "source_location": "L25",
       "id": "components_folder_picker_sheet_height_screenheight",
-      "community": 27,
+      "community": 23,
       "norm_label": "{ height: screenheight }"
     },
     {
@@ -1359,7 +1359,7 @@
       "source_file": "src/components/folder-picker-sheet.tsx",
       "source_location": "L27",
       "id": "components_folder_picker_sheet_folderpickersheet",
-      "community": 27,
+      "community": 23,
       "norm_label": "folderpickersheet()"
     },
     {
@@ -1368,7 +1368,7 @@
       "source_file": "src/components/folder-picker-sheet.tsx",
       "source_location": "L340",
       "id": "components_folder_picker_sheet_styles",
-      "community": 27,
+      "community": 23,
       "norm_label": "styles"
     },
     {
@@ -1377,7 +1377,7 @@
       "source_file": "src/components/fullscreen-photo-viewer.tsx",
       "source_location": "L1",
       "id": "src_components_fullscreen_photo_viewer_tsx",
-      "community": 2,
+      "community": 23,
       "norm_label": "fullscreen-photo-viewer.tsx"
     },
     {
@@ -1386,7 +1386,7 @@
       "source_file": "src/components/fullscreen-photo-viewer.tsx",
       "source_location": "L27",
       "id": "components_fullscreen_photo_viewer_fullscreenphotoviewerprops",
-      "community": 2,
+      "community": 23,
       "norm_label": "fullscreenphotoviewerprops"
     },
     {
@@ -1395,7 +1395,7 @@
       "source_file": "src/components/fullscreen-photo-viewer.tsx",
       "source_location": "L38",
       "id": "components_fullscreen_photo_viewer_calculatefullscreenimagebounds",
-      "community": 2,
+      "community": 23,
       "norm_label": "calculatefullscreenimagebounds()"
     },
     {
@@ -1404,7 +1404,7 @@
       "source_file": "src/components/fullscreen-photo-viewer.tsx",
       "source_location": "L69",
       "id": "components_fullscreen_photo_viewer_fullscreenphotoviewer",
-      "community": 2,
+      "community": 23,
       "norm_label": "fullscreenphotoviewer()"
     },
     {
@@ -1413,7 +1413,7 @@
       "source_file": "src/components/fullscreen-photo-viewer.tsx",
       "source_location": "L629",
       "id": "components_fullscreen_photo_viewer_styles",
-      "community": 2,
+      "community": 23,
       "norm_label": "styles"
     },
     {
@@ -1440,7 +1440,7 @@
       "source_file": "src/components/link-preview.tsx",
       "source_location": "L1",
       "id": "src_components_link_preview_tsx",
-      "community": 23,
+      "community": 7,
       "norm_label": "link-preview.tsx"
     },
     {
@@ -1449,7 +1449,7 @@
       "source_file": "src/components/link-preview.tsx",
       "source_location": "L8",
       "id": "components_link_preview_previewdata",
-      "community": 23,
+      "community": 7,
       "norm_label": "previewdata"
     },
     {
@@ -1458,7 +1458,7 @@
       "source_file": "src/components/link-preview.tsx",
       "source_location": "L14",
       "id": "components_link_preview_linkpreviewprops",
-      "community": 23,
+      "community": 7,
       "norm_label": "linkpreviewprops"
     },
     {
@@ -1467,7 +1467,7 @@
       "source_file": "src/components/link-preview.tsx",
       "source_location": "L21",
       "id": "components_link_preview_previewcache",
-      "community": 23,
+      "community": 7,
       "norm_label": "previewcache"
     },
     {
@@ -1476,7 +1476,7 @@
       "source_file": "src/components/link-preview.tsx",
       "source_location": "L23",
       "id": "components_link_preview_getstoragekeyforurl",
-      "community": 23,
+      "community": 7,
       "norm_label": "getstoragekeyforurl()"
     },
     {
@@ -1485,7 +1485,7 @@
       "source_file": "src/components/link-preview.tsx",
       "source_location": "L28",
       "id": "components_link_preview_decodehtmlentities",
-      "community": 23,
+      "community": 7,
       "norm_label": "decodehtmlentities()"
     },
     {
@@ -1494,7 +1494,7 @@
       "source_file": "src/components/link-preview.tsx",
       "source_location": "L42",
       "id": "components_link_preview_extractmetatags",
-      "community": 23,
+      "community": 7,
       "norm_label": "extractmetatags()"
     },
     {
@@ -1503,7 +1503,7 @@
       "source_file": "src/components/link-preview.tsx",
       "source_location": "L63",
       "id": "components_link_preview_isdirectimageurl",
-      "community": 23,
+      "community": 7,
       "norm_label": "isdirectimageurl()"
     },
     {
@@ -1512,7 +1512,7 @@
       "source_file": "src/components/link-preview.tsx",
       "source_location": "L70",
       "id": "components_link_preview_prefetchlinkmetadata",
-      "community": 23,
+      "community": 7,
       "norm_label": "prefetchlinkmetadata()"
     },
     {
@@ -1521,7 +1521,7 @@
       "source_file": "src/components/link-preview.tsx",
       "source_location": "L149",
       "id": "components_link_preview_linkpreview",
-      "community": 23,
+      "community": 7,
       "norm_label": "linkpreview()"
     },
     {
@@ -1530,7 +1530,7 @@
       "source_file": "src/components/link-preview.tsx",
       "source_location": "L384",
       "id": "components_link_preview_styles",
-      "community": 23,
+      "community": 7,
       "norm_label": "styles"
     },
     {
@@ -1557,7 +1557,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L1",
       "id": "src_components_photo_picker_sheet_tsx",
-      "community": 15,
+      "community": 2,
       "norm_label": "photo-picker-sheet.tsx"
     },
     {
@@ -1566,7 +1566,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L19",
       "id": "components_photo_picker_sheet_photopickersheetprops",
-      "community": 15,
+      "community": 2,
       "norm_label": "photopickersheetprops"
     },
     {
@@ -1575,7 +1575,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L27",
       "id": "components_photo_picker_sheet_width_screenwidth",
-      "community": 15,
+      "community": 2,
       "norm_label": "{ width: screenwidth }"
     },
     {
@@ -1584,7 +1584,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L32",
       "id": "components_photo_picker_sheet_photopickersheet",
-      "community": 15,
+      "community": 2,
       "norm_label": "photopickersheet()"
     },
     {
@@ -1593,7 +1593,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L328",
       "id": "components_photo_picker_sheet_styles",
-      "community": 15,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -1602,7 +1602,7 @@
       "source_file": "src/components/share-import-sheet.tsx",
       "source_location": "L1",
       "id": "src_components_share_import_sheet_tsx",
-      "community": 23,
+      "community": 7,
       "norm_label": "share-import-sheet.tsx"
     },
     {
@@ -1611,7 +1611,7 @@
       "source_file": "src/components/share-import-sheet.tsx",
       "source_location": "L23",
       "id": "components_share_import_sheet_shareimportsheetprops",
-      "community": 0,
+      "community": 7,
       "norm_label": "shareimportsheetprops"
     },
     {
@@ -1620,7 +1620,7 @@
       "source_file": "src/components/share-import-sheet.tsx",
       "source_location": "L30",
       "id": "components_share_import_sheet_width_screenwidth_height_screenheight",
-      "community": 23,
+      "community": 7,
       "norm_label": "{ width: screenwidth, height: screenheight }"
     },
     {
@@ -1629,7 +1629,7 @@
       "source_file": "src/components/share-import-sheet.tsx",
       "source_location": "L32",
       "id": "components_share_import_sheet_shareimportsheet",
-      "community": 23,
+      "community": 7,
       "norm_label": "shareimportsheet()"
     },
     {
@@ -1638,7 +1638,7 @@
       "source_file": "src/components/share-import-sheet.tsx",
       "source_location": "L373",
       "id": "components_share_import_sheet_styles",
-      "community": 23,
+      "community": 7,
       "norm_label": "styles"
     },
     {
@@ -1647,7 +1647,7 @@
       "source_file": "src/components/tab-button.tsx",
       "source_location": "L1",
       "id": "src_components_tab_button_tsx",
-      "community": 19,
+      "community": 2,
       "norm_label": "tab-button.tsx"
     },
     {
@@ -1656,7 +1656,7 @@
       "source_file": "src/components/tab-button.tsx",
       "source_location": "L6",
       "id": "components_tab_button_tabbuttonprops",
-      "community": 19,
+      "community": 2,
       "norm_label": "tabbuttonprops"
     },
     {
@@ -1665,7 +1665,7 @@
       "source_file": "src/components/tab-button.tsx",
       "source_location": "L13",
       "id": "components_tab_button_tabbutton",
-      "community": 19,
+      "community": 2,
       "norm_label": "tabbutton()"
     },
     {
@@ -1674,7 +1674,7 @@
       "source_file": "src/components/tab-button.tsx",
       "source_location": "L55",
       "id": "components_tab_button_styles",
-      "community": 19,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -1683,7 +1683,7 @@
       "source_file": "src/components/tui-button.tsx",
       "source_location": "L1",
       "id": "src_components_tui_button_tsx",
-      "community": 21,
+      "community": 2,
       "norm_label": "tui-button.tsx"
     },
     {
@@ -1692,7 +1692,7 @@
       "source_file": "src/components/tui-button.tsx",
       "source_location": "L6",
       "id": "components_tui_button_tuibuttonprops",
-      "community": 21,
+      "community": 2,
       "norm_label": "tuibuttonprops"
     },
     {
@@ -1701,7 +1701,7 @@
       "source_file": "src/components/tui-button.tsx",
       "source_location": "L15",
       "id": "components_tui_button_tuibutton",
-      "community": 21,
+      "community": 2,
       "norm_label": "tuibutton()"
     },
     {
@@ -1710,7 +1710,7 @@
       "source_file": "src/components/tui-button.tsx",
       "source_location": "L97",
       "id": "components_tui_button_styles",
-      "community": 21,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -1719,7 +1719,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L1",
       "id": "src_components_tui_calendar_tsx",
-      "community": 24,
+      "community": 0,
       "norm_label": "tui-calendar.tsx"
     },
     {
@@ -1728,7 +1728,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L7",
       "id": "components_tui_calendar_tuicalendarprops",
-      "community": 24,
+      "community": 0,
       "norm_label": "tuicalendarprops"
     },
     {
@@ -1737,7 +1737,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L13",
       "id": "components_tui_calendar_months",
-      "community": 24,
+      "community": 0,
       "norm_label": "months"
     },
     {
@@ -1746,7 +1746,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L19",
       "id": "components_tui_calendar_weekdays",
-      "community": 24,
+      "community": 0,
       "norm_label": "weekdays"
     },
     {
@@ -1755,7 +1755,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L21",
       "id": "components_tui_calendar_tuicalendar",
-      "community": 24,
+      "community": 0,
       "norm_label": "tuicalendar()"
     },
     {
@@ -1764,7 +1764,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L239",
       "id": "components_tui_calendar_styles",
-      "community": 24,
+      "community": 0,
       "norm_label": "styles"
     },
     {
@@ -1863,7 +1863,7 @@
       "source_file": "src/components/tui-checkbox.tsx",
       "source_location": "L1",
       "id": "src_components_tui_checkbox_tsx",
-      "community": 19,
+      "community": 2,
       "norm_label": "tui-checkbox.tsx"
     },
     {
@@ -1872,7 +1872,7 @@
       "source_file": "src/components/tui-checkbox.tsx",
       "source_location": "L7",
       "id": "components_tui_checkbox_tuicheckboxprops",
-      "community": 19,
+      "community": 2,
       "norm_label": "tuicheckboxprops"
     },
     {
@@ -1881,7 +1881,7 @@
       "source_file": "src/components/tui-checkbox.tsx",
       "source_location": "L14",
       "id": "components_tui_checkbox_tuicheckbox",
-      "community": 19,
+      "community": 2,
       "norm_label": "tuicheckbox()"
     },
     {
@@ -1890,7 +1890,7 @@
       "source_file": "src/components/tui-checkbox.tsx",
       "source_location": "L99",
       "id": "components_tui_checkbox_styles",
-      "community": 19,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -1899,7 +1899,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L1",
       "id": "src_components_tui_container_tsx",
-      "community": 15,
+      "community": 2,
       "norm_label": "tui-container.tsx"
     },
     {
@@ -1908,7 +1908,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L11",
       "id": "components_tui_container_tuicontainerprops",
-      "community": 15,
+      "community": 2,
       "norm_label": "tuicontainerprops"
     },
     {
@@ -1917,7 +1917,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L25",
       "id": "components_tui_container_animatedpressable",
-      "community": 15,
+      "community": 2,
       "norm_label": "animatedpressable"
     },
     {
@@ -1926,7 +1926,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L27",
       "id": "components_tui_container_tuicontainer",
-      "community": 15,
+      "community": 2,
       "norm_label": "tuicontainer()"
     },
     {
@@ -1935,7 +1935,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L166",
       "id": "components_tui_container_styles",
-      "community": 15,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -1944,7 +1944,7 @@
       "source_file": "src/components/tui-drawer.tsx",
       "source_location": "L1",
       "id": "src_components_tui_drawer_tsx",
-      "community": 26,
+      "community": 2,
       "norm_label": "tui-drawer.tsx"
     },
     {
@@ -1953,7 +1953,7 @@
       "source_file": "src/components/tui-drawer.tsx",
       "source_location": "L8",
       "id": "components_tui_drawer_spring_config_open",
-      "community": 26,
+      "community": 2,
       "norm_label": "spring_config_open"
     },
     {
@@ -1962,7 +1962,7 @@
       "source_file": "src/components/tui-drawer.tsx",
       "source_location": "L15",
       "id": "components_tui_drawer_tuidrawerprops",
-      "community": 26,
+      "community": 2,
       "norm_label": "tuidrawerprops"
     },
     {
@@ -1971,7 +1971,7 @@
       "source_file": "src/components/tui-drawer.tsx",
       "source_location": "L24",
       "id": "components_tui_drawer_tuidrawer",
-      "community": 26,
+      "community": 2,
       "norm_label": "tuidrawer()"
     },
     {
@@ -1980,7 +1980,7 @@
       "source_file": "src/components/tui-drawer.tsx",
       "source_location": "L225",
       "id": "components_tui_drawer_styles",
-      "community": 26,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -1989,7 +1989,7 @@
       "source_file": "src/components/tui-header.tsx",
       "source_location": "L1",
       "id": "src_components_tui_header_tsx",
-      "community": 28,
+      "community": 2,
       "norm_label": "tui-header.tsx"
     },
     {
@@ -1998,7 +1998,7 @@
       "source_file": "src/components/tui-header.tsx",
       "source_location": "L6",
       "id": "components_tui_header_tuiheaderprops",
-      "community": 28,
+      "community": 2,
       "norm_label": "tuiheaderprops"
     },
     {
@@ -2007,7 +2007,7 @@
       "source_file": "src/components/tui-header.tsx",
       "source_location": "L14",
       "id": "components_tui_header_tuiheader",
-      "community": 28,
+      "community": 2,
       "norm_label": "tuiheader()"
     },
     {
@@ -2016,7 +2016,7 @@
       "source_file": "src/components/tui-header.tsx",
       "source_location": "L53",
       "id": "components_tui_header_styles",
-      "community": 28,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -2025,7 +2025,7 @@
       "source_file": "src/components/tui-input.tsx",
       "source_location": "L1",
       "id": "src_components_tui_input_tsx",
-      "community": 30,
+      "community": 2,
       "norm_label": "tui-input.tsx"
     },
     {
@@ -2034,7 +2034,7 @@
       "source_file": "src/components/tui-input.tsx",
       "source_location": "L7",
       "id": "components_tui_input_tuiinputprops",
-      "community": 30,
+      "community": 2,
       "norm_label": "tuiinputprops"
     },
     {
@@ -2043,7 +2043,7 @@
       "source_file": "src/components/tui-input.tsx",
       "source_location": "L14",
       "id": "components_tui_input_tuiinput",
-      "community": 30,
+      "community": 2,
       "norm_label": "tuiinput()"
     },
     {
@@ -2052,7 +2052,7 @@
       "source_file": "src/components/tui-input.tsx",
       "source_location": "L171",
       "id": "components_tui_input_styles",
-      "community": 30,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -2106,7 +2106,7 @@
       "source_file": "src/components/tui-skeleton.tsx",
       "source_location": "L1",
       "id": "src_components_tui_skeleton_tsx",
-      "community": 15,
+      "community": 2,
       "norm_label": "tui-skeleton.tsx"
     },
     {
@@ -2115,7 +2115,7 @@
       "source_file": "src/components/tui-skeleton.tsx",
       "source_location": "L9",
       "id": "components_tui_skeleton_tuiskeletonloader",
-      "community": 15,
+      "community": 2,
       "norm_label": "tuiskeletonloader()"
     },
     {
@@ -2124,7 +2124,7 @@
       "source_file": "src/components/tui-skeleton.tsx",
       "source_location": "L284",
       "id": "components_tui_skeleton_styles",
-      "community": 15,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -2133,7 +2133,7 @@
       "source_file": "src/components/tui-switch.tsx",
       "source_location": "L1",
       "id": "src_components_tui_switch_tsx",
-      "community": 29,
+      "community": 2,
       "norm_label": "tui-switch.tsx"
     },
     {
@@ -2142,7 +2142,7 @@
       "source_file": "src/components/tui-switch.tsx",
       "source_location": "L6",
       "id": "components_tui_switch_tuiswitchprops",
-      "community": 29,
+      "community": 2,
       "norm_label": "tuiswitchprops"
     },
     {
@@ -2151,7 +2151,7 @@
       "source_file": "src/components/tui-switch.tsx",
       "source_location": "L13",
       "id": "components_tui_switch_tuiswitch",
-      "community": 29,
+      "community": 2,
       "norm_label": "tuiswitch()"
     },
     {
@@ -2160,7 +2160,7 @@
       "source_file": "src/components/tui-switch.tsx",
       "source_location": "L112",
       "id": "components_tui_switch_styles",
-      "community": 29,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -2169,7 +2169,7 @@
       "source_file": "src/components/tui-text.tsx",
       "source_location": "L1",
       "id": "src_components_tui_text_tsx",
-      "community": 19,
+      "community": 2,
       "norm_label": "tui-text.tsx"
     },
     {
@@ -2178,7 +2178,7 @@
       "source_file": "src/components/tui-text.tsx",
       "source_location": "L5",
       "id": "components_tui_text_tuitextprops",
-      "community": 19,
+      "community": 2,
       "norm_label": "tuitextprops"
     },
     {
@@ -2187,7 +2187,7 @@
       "source_file": "src/components/tui-text.tsx",
       "source_location": "L11",
       "id": "components_tui_text_tuitext",
-      "community": 19,
+      "community": 2,
       "norm_label": "tuitext()"
     },
     {
@@ -2241,7 +2241,7 @@
       "source_file": "src/screens/FilesScreen.tsx",
       "source_location": "L1",
       "id": "src_screens_filesscreen_tsx",
-      "community": 23,
+      "community": 2,
       "norm_label": "filesscreen.tsx"
     },
     {
@@ -2250,7 +2250,7 @@
       "source_file": "src/screens/FilesScreen.tsx",
       "source_location": "L24",
       "id": "screens_filesscreen_filesscreenprops",
-      "community": 2,
+      "community": 23,
       "norm_label": "filesscreenprops"
     },
     {
@@ -2259,7 +2259,7 @@
       "source_file": "src/screens/FilesScreen.tsx",
       "source_location": "L36",
       "id": "screens_filesscreen_fileitemprops",
-      "community": 2,
+      "community": 23,
       "norm_label": "fileitemprops"
     },
     {
@@ -2295,7 +2295,7 @@
       "source_file": "src/screens/FilesScreen.tsx",
       "source_location": "L220",
       "id": "screens_filesscreen_filesscreen",
-      "community": 21,
+      "community": 2,
       "norm_label": "filesscreen()"
     },
     {
@@ -2304,7 +2304,7 @@
       "source_file": "src/screens/FilesScreen.tsx",
       "source_location": "L355",
       "id": "screens_filesscreen_styles",
-      "community": 23,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -2322,7 +2322,7 @@
       "source_file": "src/screens/LinksScreen.tsx",
       "source_location": "L15",
       "id": "screens_linksscreen_linksscreenprops",
-      "community": 2,
+      "community": 23,
       "norm_label": "linksscreenprops"
     },
     {
@@ -2331,7 +2331,7 @@
       "source_file": "src/screens/LinksScreen.tsx",
       "source_location": "L27",
       "id": "screens_linksscreen_linkitemprops",
-      "community": 2,
+      "community": 23,
       "norm_label": "linkitemprops"
     },
     {
@@ -2349,7 +2349,7 @@
       "source_file": "src/screens/LinksScreen.tsx",
       "source_location": "L113",
       "id": "screens_linksscreen_linksscreen",
-      "community": 21,
+      "community": 2,
       "norm_label": "linksscreen()"
     },
     {
@@ -2376,7 +2376,7 @@
       "source_file": "src/screens/PhotosScreen.tsx",
       "source_location": "L20",
       "id": "screens_photosscreen_photolayout",
-      "community": 2,
+      "community": 23,
       "norm_label": "photolayout"
     },
     {
@@ -2385,7 +2385,7 @@
       "source_file": "src/screens/PhotosScreen.tsx",
       "source_location": "L27",
       "id": "screens_photosscreen_photoitemprops",
-      "community": 2,
+      "community": 23,
       "norm_label": "photoitemprops"
     },
     {
@@ -2403,7 +2403,7 @@
       "source_file": "src/screens/PhotosScreen.tsx",
       "source_location": "L42",
       "id": "screens_photosscreen_photoitem",
-      "community": 23,
+      "community": 2,
       "norm_label": "photoitem()"
     },
     {
@@ -2412,7 +2412,7 @@
       "source_file": "src/screens/PhotosScreen.tsx",
       "source_location": "L191",
       "id": "screens_photosscreen_photosscreenprops",
-      "community": 2,
+      "community": 23,
       "norm_label": "photosscreenprops"
     },
     {
@@ -2421,7 +2421,7 @@
       "source_file": "src/screens/PhotosScreen.tsx",
       "source_location": "L206",
       "id": "screens_photosscreen_photosscreen",
-      "community": 21,
+      "community": 2,
       "norm_label": "photosscreen()"
     },
     {
@@ -2464,7 +2464,7 @@
       "label": "styles",
       "file_type": "code",
       "source_file": "src/screens/SettingsScreen.tsx",
-      "source_location": "L326",
+      "source_location": "L328",
       "id": "screens_settingsscreen_styles",
       "community": 8,
       "norm_label": "styles"
@@ -2484,7 +2484,7 @@
       "source_file": "src/screens/TextsScreen.tsx",
       "source_location": "L13",
       "id": "screens_textsscreen_textsscreenprops",
-      "community": 2,
+      "community": 23,
       "norm_label": "textsscreenprops"
     },
     {
@@ -2493,7 +2493,7 @@
       "source_file": "src/screens/TextsScreen.tsx",
       "source_location": "L25",
       "id": "screens_textsscreen_textitemprops",
-      "community": 2,
+      "community": 23,
       "norm_label": "textitemprops"
     },
     {
@@ -2511,7 +2511,7 @@
       "source_file": "src/screens/TextsScreen.tsx",
       "source_location": "L86",
       "id": "screens_textsscreen_textsscreen",
-      "community": 21,
+      "community": 2,
       "norm_label": "textsscreen()"
     },
     {
@@ -2529,7 +2529,7 @@
       "source_file": "src/theme/theme-provider.tsx",
       "source_location": "L1",
       "id": "src_theme_theme_provider_tsx",
-      "community": 7,
+      "community": 2,
       "norm_label": "theme-provider.tsx"
     },
     {
@@ -2538,7 +2538,7 @@
       "source_file": "src/theme/theme-provider.tsx",
       "source_location": "L5",
       "id": "theme_theme_provider_thememode",
-      "community": 7,
+      "community": 2,
       "norm_label": "thememode"
     },
     {
@@ -2547,7 +2547,7 @@
       "source_file": "src/theme/theme-provider.tsx",
       "source_location": "L6",
       "id": "theme_theme_provider_accenttheme",
-      "community": 7,
+      "community": 2,
       "norm_label": "accenttheme"
     },
     {
@@ -2556,7 +2556,7 @@
       "source_file": "src/theme/theme-provider.tsx",
       "source_location": "L8",
       "id": "theme_theme_provider_themecolors",
-      "community": 7,
+      "community": 2,
       "norm_label": "themecolors"
     },
     {
@@ -2565,7 +2565,7 @@
       "source_file": "src/theme/theme-provider.tsx",
       "source_location": "L26",
       "id": "theme_theme_provider_themecontexttype",
-      "community": 7,
+      "community": 2,
       "norm_label": "themecontexttype"
     },
     {
@@ -2574,7 +2574,7 @@
       "source_file": "src/theme/theme-provider.tsx",
       "source_location": "L36",
       "id": "theme_theme_provider_accent_colors",
-      "community": 7,
+      "community": 2,
       "norm_label": "accent_colors"
     },
     {
@@ -2583,7 +2583,7 @@
       "source_file": "src/theme/theme-provider.tsx",
       "source_location": "L45",
       "id": "theme_theme_provider_themecontext",
-      "community": 7,
+      "community": 2,
       "norm_label": "themecontext"
     },
     {
@@ -2592,7 +2592,7 @@
       "source_file": "src/theme/theme-provider.tsx",
       "source_location": "L47",
       "id": "theme_theme_provider_themeprovider",
-      "community": 7,
+      "community": 2,
       "norm_label": "themeprovider()"
     },
     {
@@ -2601,7 +2601,7 @@
       "source_file": "src/theme/theme-provider.tsx",
       "source_location": "L147",
       "id": "theme_theme_provider_usetheme",
-      "community": 21,
+      "community": 2,
       "norm_label": "usetheme()"
     },
     {
@@ -2637,7 +2637,7 @@
       "source_file": "src/utils/folder-navigation.ts",
       "source_location": "L12",
       "id": "utils_folder_navigation_usefoldernavigation",
-      "community": 21,
+      "community": 2,
       "norm_label": "usefoldernavigation()"
     },
     {
@@ -2716,7 +2716,7 @@
       "label": "getGoogleUserInfo()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L81",
+      "source_location": "L83",
       "id": "utils_google_drive_getgoogleuserinfo",
       "community": 8,
       "norm_label": "getgoogleuserinfo()"
@@ -2725,7 +2725,7 @@
       "label": "isUserSignedIn()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L90",
+      "source_location": "L92",
       "id": "utils_google_drive_isusersignedin",
       "community": 8,
       "norm_label": "isusersignedin()"
@@ -2734,7 +2734,7 @@
       "label": "refreshAccessToken()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L99",
+      "source_location": "L101",
       "id": "utils_google_drive_refreshaccesstoken",
       "community": 8,
       "norm_label": "refreshaccesstoken()"
@@ -2743,7 +2743,7 @@
       "label": "getValidAccessToken()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L122",
+      "source_location": "L124",
       "id": "utils_google_drive_getvalidaccesstoken",
       "community": 8,
       "norm_label": "getvalidaccesstoken()"
@@ -2752,7 +2752,7 @@
       "label": "fetchUserInfo()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L143",
+      "source_location": "L145",
       "id": "utils_google_drive_fetchuserinfo",
       "community": 8,
       "norm_label": "fetchuserinfo()"
@@ -2761,16 +2761,25 @@
       "label": "exchangeCodeForTokens()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L154",
+      "source_location": "L156",
       "id": "utils_google_drive_exchangecodefortokens",
       "community": 8,
       "norm_label": "exchangecodefortokens()"
     },
     {
+      "label": "subFolderIdCache",
+      "file_type": "code",
+      "source_file": "src/utils/google-drive.ts",
+      "source_location": "L183",
+      "id": "utils_google_drive_subfolderidcache",
+      "community": 8,
+      "norm_label": "subfolderidcache"
+    },
+    {
       "label": "getOrCreateSyncFolder()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L180",
+      "source_location": "L185",
       "id": "utils_google_drive_getorcreatesyncfolder",
       "community": 8,
       "norm_label": "getorcreatesyncfolder()"
@@ -2779,7 +2788,7 @@
       "label": "DriveUploadResponse",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L215",
+      "source_location": "L223",
       "id": "utils_google_drive_driveuploadresponse",
       "community": 8,
       "norm_label": "driveuploadresponse"
@@ -2788,7 +2797,7 @@
       "label": "uploadJsonToDrive()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L224",
+      "source_location": "L232",
       "id": "utils_google_drive_uploadjsontodrive",
       "community": 8,
       "norm_label": "uploadjsontodrive()"
@@ -2797,7 +2806,7 @@
       "label": "uploadBinaryToDrive()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L279",
+      "source_location": "L287",
       "id": "utils_google_drive_uploadbinarytodrive",
       "community": 8,
       "norm_label": "uploadbinarytodrive()"
@@ -2806,7 +2815,7 @@
       "label": "deleteFileFromDrive()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L358",
+      "source_location": "L366",
       "id": "utils_google_drive_deletefilefromdrive",
       "community": 8,
       "norm_label": "deletefilefromdrive()"
@@ -2815,7 +2824,7 @@
       "label": "getOrCreateSubFolder()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L367",
+      "source_location": "L375",
       "id": "utils_google_drive_getorcreatesubfolder",
       "community": 8,
       "norm_label": "getorcreatesubfolder()"
@@ -2824,7 +2833,7 @@
       "label": "ensureFileParent()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L408",
+      "source_location": "L423",
       "id": "utils_google_drive_ensurefileparent",
       "community": 8,
       "norm_label": "ensurefileparent()"
@@ -2833,7 +2842,7 @@
       "label": "fetchAllMetadataFromDrive()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L436",
+      "source_location": "L451",
       "id": "utils_google_drive_fetchallmetadatafromdrive",
       "community": 8,
       "norm_label": "fetchallmetadatafromdrive()"
@@ -2842,7 +2851,7 @@
       "label": "downloadJsonContent()",
       "file_type": "code",
       "source_file": "src/utils/google-drive.ts",
-      "source_location": "L465",
+      "source_location": "L480",
       "id": "utils_google_drive_downloadjsoncontent",
       "community": 8,
       "norm_label": "downloadjsoncontent()"
@@ -2853,7 +2862,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L1",
       "id": "src_utils_helpers_ts",
-      "community": 27,
+      "community": 23,
       "norm_label": "helpers.ts"
     },
     {
@@ -2880,7 +2889,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L16",
       "id": "utils_helpers_getwebsitename",
-      "community": 27,
+      "community": 23,
       "norm_label": "getwebsitename()"
     },
     {
@@ -2889,7 +2898,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L120",
       "id": "utils_helpers_handleopenurl",
-      "community": 27,
+      "community": 23,
       "norm_label": "handleopenurl()"
     },
     {
@@ -2907,7 +2916,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L161",
       "id": "utils_helpers_getactualtype",
-      "community": 27,
+      "community": 23,
       "norm_label": "getactualtype()"
     },
     {
@@ -2925,7 +2934,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L190",
       "id": "utils_helpers_base64tobytes",
-      "community": 27,
+      "community": 23,
       "norm_label": "base64tobytes()"
     },
     {
@@ -2934,7 +2943,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L232",
       "id": "utils_helpers_bytestobase64",
-      "community": 27,
+      "community": 23,
       "norm_label": "bytestobase64()"
     },
     {
@@ -2943,7 +2952,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L270",
       "id": "utils_helpers_extractaudioartwork",
-      "community": 27,
+      "community": 23,
       "norm_label": "extractaudioartwork()"
     },
     {
@@ -2961,7 +2970,7 @@
       "source_file": "src/utils/share-receiver.ts",
       "source_location": "L4",
       "id": "utils_share_receiver_parsedshare",
-      "community": 0,
+      "community": 7,
       "norm_label": "parsedshare"
     },
     {
@@ -2997,7 +3006,7 @@
       "source_file": "src/utils/storage.ts",
       "source_location": "L5",
       "id": "utils_storage_dumptype",
-      "community": 27,
+      "community": 23,
       "norm_label": "dumptype"
     },
     {
@@ -3006,7 +3015,7 @@
       "source_file": "src/utils/storage.ts",
       "source_location": "L7",
       "id": "utils_storage_dumpitem",
-      "community": 2,
+      "community": 23,
       "norm_label": "dumpitem"
     },
     {
@@ -3118,10 +3127,37 @@
       "norm_label": "sync-engine.ts"
     },
     {
+      "label": "initializeRealtimeSync()",
+      "file_type": "code",
+      "source_file": "src/utils/sync-engine.ts",
+      "source_location": "L23",
+      "id": "utils_sync_engine_initializerealtimesync",
+      "community": 8,
+      "norm_label": "initializerealtimesync()"
+    },
+    {
+      "label": "closeRealtimeSync()",
+      "file_type": "code",
+      "source_file": "src/utils/sync-engine.ts",
+      "source_location": "L88",
+      "id": "utils_sync_engine_closerealtimesync",
+      "community": 8,
+      "norm_label": "closerealtimesync()"
+    },
+    {
+      "label": "notifyRemoteDevicesOfChange()",
+      "file_type": "code",
+      "source_file": "src/utils/sync-engine.ts",
+      "source_location": "L102",
+      "id": "utils_sync_engine_notifyremotedevicesofchange",
+      "community": 8,
+      "norm_label": "notifyremotedevicesofchange()"
+    },
+    {
       "label": "CATEGORY_FOLDERS",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L20",
+      "source_location": "L126",
       "id": "utils_sync_engine_category_folders",
       "community": 8,
       "norm_label": "category_folders"
@@ -3130,7 +3166,7 @@
       "label": "resolveUserFolderDriveId()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L28",
+      "source_location": "L134",
       "id": "utils_sync_engine_resolveuserfolderdriveid",
       "community": 8,
       "norm_label": "resolveuserfolderdriveid()"
@@ -3139,16 +3175,16 @@
       "label": "SyncTask",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L57",
+      "source_location": "L163",
       "id": "utils_sync_engine_synctask",
-      "community": 27,
+      "community": 23,
       "norm_label": "synctask"
     },
     {
       "label": "SyncStatus",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L70",
+      "source_location": "L176",
       "id": "utils_sync_engine_syncstatus",
       "community": 8,
       "norm_label": "syncstatus"
@@ -3157,7 +3193,7 @@
       "label": "syncStatusListeners",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L76",
+      "source_location": "L182",
       "id": "utils_sync_engine_syncstatuslisteners",
       "community": 8,
       "norm_label": "syncstatuslisteners"
@@ -3166,7 +3202,7 @@
       "label": "currentSyncStatus",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L77",
+      "source_location": "L183",
       "id": "utils_sync_engine_currentsyncstatus",
       "community": 8,
       "norm_label": "currentsyncstatus"
@@ -3175,7 +3211,7 @@
       "label": "notifyListeners()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L91",
+      "source_location": "L197",
       "id": "utils_sync_engine_notifylisteners",
       "community": 8,
       "norm_label": "notifylisteners()"
@@ -3184,7 +3220,7 @@
       "label": "subscribeToSyncStatus()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L95",
+      "source_location": "L201",
       "id": "utils_sync_engine_subscribetosyncstatus",
       "community": 8,
       "norm_label": "subscribetosyncstatus()"
@@ -3193,7 +3229,7 @@
       "label": "clearSyncError()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L103",
+      "source_location": "L209",
       "id": "utils_sync_engine_clearsyncerror",
       "community": 8,
       "norm_label": "clearsyncerror()"
@@ -3202,7 +3238,7 @@
       "label": "updateSyncStatus()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L107",
+      "source_location": "L213",
       "id": "utils_sync_engine_updatesyncstatus",
       "community": 8,
       "norm_label": "updatesyncstatus()"
@@ -3211,7 +3247,7 @@
       "label": "getSyncQueue()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L115",
+      "source_location": "L221",
       "id": "utils_sync_engine_getsyncqueue",
       "community": 8,
       "norm_label": "getsyncqueue()"
@@ -3220,7 +3256,7 @@
       "label": "saveSyncQueue()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L125",
+      "source_location": "L231",
       "id": "utils_sync_engine_savesyncqueue",
       "community": 8,
       "norm_label": "savesyncqueue()"
@@ -3229,16 +3265,16 @@
       "label": "EnqueueTaskInput",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L133",
+      "source_location": "L239",
       "id": "utils_sync_engine_enqueuetaskinput",
-      "community": 27,
+      "community": 23,
       "norm_label": "enqueuetaskinput"
     },
     {
       "label": "activeSyncTasks",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L141",
+      "source_location": "L247",
       "id": "utils_sync_engine_activesynctasks",
       "community": 8,
       "norm_label": "activesynctasks"
@@ -3247,7 +3283,7 @@
       "label": "queueLockPromise",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L144",
+      "source_location": "L250",
       "id": "utils_sync_engine_queuelockpromise",
       "community": 8,
       "norm_label": "queuelockpromise"
@@ -3256,7 +3292,7 @@
       "label": "runLockedQueueOperation()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L146",
+      "source_location": "L252",
       "id": "utils_sync_engine_runlockedqueueoperation",
       "community": 8,
       "norm_label": "runlockedqueueoperation()"
@@ -3265,7 +3301,7 @@
       "label": "ProgressListener",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L154",
+      "source_location": "L260",
       "id": "utils_sync_engine_progresslistener",
       "community": 8,
       "norm_label": "progresslistener"
@@ -3274,7 +3310,7 @@
       "label": "progressListeners",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L155",
+      "source_location": "L261",
       "id": "utils_sync_engine_progresslisteners",
       "community": 8,
       "norm_label": "progresslisteners"
@@ -3283,16 +3319,16 @@
       "label": "subscribeToUploadProgress()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L157",
+      "source_location": "L263",
       "id": "utils_sync_engine_subscribetouploadprogress",
-      "community": 2,
+      "community": 8,
       "norm_label": "subscribetouploadprogress()"
     },
     {
       "label": "notifyUploadProgress()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L164",
+      "source_location": "L270",
       "id": "utils_sync_engine_notifyuploadprogress",
       "community": 8,
       "norm_label": "notifyuploadprogress()"
@@ -3301,7 +3337,7 @@
       "label": "enqueueSyncTasks()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L171",
+      "source_location": "L277",
       "id": "utils_sync_engine_enqueuesynctasks",
       "community": 8,
       "norm_label": "enqueuesynctasks()"
@@ -3310,7 +3346,7 @@
       "label": "enqueueSyncTask()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L242",
+      "source_location": "L348",
       "id": "utils_sync_engine_enqueuesynctask",
       "community": 8,
       "norm_label": "enqueuesynctask()"
@@ -3319,7 +3355,7 @@
       "label": "enqueueUnsyncedLocalItems()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L255",
+      "source_location": "L361",
       "id": "utils_sync_engine_enqueueunsyncedlocalitems",
       "community": 8,
       "norm_label": "enqueueunsyncedlocalitems()"
@@ -3328,16 +3364,16 @@
       "label": "resolveLocalFile()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L315",
+      "source_location": "L421",
       "id": "utils_sync_engine_resolvelocalfile",
-      "community": 23,
+      "community": 8,
       "norm_label": "resolvelocalfile()"
     },
     {
       "label": "processSyncQueue()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L330",
+      "source_location": "L436",
       "id": "utils_sync_engine_processsyncqueue",
       "community": 8,
       "norm_label": "processsyncqueue()"
@@ -3346,7 +3382,7 @@
       "label": "dequeueTask()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L645",
+      "source_location": "L757",
       "id": "utils_sync_engine_dequeuetask",
       "community": 8,
       "norm_label": "dequeuetask()"
@@ -3355,7 +3391,7 @@
       "label": "deleteItemFilesFromDrive()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L653",
+      "source_location": "L765",
       "id": "utils_sync_engine_deleteitemfilesfromdrive",
       "community": 8,
       "norm_label": "deleteitemfilesfromdrive()"
@@ -3364,7 +3400,7 @@
       "label": "askConflictResolution()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L700",
+      "source_location": "L812",
       "id": "utils_sync_engine_askconflictresolution",
       "community": 8,
       "norm_label": "askconflictresolution()"
@@ -3373,7 +3409,7 @@
       "label": "pullChangesFromDrive()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L724",
+      "source_location": "L836",
       "id": "utils_sync_engine_pullchangesfromdrive",
       "community": 8,
       "norm_label": "pullchangesfromdrive()"
@@ -3680,7 +3716,7 @@
       "file_type": "code",
       "source_file": "src/components/share-import-sheet.tsx",
       "source_location": "L30",
-      "community": 23,
+      "community": 7,
       "norm_label": "{ width: screenwidth }",
       "id": "components_share_import_sheet_width_screenwidth"
     },
@@ -3698,7 +3734,7 @@
       "file_type": "code",
       "source_file": "App.tsx",
       "source_location": "L87",
-      "community": 21,
+      "community": 0,
       "norm_label": "tabbutton()",
       "id": "boothub_app_tabbutton"
     },
@@ -3743,7 +3779,7 @@
       "file_type": "code",
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L32",
-      "community": 15,
+      "community": 2,
       "norm_label": "{ width: screenwidth, height: screenheight }",
       "id": "components_photo_picker_sheet_width_screenwidth_height_screenheight"
     },
@@ -3887,7 +3923,7 @@
       "file_type": "code",
       "source_file": "App.tsx",
       "source_location": "L30",
-      "community": 21,
+      "community": 0,
       "norm_label": "mainapp()",
       "id": "tui_template_native_app_mainapp"
     }
@@ -5364,6 +5400,17 @@
       "confidence_score": 1.0,
       "source": "app_tsx",
       "target": "utils_sync_engine_enqueueunsyncedlocalitems"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "App.tsx",
+      "source_location": "L72",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "app_tsx",
+      "target": "utils_sync_engine_initializerealtimesync"
     },
     {
       "relation": "imports",
@@ -10638,6 +10685,17 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/screens/SettingsScreen.tsx",
+      "source_location": "L21",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_screens_settingsscreen_tsx",
+      "target": "utils_sync_engine_closerealtimesync"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/screens/SettingsScreen.tsx",
       "source_location": "L20",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -10654,6 +10712,17 @@
       "confidence_score": 1.0,
       "source": "src_screens_settingsscreen_tsx",
       "target": "utils_sync_engine_getsyncqueue"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/screens/SettingsScreen.tsx",
+      "source_location": "L21",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_screens_settingsscreen_tsx",
+      "target": "utils_sync_engine_initializerealtimesync"
     },
     {
       "relation": "imports",
@@ -11328,6 +11397,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/utils/google-drive.ts",
+      "source_location": "L183",
+      "weight": 1.0,
+      "source": "src_utils_google_drive_ts",
+      "target": "utils_google_drive_subfolderidcache",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/google-drive.ts",
       "source_location": "L271",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -11387,6 +11466,39 @@
       "confidence_score": 1.0,
       "source": "utils_google_drive_refreshaccesstoken",
       "target": "utils_google_drive_getclientid"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/sync-engine.ts",
+      "source_location": "L5",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_sync_engine_ts",
+      "target": "utils_google_drive_getgoogleuserinfo"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/utils/sync-engine.ts",
+      "source_location": "L25",
+      "weight": 1.0,
+      "source": "utils_sync_engine_initializerealtimesync",
+      "target": "utils_google_drive_getgoogleuserinfo"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/utils/sync-engine.ts",
+      "source_location": "L104",
+      "weight": 1.0,
+      "source": "utils_sync_engine_notifyremotedevicesofchange",
+      "target": "utils_google_drive_getgoogleuserinfo"
     },
     {
       "relation": "calls",
@@ -12484,6 +12596,16 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/utils/sync-engine.ts",
+      "source_location": "L88",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_sync_engine_ts",
+      "target": "utils_sync_engine_closerealtimesync"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/sync-engine.ts",
       "source_location": "L28",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -12564,11 +12686,31 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/utils/sync-engine.ts",
+      "source_location": "L23",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_sync_engine_ts",
+      "target": "utils_sync_engine_initializerealtimesync"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/sync-engine.ts",
       "source_location": "L42",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "src_utils_sync_engine_ts",
       "target": "utils_sync_engine_notifylisteners"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/sync-engine.ts",
+      "source_location": "L102",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "src_utils_sync_engine_ts",
+      "target": "utils_sync_engine_notifyremotedevicesofchange"
     },
     {
       "relation": "contains",
@@ -12729,6 +12871,28 @@
       "confidence_score": 1.0,
       "source": "src_utils_sync_engine_ts",
       "target": "utils_sync_engine_updatesyncstatus"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/sync-engine.ts",
+      "source_location": "L27",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_sync_engine_initializerealtimesync",
+      "target": "utils_sync_engine_closerealtimesync"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/utils/sync-engine.ts",
+      "source_location": "L744",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "utils_sync_engine_processsyncqueue",
+      "target": "utils_sync_engine_notifyremotedevicesofchange"
     },
     {
       "relation": "calls",
@@ -13274,5 +13438,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "5c25365a482c317dfba7ae18d0168c856e63460d"
+  "built_at_commit": "c88cae70528ab18d87361bad0aa962ecb9c1772d"
 }

@@ -12,7 +12,113 @@ import {
   ensureFileParent,
   fetchAllMetadataFromDrive,
   downloadJsonContent,
+  getGoogleUserInfo,
 } from './google-drive';
+
+let realtimeWs: WebSocket | null = null;
+let realtimeReconnectTimer: any = null;
+let realtimeActiveEmail: string | null = null;
+let isRealtimeClosed = false;
+
+export const initializeRealtimeSync = async (): Promise<void> => {
+  try {
+    const userInfo = await getGoogleUserInfo();
+    if (!userInfo || !userInfo.email) {
+      closeRealtimeSync();
+      return;
+    }
+
+    const email = userInfo.email.trim().toLowerCase();
+    if (realtimeWs && realtimeActiveEmail === email) {
+      return;
+    }
+
+    if (realtimeWs) {
+      closeRealtimeSync();
+    }
+
+    isRealtimeClosed = false;
+    realtimeActiveEmail = email;
+
+    let hexEmail = '';
+    for (let i = 0; i < email.length; i++) {
+      hexEmail += email.charCodeAt(i).toString(16);
+    }
+    const topic = `boothub-sync-${hexEmail}`;
+    const wsUrl = `wss://ntfy.sh/${topic}/ws`;
+
+    const connect = () => {
+      if (isRealtimeClosed || realtimeActiveEmail !== email) return;
+      console.log('[Realtime Sync] Connecting to', wsUrl);
+      realtimeWs = new WebSocket(wsUrl);
+
+      realtimeWs.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.event === 'message' && data.message === 'sync') {
+            console.log('[Realtime Sync] Received sync signal from remote device!');
+            pullChangesFromDrive().catch((err) => {
+              console.error('[Realtime Sync] Pull failed:', err);
+            });
+          }
+        } catch (err) {
+          console.error('[Realtime Sync] Error parsing WebSocket message:', err);
+        }
+      };
+
+      realtimeWs.onclose = () => {
+        console.log('[Realtime Sync] Connection closed.');
+        if (!isRealtimeClosed && realtimeActiveEmail === email) {
+          console.log('[Realtime Sync] Reconnecting in 5 seconds...');
+          realtimeReconnectTimer = setTimeout(connect, 5000);
+        }
+      };
+
+      realtimeWs.onerror = (err) => {
+        console.error('[Realtime Sync] WebSocket error:', err);
+      };
+    };
+
+    connect();
+  } catch (err) {
+    console.error('[Realtime Sync] Failed to initialize:', err);
+  }
+};
+
+export const closeRealtimeSync = (): void => {
+  isRealtimeClosed = true;
+  realtimeActiveEmail = null;
+  if (realtimeReconnectTimer) {
+    clearTimeout(realtimeReconnectTimer);
+    realtimeReconnectTimer = null;
+  }
+  if (realtimeWs) {
+    realtimeWs.close();
+    realtimeWs = null;
+  }
+  console.log('[Realtime Sync] Closed connection.');
+};
+
+export const notifyRemoteDevicesOfChange = async (): Promise<void> => {
+  try {
+    const userInfo = await getGoogleUserInfo();
+    if (!userInfo || !userInfo.email) return;
+
+    const cleaned = userInfo.email.trim().toLowerCase();
+    let hexEmail = '';
+    for (let i = 0; i < cleaned.length; i++) {
+      hexEmail += cleaned.charCodeAt(i).toString(16);
+    }
+    const topic = `boothub-sync-${hexEmail}`;
+
+    console.log('[Realtime Sync] Notifying remote devices...');
+    await axios.post(`https://ntfy.sh/${topic}`, 'sync', {
+      headers: { 'Content-Type': 'text/plain' },
+    });
+  } catch (err) {
+    console.warn('[Realtime Sync] Failed to send remote notification:', err);
+  }
+};
 import { ensureFileUri } from './helpers';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system/legacy';
@@ -341,6 +447,7 @@ export const processSyncQueue = async (): Promise<void> => {
       return;
     }
 
+    let processedAnyTasks = false;
     const syncFolderId = await getOrCreateSyncFolder(accessToken);
 
     while (true) {
@@ -350,7 +457,8 @@ export const processSyncQueue = async (): Promise<void> => {
       }
 
       for (const task of [...queue]) {
-      let activeAbort = () => {};
+        processedAnyTasks = true;
+        let activeAbort = () => {};
       activeSyncTasks.set(task.itemId, { abort: () => activeAbort() });
 
       try {
@@ -631,6 +739,10 @@ export const processSyncQueue = async (): Promise<void> => {
     const lastSyncedLabel = `${dateStr} @ ${timeStr}`;
 
     updateSyncStatus({ isSyncing: false, error: null, lastSynced: lastSyncedLabel });
+
+    if (processedAnyTasks) {
+      notifyRemoteDevicesOfChange().catch(() => {});
+    }
   } catch (err: any) {
     console.error('Failed to run sync queue:', err);
     const details = err.response?.data
@@ -732,10 +844,26 @@ export const pullChangesFromDrive = async (): Promise<void> => {
     const syncFolderId = await getOrCreateSyncFolder(accessToken);
     const remoteFiles = await fetchAllMetadataFromDrive(accessToken);
 
+    const { getItems, saveItems } = require('./storage') as typeof import('./storage');
+    const localItems = await getItems();
+    const lastPullTimestampStr = await AsyncStorage.getItem('@boothub_last_pull_timestamp');
+    const lastPullTimestamp = lastPullTimestampStr ? parseInt(lastPullTimestampStr, 10) : 0;
+    const currentPullTime = Date.now();
+
     // Fetch JSON content for all files in parallel
     const remoteItems: DumpItem[] = await Promise.all(
       remoteFiles.map(async (file) => {
         try {
+          const localMatch = localItems.find((x) => x.driveMetaFileId === file.id);
+          const remoteModTime = file.modifiedTime ? Date.parse(file.modifiedTime) : 0;
+
+          if (localMatch && remoteModTime && remoteModTime <= lastPullTimestamp - 10000) {
+            return {
+              ...localMatch,
+              driveMetaFileId: file.id,
+            };
+          }
+
           const data = await downloadJsonContent(accessToken, file.id);
           return {
             ...data,
@@ -748,8 +876,7 @@ export const pullChangesFromDrive = async (): Promise<void> => {
       })
     ).then((results) => results.filter((x): x is DumpItem => x !== null));
 
-    const { getItems, saveItems } = require('./storage') as typeof import('./storage');
-    const localItems = await getItems();
+    await AsyncStorage.setItem('@boothub_last_pull_timestamp', String(currentPullTime));
     const remoteItemIds = new Set(remoteItems.map((x) => x.id));
 
     // Identify items deleted remotely

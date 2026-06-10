@@ -18,7 +18,7 @@ import {
   getRedirectScheme,
   fetchAllMetadataFromDrive,
 } from '../utils/google-drive';
-import { subscribeToSyncStatus, processSyncQueue, getSyncQueue, saveSyncQueue, enqueueUnsyncedLocalItems, pullChangesFromDrive, SyncStatus, clearSyncError, updateSyncStatus } from '../utils/sync-engine';
+import { subscribeToSyncStatus, processSyncQueue, getSyncQueue, saveSyncQueue, enqueueUnsyncedLocalItems, pullChangesFromDrive, SyncStatus, clearSyncError, updateSyncStatus, initializeRealtimeSync, closeRealtimeSync } from '../utils/sync-engine';
 
 interface SettingsScreenProps {}
 
@@ -107,6 +107,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
           setIsSignedIn(true);
           setUserInfo(info);
           clearSyncError();
+          initializeRealtimeSync().catch(() => {});
           
           // Check for reconnection sync conflict:
           // If we have offline DELETE tasks, and Google Drive actually has items, prompt the user.
@@ -204,6 +205,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
               await clearAuthSession();
               setIsSignedIn(false);
               setUserInfo(null);
+              closeRealtimeSync();
             } catch (err) {
               console.error('Error signing out from Google Account:', err);
             } finally {

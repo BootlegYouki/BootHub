@@ -76,6 +76,8 @@ export const clearAuthSession = async (): Promise<void> => {
   await SecureStore.deleteItemAsync(SECURE_KEYS.REFRESH_TOKEN);
   await SecureStore.deleteItemAsync(SECURE_KEYS.EXPIRES_AT);
   await SecureStore.deleteItemAsync(SECURE_KEYS.USER_INFO);
+  cachedSyncFolderId = null;
+  subFolderIdCache.clear();
 };
 
 export const getGoogleUserInfo = async (): Promise<GoogleUserInfo | null> => {
@@ -177,7 +179,11 @@ export const exchangeCodeForTokens = async (
 
 // ─── Google Drive Operations ────────────────────────────────────────────────
 
+let cachedSyncFolderId: string | null = null;
+const subFolderIdCache = new Map<string, string>();
+
 export const getOrCreateSyncFolder = async (accessToken: string): Promise<string> => {
+  if (cachedSyncFolderId) return cachedSyncFolderId;
   const folderName = 'BootHub_Sync';
 
   // 1. Search for existing folder
@@ -191,6 +197,7 @@ export const getOrCreateSyncFolder = async (accessToken: string): Promise<string
 
   const files = searchRes.data.files || [];
   if (files.length > 0) {
+    cachedSyncFolderId = files[0].id;
     return files[0].id;
   }
 
@@ -209,6 +216,7 @@ export const getOrCreateSyncFolder = async (accessToken: string): Promise<string
     }
   );
 
+  cachedSyncFolderId = createRes.data.id;
   return createRes.data.id;
 };
 
@@ -369,6 +377,11 @@ export const getOrCreateSubFolder = async (
   parentFolderId: string,
   folderName: string
 ): Promise<string> => {
+  const cacheKey = `${parentFolderId}:${folderName}`;
+  if (subFolderIdCache.has(cacheKey)) {
+    return subFolderIdCache.get(cacheKey)!;
+  }
+
   const escapedName = folderName.replace(/'/g, "\\'");
   const query = `name='${escapedName}' and '${parentFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
   
@@ -381,6 +394,7 @@ export const getOrCreateSubFolder = async (
 
   const files = searchRes.data.files || [];
   if (files.length > 0) {
+    subFolderIdCache.set(cacheKey, files[0].id);
     return files[0].id;
   }
 
@@ -399,6 +413,7 @@ export const getOrCreateSubFolder = async (
     }
   );
 
+  subFolderIdCache.set(cacheKey, createRes.data.id);
   return createRes.data.id;
 };
 
@@ -443,7 +458,7 @@ export const fetchAllMetadataFromDrive = async (
   do {
     const url: string = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(
       query
-    )}&fields=nextPageToken,files(id,name,parents)&pageSize=100${
+    )}&fields=nextPageToken,files(id,name,parents,modifiedTime)&pageSize=100${
       pageToken ? `&pageToken=${pageToken}` : ''
     }`;
 

@@ -69,7 +69,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Clipboard from 'expo-clipboard';
 import * as MediaLibrary from 'expo-media-library';
 import * as WebBrowser from 'expo-web-browser';
-import { processSyncQueue, pullChangesFromDrive, enqueueUnsyncedLocalItems } from './src/utils/sync-engine';
+import { processSyncQueue, pullChangesFromDrive, enqueueUnsyncedLocalItems, initializeRealtimeSync } from './src/utils/sync-engine';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -689,6 +689,7 @@ function MainApp() {
         console.error('[App] Failed to enqueue unsynced local items:', err);
       }
       await processSyncQueue().catch((err) => console.error('[App] Sync failed:', err));
+      initializeRealtimeSync().catch(() => {});
     };
 
     // Run sync queue on startup
