@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "scheme": ["boothub", "tuitemplatenative"],
+    "scheme": "boothub",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.bootlegyouki.boothub",
@@ -83,7 +83,8 @@
           ]
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {
