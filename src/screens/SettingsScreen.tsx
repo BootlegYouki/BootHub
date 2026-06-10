@@ -15,7 +15,7 @@ import {
   isUserSignedIn,
   getGoogleUserInfo,
   exchangeCodeForTokens,
-  REDIRECT_SCHEME,
+  getRedirectScheme,
 } from '../utils/google-drive';
 import { subscribeToSyncStatus, processSyncQueue, getSyncQueue, SyncStatus } from '../utils/sync-engine';
 
@@ -44,7 +44,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
       clientId: getClientId(),
       scopes: ['https://www.googleapis.com/auth/drive.file'],
       redirectUri: AuthSession.makeRedirectUri({
-        scheme: REDIRECT_SCHEME,
+        scheme: getRedirectScheme(),
+        path: 'oauth2redirect',
       }),
       extraParams: {
         access_type: 'offline',
@@ -94,7 +95,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
             throw new Error('Authorization response parameters are invalid.');
           }
 
-          const redirectUri = AuthSession.makeRedirectUri({ scheme: REDIRECT_SCHEME });
+          const redirectUri = AuthSession.makeRedirectUri({
+            scheme: getRedirectScheme(),
+            path: 'oauth2redirect',
+          });
           const tokens = await exchangeCodeForTokens(code, codeVerifier, redirectUri);
           const info = await fetchUserInfo(tokens.access_token);
           

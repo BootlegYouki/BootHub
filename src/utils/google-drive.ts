@@ -7,6 +7,7 @@ import { FileSystemUploadType } from 'expo-file-system/legacy';
 
 // Google OAuth client IDs - loaded dynamically from environment variables
 export const CLIENT_ID_IOS = process.env.EXPO_PUBLIC_CLIENT_ID_IOS || '';
+export const CLIENT_ID_DEV_IOS = process.env.EXPO_PUBLIC_CLIENT_ID_DEV_IOS || '';
 export const CLIENT_ID_ANDROID = process.env.EXPO_PUBLIC_CLIENT_ID_ANDROID || '';
 export const CLIENT_ID_WEB = process.env.EXPO_PUBLIC_CLIENT_ID_WEB || '';
 
@@ -26,9 +27,26 @@ export const discovery = {
 };
 
 export const getClientId = (): string => {
-  if (Platform.OS === 'ios') return CLIENT_ID_IOS;
-  if (Platform.OS === 'android') return CLIENT_ID_ANDROID;
+  if (Platform.OS === 'ios') {
+    return __DEV__ ? (CLIENT_ID_DEV_IOS || CLIENT_ID_IOS) : CLIENT_ID_IOS;
+  }
+  if (Platform.OS === 'android') {
+    return CLIENT_ID_ANDROID || CLIENT_ID_WEB;
+  }
   return CLIENT_ID_WEB;
+};
+
+export const getRedirectScheme = (): string => {
+  if (Platform.OS === 'ios') {
+    const clientId = getClientId();
+    if (clientId) {
+      const parts = clientId.split('.');
+      if (parts.length > 0) {
+        return `com.googleusercontent.apps.${parts[0]}`;
+      }
+    }
+  }
+  return REDIRECT_SCHEME;
 };
 
 export interface GoogleUserInfo {
