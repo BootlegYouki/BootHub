@@ -613,23 +613,27 @@ function MainApp() {
     });
   };
 
-  useEffect(() => {
-    if (isPhotoSheetOpen) {
-      photoSheetHeight.value = withTiming(360, { duration: 250 });
-    } else {
-      photoSheetHeight.value = withTiming(0, { duration: 200 });
-    }
-  }, [isPhotoSheetOpen]);
-
   // Per-frame keyboard height — updated every native animation frame via JSI.
   // This is the "fake spacer" approach: the Animated.View at the bottom of the
   // screen grows to match the keyboard height, squeezing SafeAreaView upward
   // in perfect sync with the keyboard animation.
   const keyboard = useAnimatedKeyboard();
 
+  useEffect(() => {
+    if (isPhotoSheetOpen) {
+      if (keyboard.height.value > 0) {
+        photoSheetHeight.value = keyboard.height.value;
+      }
+      photoSheetHeight.value = withTiming(360, { duration: 250 });
+    } else {
+      photoSheetHeight.value = withTiming(0, { duration: 300 });
+    }
+  }, [isPhotoSheetOpen]);
+
   const bottomSpacerStyle = useAnimatedStyle(() => {
     const keyboardHeight = isFooterFocused ? keyboard.height.value : 0;
-    const height = Math.max(keyboardHeight, photoSheetHeight.value);
+    // Interpolate smoothly between 360 and the keyboard height to avoid any dip during transitions
+    const height = keyboardHeight + (360 - keyboardHeight) * (photoSheetHeight.value / 360);
     return {
       height: height,
     };
@@ -638,7 +642,7 @@ function MainApp() {
   const animatedBottomBarStyle = useAnimatedStyle(() => {
     const targetPadding = insets.bottom > 0 ? insets.bottom : 12;
     const keyboardHeight = isFooterFocused ? keyboard.height.value : 0;
-    const totalHeight = Math.max(keyboardHeight, photoSheetHeight.value);
+    const totalHeight = keyboardHeight + (360 - keyboardHeight) * (photoSheetHeight.value / 360);
     const padding = interpolate(
       totalHeight,
       [0, 50],
@@ -1283,39 +1287,9 @@ function MainApp() {
   const mainInputRef = useRef<TextInput>(null);
   const searchInputRef = useRef<TextInput>(null);
 
-  const [toast, setToast] = useState<{ label: string; caption: string } | null>(null);
-  const toastOpacity = useSharedValue(0);
-  const toastTranslateY = useSharedValue(20);
-
   const showToast = (label: string, caption: string) => {
-    setToast({ label, caption });
-    toastOpacity.value = 0;
-    toastTranslateY.value = 20;
-
-    toastOpacity.value = withTiming(1, { duration: 250 }, () => {
-      toastOpacity.value = withDelay(
-        2000,
-        withTiming(0, { duration: 250 }, (fin) => {
-          if (fin) {
-            runOnJS(setToast)(null);
-          }
-        })
-      );
-    });
-    toastTranslateY.value = withTiming(0, { duration: 250 }, () => {
-      toastTranslateY.value = withDelay(
-        2000,
-        withTiming(20, { duration: 250 })
-      );
-    });
+    // No-op: Toast notifications completely disabled
   };
-
-  const animatedToastStyle = useAnimatedStyle(() => {
-    return {
-      opacity: toastOpacity.value,
-      transform: [{ translateY: toastTranslateY.value }],
-    };
-  });
 
   useEffect(() => {
     if (editingItemId !== null) {
@@ -1500,7 +1474,21 @@ function MainApp() {
   const handleAddMultiplePhotos = async (uris: string[]) => {
     const savePhotos = async (folderId?: string) => {
       try {
-        const updated = await addMultiplePhotos(uris, folderId);
+        const persistentUris: string[] = [];
+        for (const uri of uris) {
+          if (uri.startsWith('file://') && (uri.includes('/Caches/') || uri.includes('/cache/'))) {
+            const fileName = uri.split('/').pop() || `photo_${Date.now()}.jpg`;
+            const dest = `${FileSystem.documentDirectory}${Date.now()}_${fileName}`;
+            await FileSystem.copyAsync({
+              from: uri,
+              to: dest,
+            });
+            persistentUris.push(dest);
+          } else {
+            persistentUris.push(uri);
+          }
+        }
+        const updated = await addMultiplePhotos(persistentUris, folderId);
         setItems(updated);
         setActiveTab('photo');
         scrollToTab('photo');
@@ -1535,7 +1523,7 @@ function MainApp() {
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ['images', 'videos'],
         allowsEditing: false,
-        quality: 1,
+        quality: 0.8,
       });
 
       if (result.canceled || !result.assets || result.assets.length === 0) {
@@ -1546,35 +1534,46 @@ function MainApp() {
       const isVideo = asset.type === 'video' || asset.uri.toLowerCase().endsWith('.mp4') || asset.uri.toLowerCase().endsWith('.mov');
 
       if (isVideo) {
-        const destinationUri = `${FileSystem.documentDirectory}${Date.now()}_video.mp4`;
-        await FileSystem.copyAsync({
-          from: asset.uri,
-          to: destinationUri,
-        });
-
-        const fileData = {
-          uri: destinationUri,
-          name: `video_${Date.now()}.mp4`,
-          size: 0,
-          mimeType: 'video/mp4',
-        };
-
-        const saveVideo = async (folderId?: string) => {
-          const updated = await addItem('file', JSON.stringify(fileData), folderId);
-          setItems(updated);
-          setActiveTab('file');
-          scrollToTab('file');
-          showToast(folderId ? 'Video added to folder!' : 'Video added!', fileData.name);
-        };
-
-        const folder = getActiveExpandedFolder();
-        if (folder) {
-          await saveVideo(folder.id);
-        } else {
-          await saveVideo();
+        let fileSize = 0;
+        try {
+          const info = await FileSystem.getInfoAsync(asset.uri);
+          if (info.exists) {
+            fileSize = info.size || 0;
+          }
+        } catch (err) {
+          console.warn('Failed to retrieve video file size:', err);
         }
+
+        const parsed: ParsedShare = {
+          type: 'file',
+          value: asset.uri,
+          name: `video_${Date.now()}.mp4`,
+          mimeType: 'video/mp4',
+          size: fileSize,
+        };
+        setPendingShare(parsed);
+        setIsShareSheetOpen(true);
       } else {
-        await handleAddMultiplePhotos([asset.uri]);
+        const { status: libStatus } = await MediaLibrary.requestPermissionsAsync();
+        let targetUri = asset.uri;
+        if (libStatus === 'granted') {
+          try {
+            const savedAsset = await MediaLibrary.createAssetAsync(asset.uri);
+            if (savedAsset && savedAsset.uri) {
+              targetUri = savedAsset.uri;
+            }
+          } catch (err) {
+            console.warn('Failed to save captured photo to media library:', err);
+          }
+        }
+        
+        // Open the preview drawer using the ShareImportSheet component
+        const parsed: ParsedShare = {
+          type: 'photo',
+          value: targetUri,
+        };
+        setPendingShare(parsed);
+        setIsShareSheetOpen(true);
       }
     } catch (e) {
       console.error('Failed to launch camera:', e);
@@ -2551,29 +2550,6 @@ function MainApp() {
           onMoveToFolder={() => handleMoveToFolder(contextMenuPhoto.item)}
           onRemoveFromFolder={() => handleSetItemFolder(contextMenuPhoto.item.id, undefined)}
         />
-      )}
-
-      {toast && (
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            {
-              position: 'absolute',
-              bottom: insets.bottom + 70,
-              left: 20,
-              right: 20,
-              zIndex: 2500,
-              alignItems: 'center',
-            },
-            animatedToastStyle,
-          ]}
-        >
-          <TuiContainer label={toast.label} accentBorder={true} style={{ paddingTop: 18, paddingBottom: 16 }}>
-            <TuiText size="sm" style={{ color: colors.foreground }} numberOfLines={2}>
-              {toast.caption}
-            </TuiText>
-          </TuiContainer>
-        </Animated.View>
       )}
 
 

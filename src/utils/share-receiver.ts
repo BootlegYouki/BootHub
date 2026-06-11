@@ -54,6 +54,13 @@ export const processSharedItem = async (parsed: ParsedShare): Promise<{ type: 'l
     }
 
     if (parsed.type === 'photo') {
+      const isSystemAsset = parsed.value.startsWith('ph://') || parsed.value.startsWith('assets-library://') || (parsed.value.startsWith('content://') && !parsed.value.includes('ImagePicker'));
+      if (isSystemAsset) {
+        await addItem('photo', parsed.value);
+        const fileName = parsed.value.split('/').pop() || `photo_${Date.now()}.jpg`;
+        return { type: 'photo', label: fileName };
+      }
+
       // Copy the photo to our app's document directory to ensure it is not deleted
       const fileName = parsed.value.split('/').pop() || `photo_${Date.now()}.jpg`;
       const destinationUri = `${FileSystem.documentDirectory}${Date.now()}_${fileName}`;
@@ -62,7 +69,7 @@ export const processSharedItem = async (parsed: ParsedShare): Promise<{ type: 'l
       let sourceUri = parsed.value;
       const isRemote = sourceUri.startsWith('http://') || sourceUri.startsWith('https://');
 
-      if (!isRemote && !sourceUri.startsWith('file://') && !sourceUri.startsWith('content://')) {
+      if (!isRemote && !sourceUri.startsWith('file://') && !sourceUri.startsWith('content://') && !sourceUri.startsWith('ph://') && !sourceUri.startsWith('assets-library://')) {
         sourceUri = `file://${sourceUri}`;
       }
 

@@ -246,6 +246,7 @@ export const PhotosScreen: React.FC<PhotosScreenProps> = ({
     topLevelItems,
     handleBack,
     handleOpenSubFolder,
+    breadcrumb,
   } = useFolderNavigation(sortedItems, expandedFolders, setExpandedFolders);
 
   // Calculate dynamic width for 3 columns with 8px gaps and 16px horizontal screen margins
@@ -261,8 +262,7 @@ export const PhotosScreen: React.FC<PhotosScreenProps> = ({
     return (
       <View style={{ width: '100%' }}>
         <FolderHeader
-          name={activeFolderName}
-          count={activeFolderChildren.length}
+          name={breadcrumb}
           onBack={handleBack}
         />
 

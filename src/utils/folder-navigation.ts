@@ -61,6 +61,39 @@ export const useFolderNavigation = (
     setExpandedFolders((prev) => ({ ...prev, [folderId]: !prev[folderId] }));
   };
 
+  const breadcrumb = useMemo(() => {
+    if (!activeFolder) return '';
+    
+    let tabRoot = '';
+    try {
+      const obj = JSON.parse(activeFolder.value);
+      const tab = obj.tab || 'folder';
+      tabRoot = tab.charAt(0).toUpperCase() + tab.slice(1) + 's';
+      if (tabRoot === 'Texts') tabRoot = 'Texts'; // preserve exact tab names
+    } catch {
+      tabRoot = 'Folders';
+    }
+    
+    const path: string[] = [];
+    let current: DumpItem | undefined = activeFolder;
+    while (current) {
+      try {
+        const details = JSON.parse(current.value);
+        path.unshift(details.name || 'Folder');
+      } catch {
+        path.unshift(current.label || 'Folder');
+      }
+      
+      if (current && current.folderId) {
+        current = sortedItems.find((x) => x.id === current.folderId);
+      } else {
+        current = undefined;
+      }
+    }
+    
+    return [tabRoot, ...path].join(' > ');
+  }, [activeFolder, sortedItems]);
+
   return {
     activeFolder,
     activeFolderName,
@@ -69,5 +102,6 @@ export const useFolderNavigation = (
     handleBack,
     handleOpenSubFolder,
     handleToggleFolder,
+    breadcrumb,
   };
 };

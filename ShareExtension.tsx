@@ -27,6 +27,7 @@ export default function ShareExtension(props: InitialProps) {
           // Send to main app via URL scheme
           const path = `share?type=${type}&value=${encodeURIComponent(value)}`;
           openHostApp(path);
+          close();
         } else {
           // If no content found, close the extension
           close();

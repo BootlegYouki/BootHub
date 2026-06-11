@@ -130,14 +130,14 @@ export const LinksScreen: React.FC<LinksScreenProps> = ({
     topLevelItems,
     handleBack,
     handleOpenSubFolder,
+    breadcrumb,
   } = useFolderNavigation(sortedItems, expandedFolders, setExpandedFolders);
 
   if (activeFolder) {
     return (
       <>
         <FolderHeader
-          name={activeFolderName}
-          count={activeFolderChildren.length}
+          name={breadcrumb}
           onBack={handleBack}
         />
 

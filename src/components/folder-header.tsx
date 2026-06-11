@@ -6,7 +6,7 @@ import { useTheme } from '../theme/theme-provider';
 
 interface FolderHeaderProps {
   name: string;
-  count: number;
+  count?: number;
   onBack: () => void;
 }
 
@@ -18,21 +18,18 @@ export const FolderHeader: React.FC<FolderHeaderProps> = ({ name, count, onBack 
       <Pressable
         onPress={onBack}
         style={({ pressed }) => [
-          styles.backBtn,
+          styles.folderTitleContainer,
           {
             borderColor: colors.primary,
-            backgroundColor: pressed ? colors.primary + '25' : 'transparent',
+            backgroundColor: pressed ? colors.primary + '25' : colors.card,
           },
         ]}
       >
-        <ArrowLeft size={16} color={colors.primary} />
-      </Pressable>
-      <View style={[styles.folderTitleContainer, { borderColor: colors.primary, backgroundColor: colors.card }]}>
-        <FolderOpen size={16} color={colors.primary} style={{ marginRight: 6 }} />
-        <TuiText weight="bold" size="sm" style={{ color: colors.foreground }}>
-          {name} ({count})
+        <FolderOpen size={18} color={colors.primary} style={{ marginRight: 10 }} />
+        <TuiText weight="bold" size="md" style={{ color: colors.foreground }}>
+          {name}
         </TuiText>
-      </View>
+      </Pressable>
     </View>
   );
 };

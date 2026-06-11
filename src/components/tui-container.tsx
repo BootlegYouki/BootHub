@@ -42,6 +42,15 @@ export const TuiContainer: React.FC<TuiContainerProps> = ({
 
   const scale = useSharedValue(1);
 
+  const scaleTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const cancelScaleTimer = () => {
+    if (scaleTimer.current) {
+      clearTimeout(scaleTimer.current);
+      scaleTimer.current = null;
+    }
+  };
+
   const showLegend = !!(label || badge);
 
   const animatedPressableStyle = useAnimatedStyle(() => {
@@ -60,15 +69,22 @@ export const TuiContainer: React.FC<TuiContainerProps> = ({
 
   return (
     <AnimatedPressable
-      onPress={onPress}
+      onPress={() => {
+        cancelScaleTimer();
+        if (onPress) onPress();
+      }}
       onLongPress={onLongPress}
       delayLongPress={350}
       onPressIn={() => {
         if (onLongPress) {
-          scale.value = withTiming(1.03, { duration: 150 });
+          cancelScaleTimer();
+          scaleTimer.current = setTimeout(() => {
+            scale.value = withTiming(1.03, { duration: 150 });
+          }, 150);
         }
       }}
       onPressOut={() => {
+        cancelScaleTimer();
         scale.value = withTiming(1, { duration: 150 });
       }}
       disabled={!onPress && !onLongPress}
