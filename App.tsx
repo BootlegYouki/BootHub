@@ -60,6 +60,7 @@ import {
   FolderPlus,
   Settings,
   Share as LucideShare,
+  Camera,
 } from 'lucide-react-native';
 import RNShare from 'react-native-share';
 import * as ImagePicker from 'expo-image-picker';
@@ -1517,6 +1518,70 @@ function MainApp() {
     }
   };
 
+  const handleLaunchCamera = async () => {
+    if (isLocked()) return;
+
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Camera access is needed to capture photos and record videos.');
+      return;
+    }
+
+    try {
+      setActiveFullscreenPhotoIndex(null);
+      setIsPhotoSheetOpen(false);
+      Keyboard.dismiss();
+
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ['images', 'videos'],
+        allowsEditing: false,
+        quality: 1,
+      });
+
+      if (result.canceled || !result.assets || result.assets.length === 0) {
+        return;
+      }
+
+      const asset = result.assets[0];
+      const isVideo = asset.type === 'video' || asset.uri.toLowerCase().endsWith('.mp4') || asset.uri.toLowerCase().endsWith('.mov');
+
+      if (isVideo) {
+        const destinationUri = `${FileSystem.documentDirectory}${Date.now()}_video.mp4`;
+        await FileSystem.copyAsync({
+          from: asset.uri,
+          to: destinationUri,
+        });
+
+        const fileData = {
+          uri: destinationUri,
+          name: `video_${Date.now()}.mp4`,
+          size: 0,
+          mimeType: 'video/mp4',
+        };
+
+        const saveVideo = async (folderId?: string) => {
+          const updated = await addItem('file', JSON.stringify(fileData), folderId);
+          setItems(updated);
+          setActiveTab('file');
+          scrollToTab('file');
+          showToast(folderId ? 'Video added to folder!' : 'Video added!', fileData.name);
+        };
+
+        const folder = getActiveExpandedFolder();
+        if (folder) {
+          await saveVideo(folder.id);
+        } else {
+          await saveVideo();
+        }
+      } else {
+        await handleAddMultiplePhotos([asset.uri]);
+      }
+    } catch (e) {
+      console.error('Failed to launch camera:', e);
+      Alert.alert('Camera Error', 'An error occurred while launching the camera.');
+    }
+  };
+
   const handleSubmit = async () => {
     if (isLocked()) return;
     Keyboard.dismiss();
@@ -2352,10 +2417,10 @@ function MainApp() {
                     </Pressable>
                   </View>
 
-                  {/* Sort Button - Animation Removed */}
+                  {/* Camera Button */}
                   <View>
                     <Pressable
-                      onPress={() => setPhotoSheetTriggerSort((p) => p + 1)}
+                      onPress={handleLaunchCamera}
                       hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
                       style={({ pressed }) => [
                         styles.iconBtn,
@@ -2365,11 +2430,7 @@ function MainApp() {
                         },
                       ]}
                     >
-                      {photoSheetState.sortAscending ? (
-                        <ArrowUp size={16} color={colors.primary} />
-                      ) : (
-                        <ArrowDown size={16} color={colors.primary} />
-                      )}
+                      <Camera size={16} color={colors.primary} />
                     </Pressable>
                   </View>
                 </View>

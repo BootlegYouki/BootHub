@@ -349,7 +349,7 @@
       "label": "MainApp()",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L108",
+      "source_location": "L109",
       "id": "boothub_app_mainapp",
       "community": 0,
       "norm_label": "mainapp()"
@@ -358,7 +358,7 @@
       "label": "App()",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L2528",
+      "source_location": "L2589",
       "id": "boothub_app_app",
       "community": 0,
       "norm_label": "app()"
@@ -367,7 +367,7 @@
       "label": "styles",
       "file_type": "code",
       "source_file": "App.tsx",
-      "source_location": "L2542",
+      "source_location": "L2603",
       "id": "boothub_app_styles",
       "community": 0,
       "norm_label": "styles"
@@ -3085,7 +3085,7 @@
       "label": "deleteItem()",
       "file_type": "code",
       "source_file": "src/utils/storage.ts",
-      "source_location": "L95",
+      "source_location": "L102",
       "id": "utils_storage_deleteitem",
       "community": 8,
       "norm_label": "deleteitem()"
@@ -3094,7 +3094,7 @@
       "label": "updateItem()",
       "file_type": "code",
       "source_file": "src/utils/storage.ts",
-      "source_location": "L184",
+      "source_location": "L191",
       "id": "utils_storage_updateitem",
       "community": 8,
       "norm_label": "updateitem()"
@@ -3103,7 +3103,7 @@
       "label": "addMultiplePhotos()",
       "file_type": "code",
       "source_file": "src/utils/storage.ts",
-      "source_location": "L233",
+      "source_location": "L245",
       "id": "utils_storage_addmultiplephotos",
       "community": 8,
       "norm_label": "addmultiplephotos()"
@@ -3112,7 +3112,7 @@
       "label": "setItemFolder()",
       "file_type": "code",
       "source_file": "src/utils/storage.ts",
-      "source_location": "L273",
+      "source_location": "L285",
       "id": "utils_storage_setitemfolder",
       "community": 8,
       "norm_label": "setitemfolder()"
@@ -3397,19 +3397,10 @@
       "norm_label": "deleteitemfilesfromdrive()"
     },
     {
-      "label": "askConflictResolution()",
-      "file_type": "code",
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L812",
-      "id": "utils_sync_engine_askconflictresolution",
-      "community": 8,
-      "norm_label": "askconflictresolution()"
-    },
-    {
       "label": "pullChangesFromDrive()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L836",
+      "source_location": "L815",
       "id": "utils_sync_engine_pullchangesfromdrive",
       "community": 8,
       "norm_label": "pullchangesfromdrive()"
@@ -3557,6 +3548,15 @@
       "id": "workflows_graphify_workflow_graphify",
       "community": 11,
       "norm_label": "workflow: graphify"
+    },
+    {
+      "label": "askConflictResolution()",
+      "file_type": "code",
+      "source_file": "src/utils/sync-engine.ts",
+      "source_location": "L812",
+      "community": 8,
+      "norm_label": "askconflictresolution()",
+      "id": "utils_sync_engine_askconflictresolution"
     },
     {
       "label": "README.md",
@@ -11399,9 +11399,9 @@
       "source_file": "src/utils/google-drive.ts",
       "source_location": "L183",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_subfolderidcache",
-      "confidence_score": 1.0
+      "target": "utils_google_drive_subfolderidcache"
     },
     {
       "relation": "contains",
@@ -13438,5 +13438,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "c88cae70528ab18d87361bad0aa962ecb9c1772d"
+  "built_at_commit": "10f185cebb3a06d49c5c6c9b96b1ccf68e146548"
 }
