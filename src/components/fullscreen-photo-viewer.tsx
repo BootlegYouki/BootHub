@@ -154,20 +154,39 @@ export const FullscreenPhotoViewer: React.FC<FullscreenPhotoViewerProps> = ({
     }
   }, [activeFullscreenPhotoIndex]);
 
+  const startAnimationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const startZoomInAnimation = () => {
+    if (startAnimationTimeoutRef.current) {
+      clearTimeout(startAnimationTimeoutRef.current);
+      startAnimationTimeoutRef.current = null;
+    }
+    if (animationProgress.value === 0) {
+      animationProgress.value = withTiming(1, { duration: 250 }, () => {
+        zoomPhase.value = 0;
+        runOnJS(setIsZooming)(null);
+        // Fade controls in after zoom fully completes
+        controlsOpacity.value = withTiming(1, { duration: 120 });
+      });
+    }
+  };
+
   // Trigger zoom-in animation only after the fullscreen overlay has mounted
   useEffect(() => {
     if (isZooming === 'in') {
       animationProgress.value = 0;
       controlsOpacity.value = 0;
-      requestAnimationFrame(() => {
-        animationProgress.value = withTiming(1, { duration: 250 }, () => {
-          zoomPhase.value = 0;
-          runOnJS(setIsZooming)(null);
-          // Fade controls in after zoom fully completes
-          controlsOpacity.value = withTiming(1, { duration: 120 });
-        });
-      });
+      
+      // Fallback timeout to guarantee the animation runs even if onLoad doesn't fire
+      startAnimationTimeoutRef.current = setTimeout(() => {
+        startZoomInAnimation();
+      }, 100);
     }
+    return () => {
+      if (startAnimationTimeoutRef.current) {
+        clearTimeout(startAnimationTimeoutRef.current);
+      }
+    };
   }, [isZooming]);
 
   // Reset zoomPhase after the overlay has fully unmounted
@@ -354,44 +373,53 @@ export const FullscreenPhotoViewer: React.FC<FullscreenPhotoViewerProps> = ({
   });
 
   const animatedTransitionStyle = useAnimatedStyle(() => {
-    const left = interpolate(
-      animationProgress.value,
+    const progress = animationProgress.value;
+
+    const scaleX = interpolate(
+      progress,
       [0, 1],
-      [startX.value, endX.value]
+      [startWidth.value / Math.max(endWidth.value, 1), 1]
     );
-    const top = interpolate(
-      animationProgress.value,
+    const scaleY = interpolate(
+      progress,
       [0, 1],
-      [startY.value, endY.value]
-    );
-    const width = interpolate(
-      animationProgress.value,
-      [0, 1],
-      [startWidth.value, endWidth.value]
-    );
-    const height = interpolate(
-      animationProgress.value,
-      [0, 1],
-      [startHeight.value, endHeight.value]
+      [startHeight.value / Math.max(endHeight.value, 1), 1]
     );
 
-    const borderWidth = interpolate(animationProgress.value, [0, 1], [1.5, 0]);
-    const padding = interpolate(animationProgress.value, [0, 1], [6, 0]);
+    const centerX_start = startX.value + startWidth.value / 2;
+    const centerX_end = endX.value + endWidth.value / 2;
+    const centerY_start = startY.value + startHeight.value / 2;
+    const centerY_end = endY.value + endHeight.value / 2;
+
+    const translateX_start = centerX_start - centerX_end;
+    const translateY_start = centerY_start - centerY_end;
+
+    const translateX = interpolate(progress, [0, 1], [translateX_start, 0]);
+    const translateY_val = interpolate(progress, [0, 1], [translateY_start, 0]);
+
+    const borderWidth = interpolate(progress, [0, 1], [1.5, 0]);
+    const padding = interpolate(progress, [0, 1], [6, 0]);
 
     const opacity = isZooming ? 1 : 0;
 
     return {
       position: 'absolute',
-      left,
-      top,
-      width,
-      height,
+      left: endX.value,
+      top: endY.value,
+      width: endWidth.value,
+      height: endHeight.value,
       borderWidth,
       padding,
       borderColor: colors.primary + (isDark ? '40' : '26'),
       backgroundColor: 'transparent',
       overflow: 'hidden',
       opacity,
+      transform: [
+        { translateX },
+        { translateY: translateY_val },
+        { scaleX },
+        { scaleY },
+      ],
     };
   });
 
@@ -478,9 +506,10 @@ export const FullscreenPhotoViewer: React.FC<FullscreenPhotoViewerProps> = ({
               >
                 <Image
                   source={{ uri: ensureFileUri(item.value) }}
-                  style={{ width: '100%', height: '100%' }}
+                  style={{ width: windowWidth, height: windowHeight }}
                   contentFit="contain"
                   transition={0}
+                  cachePolicy="memory-disk"
                 />
               </Pressable>
             </View>
@@ -496,6 +525,8 @@ export const FullscreenPhotoViewer: React.FC<FullscreenPhotoViewerProps> = ({
           style={{ width: '100%', height: '100%' }}
           contentFit="cover"
           transition={0}
+          cachePolicy="memory-disk"
+          onLoad={startZoomInAnimation}
         />
       </Animated.View>
 

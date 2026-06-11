@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
 import { enqueueSyncTask, enqueueSyncTasks, processSyncQueue } from './sync-engine';
+import { optimizePhoto } from './image-optimizer';
 
 export type DumpType = 'link' | 'text' | 'photo' | 'file' | 'folder';
 
@@ -13,6 +14,8 @@ export interface DumpItem {
   syncState?: 'synced' | 'pending' | 'error';
   driveFileId?: string;
   driveMetaFileId?: string;
+  width?: number;
+  height?: number;
 }
 
 const STORAGE_KEY = '@boothub_dump_items';
@@ -242,7 +245,10 @@ export const updateItem = async (id: string, value: string): Promise<DumpItem[]>
   }
 };
 
-export const addMultiplePhotos = async (uris: string[], folderId?: string): Promise<DumpItem[]> => {
+export const addMultiplePhotos = async (
+  uris: (string | { uri: string; width?: number; height?: number })[],
+  folderId?: string
+): Promise<DumpItem[]> => {
   try {
     const currentItems = await getItems();
     
@@ -252,14 +258,28 @@ export const addMultiplePhotos = async (uris: string[], folderId?: string): Prom
     const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
     const label = `${dateStr} @ ${timeStr}`;
 
-    const newItems: DumpItem[] = uris.map((uri, index) => ({
-      id: `${Date.now()}_${index}`,
-      type: 'photo',
-      label,
-      value: uri,
-      ...(folderId ? { folderId } : {}),
-      syncState: 'pending',
-    }));
+    const newItems: DumpItem[] = await Promise.all(
+      uris.map(async (item, index) => {
+        const isObject = typeof item === 'object' && item !== null;
+        const uri = isObject ? item.uri : item;
+        const width = isObject ? item.width : undefined;
+        const height = isObject ? item.height : undefined;
+
+        // Compress and downscale the photo physically on the device
+        const optimized = await optimizePhoto(uri, width, height);
+
+        return {
+          id: `${Date.now()}_${index}`,
+          type: 'photo',
+          label,
+          value: optimized.uri,
+          ...(folderId ? { folderId } : {}),
+          syncState: 'pending',
+          width: optimized.width,
+          height: optimized.height,
+        };
+      })
+    );
 
     const updated = [...newItems, ...currentItems];
     await saveItems(updated);

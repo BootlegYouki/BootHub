@@ -18,7 +18,7 @@ import { TuiText } from './tui-text';
 
 interface PhotoPickerSheetProps {
   onClose: () => void;
-  onAddPhotos: (uris: string[]) => void;
+  onAddPhotos: (uris: (string | { uri: string; width?: number; height?: number })[]) => void;
   triggerSelectAll?: number;
   triggerSort?: number;
   onStateChange?: (state: { isAllSelected: boolean; sortAscending: boolean }) => void;
@@ -179,7 +179,15 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
 
   const handleConfirmSelection = () => {
     if (selectedUris.length > 0) {
-      onAddPhotos(selectedUris);
+      const selectedPhotos = selectedUris.map((uri) => {
+        const photo = photos.find((p) => p.uri === uri);
+        return {
+          uri,
+          width: photo?.width,
+          height: photo?.height,
+        };
+      });
+      onAddPhotos(selectedPhotos as any);
       onClose();
     }
   };
@@ -190,12 +198,16 @@ export const PhotoPickerSheet: React.FC<PhotoPickerSheetProps> = ({
         mediaTypes: ['images'],
         allowsEditing: false,
         allowsMultipleSelection: true,
-        quality: 1,
+        quality: 0.85,
       });
 
       if (!result.canceled && result.assets && result.assets.length > 0) {
-        const uris = result.assets.map((asset) => asset.uri);
-        onAddPhotos(uris);
+        const selectedPhotos = result.assets.map((asset) => ({
+          uri: asset.uri,
+          width: asset.width,
+          height: asset.height,
+        }));
+        onAddPhotos(selectedPhotos as any);
         onClose();
       }
     } catch (e) {

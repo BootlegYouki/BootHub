@@ -145,7 +145,8 @@ const PhotoItem: React.FC<PhotoItemProps> = ({
         {
           width: itemWidth,
           height: itemWidth,
-          borderColor: isSelected ? colors.primary : colors.primary + (isDark ? '40' : '26'),
+          borderWidth: isSelected ? 1.5 : 0,
+          borderColor: colors.primary,
           backgroundColor: colors.card,
         },
         isSelected && { backgroundColor: isDark ? '#27272A' : '#E4E4E7' },
@@ -156,9 +157,10 @@ const PhotoItem: React.FC<PhotoItemProps> = ({
       <View style={styles.imageWrapper} pointerEvents="none">
         <Image
           source={{ uri: ensureFileUri(item.value) }}
-          style={styles.photoImage}
+          style={[styles.photoImage, { width: itemWidth, height: itemWidth }]}
           contentFit="cover"
           transition={0}
+          cachePolicy="memory-disk"
         />
         {isSelected && (
           <View
@@ -402,8 +404,7 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
   },
   photoCard: {
-    borderWidth: 1.5,
-    padding: 6,
+    overflow: 'hidden',
   },
   imageWrapper: {
     flex: 1,
