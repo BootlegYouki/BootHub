@@ -809,27 +809,6 @@ export const deleteItemFilesFromDrive = async (accessToken: string, itemId: stri
   }
 };
 
-const askConflictResolution = (count: number): Promise<'follow_drive' | 'follow_phone'> => {
-  return new Promise((resolve) => {
-    Alert.alert(
-      'Sync Conflict Detected',
-      `We found ${count} item${count > 1 ? 's' : ''} that were deleted on Google Drive but still exist on this device. Would you like to restore them to the cloud or remove them from this device?`,
-      [
-        {
-          text: 'Restore to Cloud',
-          onPress: () => resolve('follow_phone'),
-        },
-        {
-          text: 'Remove from Device',
-          onPress: () => resolve('follow_drive'),
-          style: 'destructive',
-        },
-      ],
-      { cancelable: false }
-    );
-  });
-};
-
 /**
  * Inbound synchronization: downloads new/updated items and folder structures from Google Drive.
  */
@@ -885,9 +864,7 @@ export const pullChangesFromDrive = async (): Promise<void> => {
     );
 
     let resolveAction: 'follow_drive' | 'follow_phone' = 'follow_drive';
-    if (itemsDeletedRemotely.length > 0) {
-      resolveAction = await askConflictResolution(itemsDeletedRemotely.length);
-    }
+    // Remote deletions (e.g. from desktop) automatically propagate locally to keep sync seamless.
 
     const updatedLocalItems: DumpItem[] = [];
 
@@ -1004,18 +981,7 @@ export const pullChangesFromDrive = async (): Promise<void> => {
 
     await saveItems(updatedLocalItems);
 
-    // If they chose to restore the items, queue the upload tasks
-    if (resolveAction === 'follow_phone' && itemsDeletedRemotely.length > 0) {
-      const tasksToEnqueue = itemsDeletedRemotely.map((item) => ({
-        action: 'UPLOAD' as const,
-        itemId: item.id,
-        itemType: item.type,
-        extras: { fileUri: item.type === 'photo' || item.type === 'file' ? item.value : undefined },
-      }));
-
-      await enqueueSyncTasks(tasksToEnqueue);
-      processSyncQueue().catch((e) => console.error('Failed to run sync after resolving remote deletion conflict:', e));
-    }
+    // No-op: resolveAction is always 'follow_drive' now, so no items are ever restored.
   } catch (err) {
     console.error('Failed to pull changes from Google Drive:', err);
     throw err;
