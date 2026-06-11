@@ -396,13 +396,6 @@ function MainApp() {
     const photos = items.filter((item) => item.type === 'photo');
     photos.forEach(async (photo) => {
       if (!imageSizes[photo.id]) {
-        if (photo.width && photo.height) {
-          setImageSizes((prev) => {
-            if (prev[photo.id]) return prev;
-            return { ...prev, [photo.id]: { width: photo.width!, height: photo.height! } };
-          });
-          return;
-        }
         const uri = photo.value;
         if (uri.startsWith('ph://')) {
           try {
@@ -1504,9 +1497,7 @@ function MainApp() {
     }
   };
 
-  const handleAddMultiplePhotos = async (
-    uris: (string | { uri: string; width?: number; height?: number })[]
-  ) => {
+  const handleAddMultiplePhotos = async (uris: string[]) => {
     const savePhotos = async (folderId?: string) => {
       try {
         const updated = await addMultiplePhotos(uris, folderId);
@@ -1544,7 +1535,7 @@ function MainApp() {
       const result = await ImagePicker.launchCameraAsync({
         mediaTypes: ['images', 'videos'],
         allowsEditing: false,
-        quality: 0.85,
+        quality: 1,
       });
 
       if (result.canceled || !result.assets || result.assets.length === 0) {
@@ -1583,7 +1574,7 @@ function MainApp() {
           await saveVideo();
         }
       } else {
-        await handleAddMultiplePhotos([{ uri: asset.uri, width: asset.width, height: asset.height }]);
+        await handleAddMultiplePhotos([asset.uri]);
       }
     } catch (e) {
       console.error('Failed to launch camera:', e);

@@ -492,7 +492,7 @@ export const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
             left: menuLeft,
             top: menuTop,
             width: menuWidth,
-            height: menuHeight + 3,
+            height: menuHeight,
             zIndex: 1700,
             borderRadius: 0, // No radius!
             borderWidth: 1.5,
