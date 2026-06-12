@@ -27,7 +27,11 @@ export default function ShareExtension(props: InitialProps) {
           // Send to main app via URL scheme
           const path = `share?type=${type}&value=${encodeURIComponent(value)}`;
           openHostApp(path);
-          close();
+          // Wait a short delay to ensure the OS registers and starts launching the host app,
+          // then close the extension so it doesn't stay stuck on the loading spinner.
+          setTimeout(() => {
+            close();
+          }, 800);
         } else {
           // If no content found, close the extension
           close();

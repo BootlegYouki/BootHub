@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { File, Link2, FileText, Folder, Check, Square } from 'lucide-react-native';
+import * as MediaLibrary from 'expo-media-library';
 
 import { useTheme } from '../theme/theme-provider';
 import { TuiText } from './tui-text';
@@ -57,21 +58,39 @@ export const ShareImportSheet: React.FC<ShareImportSheetProps> = ({
     if (parsedShare.type === 'photo') {
       const uri = ensureFileUri(parsedShare.value);
       console.log('[ShareImportSheet] Fetching image size for:', uri);
-      RNImage.getSize(
-        uri,
-        (w, h) => {
-          console.log('[ShareImportSheet] getSize success:', w, 'x', h);
-          if (w > 0 && h > 0) {
-            setAspectRatio(w / h);
-          } else {
+      if (uri.startsWith('ph://')) {
+        const fetchPhSize = async () => {
+          try {
+            const assetId = uri.slice(5);
+            const assetInfo = await MediaLibrary.getAssetInfoAsync(assetId);
+            if (assetInfo && assetInfo.width > 0 && assetInfo.height > 0) {
+              setAspectRatio(assetInfo.width / assetInfo.height);
+            } else {
+              setAspectRatio(1);
+            }
+          } catch (err) {
+            console.warn('[ShareImportSheet] Failed to get ph:// asset info:', err);
             setAspectRatio(1);
           }
-        },
-        (err) => {
-          console.warn('[ShareImportSheet] getSize error:', err, 'for URI:', uri);
-          setAspectRatio(1); // fallback to square to avoid loading forever
-        }
-      );
+        };
+        fetchPhSize();
+      } else {
+        RNImage.getSize(
+          uri,
+          (w, h) => {
+            console.log('[ShareImportSheet] getSize success:', w, 'x', h);
+            if (w > 0 && h > 0) {
+              setAspectRatio(w / h);
+            } else {
+              setAspectRatio(1);
+            }
+          },
+          (err) => {
+            console.warn('[ShareImportSheet] getSize error:', err, 'for URI:', uri);
+            setAspectRatio(1); // fallback to square to avoid loading forever
+          }
+        );
+      }
     }
   }, [parsedShare]);
 
