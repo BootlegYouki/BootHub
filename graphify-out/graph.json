@@ -351,7 +351,7 @@
       "source_file": "App.tsx",
       "source_location": "L109",
       "id": "boothub_app_mainapp",
-      "community": 21,
+      "community": 0,
       "norm_label": "mainapp()"
     },
     {
@@ -1075,13 +1075,13 @@
       "norm_label": "withhostappschemefix.js"
     },
     {
-      "label": "{ withDangerousMod }",
+      "label": "{ withInfoPlist }",
       "file_type": "code",
       "source_file": "plugins/withHostAppSchemeFix.js",
       "source_location": "L1",
-      "id": "plugins_withhostappschemefix_withdangerousmod",
+      "id": "plugins_withhostappschemefix_withinfoplist",
       "community": 26,
-      "norm_label": "{ withdangerousmod }"
+      "norm_label": "{ withinfoplist }"
     },
     {
       "label": "fs",
@@ -1251,7 +1251,7 @@
       "source_file": "src/components/context-menu-overlay.tsx",
       "source_location": "L1",
       "id": "src_components_context_menu_overlay_tsx",
-      "community": 7,
+      "community": 2,
       "norm_label": "context-menu-overlay.tsx"
     },
     {
@@ -1260,7 +1260,7 @@
       "source_file": "src/components/context-menu-overlay.tsx",
       "source_location": "L27",
       "id": "components_context_menu_overlay_contextmenuoverlayprops",
-      "community": 7,
+      "community": 2,
       "norm_label": "contextmenuoverlayprops"
     },
     {
@@ -1269,7 +1269,7 @@
       "source_file": "src/components/context-menu-overlay.tsx",
       "source_location": "L39",
       "id": "components_context_menu_overlay_contextmenuoverlay",
-      "community": 19,
+      "community": 2,
       "norm_label": "contextmenuoverlay()"
     },
     {
@@ -1278,7 +1278,7 @@
       "source_file": "src/components/context-menu-overlay.tsx",
       "source_location": "L539",
       "id": "components_context_menu_overlay_styles",
-      "community": 7,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -1395,7 +1395,7 @@
       "source_file": "src/components/folder-picker-sheet.tsx",
       "source_location": "L17",
       "id": "components_folder_picker_sheet_folderpickersheetprops",
-      "community": 23,
+      "community": 8,
       "norm_label": "folderpickersheetprops"
     },
     {
@@ -1431,7 +1431,7 @@
       "source_file": "src/components/fullscreen-photo-viewer.tsx",
       "source_location": "L1",
       "id": "src_components_fullscreen_photo_viewer_tsx",
-      "community": 19,
+      "community": 2,
       "norm_label": "fullscreen-photo-viewer.tsx"
     },
     {
@@ -1440,7 +1440,7 @@
       "source_file": "src/components/fullscreen-photo-viewer.tsx",
       "source_location": "L27",
       "id": "components_fullscreen_photo_viewer_fullscreenphotoviewerprops",
-      "community": 7,
+      "community": 2,
       "norm_label": "fullscreenphotoviewerprops"
     },
     {
@@ -1449,7 +1449,7 @@
       "source_file": "src/components/fullscreen-photo-viewer.tsx",
       "source_location": "L38",
       "id": "components_fullscreen_photo_viewer_calculatefullscreenimagebounds",
-      "community": 19,
+      "community": 2,
       "norm_label": "calculatefullscreenimagebounds()"
     },
     {
@@ -1458,7 +1458,7 @@
       "source_file": "src/components/fullscreen-photo-viewer.tsx",
       "source_location": "L69",
       "id": "components_fullscreen_photo_viewer_fullscreenphotoviewer",
-      "community": 19,
+      "community": 2,
       "norm_label": "fullscreenphotoviewer()"
     },
     {
@@ -1467,7 +1467,7 @@
       "source_file": "src/components/fullscreen-photo-viewer.tsx",
       "source_location": "L629",
       "id": "components_fullscreen_photo_viewer_styles",
-      "community": 19,
+      "community": 2,
       "norm_label": "styles"
     },
     {
@@ -1611,7 +1611,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L1",
       "id": "src_components_photo_picker_sheet_tsx",
-      "community": 2,
+      "community": 19,
       "norm_label": "photo-picker-sheet.tsx"
     },
     {
@@ -1620,7 +1620,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L19",
       "id": "components_photo_picker_sheet_photopickersheetprops",
-      "community": 2,
+      "community": 19,
       "norm_label": "photopickersheetprops"
     },
     {
@@ -1629,7 +1629,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L27",
       "id": "components_photo_picker_sheet_width_screenwidth",
-      "community": 2,
+      "community": 19,
       "norm_label": "{ width: screenwidth }"
     },
     {
@@ -1638,7 +1638,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L32",
       "id": "components_photo_picker_sheet_photopickersheet",
-      "community": 2,
+      "community": 19,
       "norm_label": "photopickersheet()"
     },
     {
@@ -1647,7 +1647,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L328",
       "id": "components_photo_picker_sheet_styles",
-      "community": 2,
+      "community": 19,
       "norm_label": "styles"
     },
     {
@@ -1917,7 +1917,7 @@
       "source_file": "src/components/tui-checkbox.tsx",
       "source_location": "L1",
       "id": "src_components_tui_checkbox_tsx",
-      "community": 15,
+      "community": 28,
       "norm_label": "tui-checkbox.tsx"
     },
     {
@@ -1926,7 +1926,7 @@
       "source_file": "src/components/tui-checkbox.tsx",
       "source_location": "L7",
       "id": "components_tui_checkbox_tuicheckboxprops",
-      "community": 15,
+      "community": 28,
       "norm_label": "tuicheckboxprops"
     },
     {
@@ -1935,7 +1935,7 @@
       "source_file": "src/components/tui-checkbox.tsx",
       "source_location": "L14",
       "id": "components_tui_checkbox_tuicheckbox",
-      "community": 15,
+      "community": 28,
       "norm_label": "tuicheckbox()"
     },
     {
@@ -1944,7 +1944,7 @@
       "source_file": "src/components/tui-checkbox.tsx",
       "source_location": "L99",
       "id": "components_tui_checkbox_styles",
-      "community": 15,
+      "community": 28,
       "norm_label": "styles"
     },
     {
@@ -1953,7 +1953,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L1",
       "id": "src_components_tui_container_tsx",
-      "community": 2,
+      "community": 19,
       "norm_label": "tui-container.tsx"
     },
     {
@@ -1962,7 +1962,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L11",
       "id": "components_tui_container_tuicontainerprops",
-      "community": 2,
+      "community": 19,
       "norm_label": "tuicontainerprops"
     },
     {
@@ -1971,7 +1971,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L25",
       "id": "components_tui_container_animatedpressable",
-      "community": 2,
+      "community": 19,
       "norm_label": "animatedpressable"
     },
     {
@@ -1980,7 +1980,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L27",
       "id": "components_tui_container_tuicontainer",
-      "community": 2,
+      "community": 19,
       "norm_label": "tuicontainer()"
     },
     {
@@ -1989,7 +1989,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L182",
       "id": "components_tui_container_styles",
-      "community": 2,
+      "community": 19,
       "norm_label": "styles"
     },
     {
@@ -2079,7 +2079,7 @@
       "source_file": "src/components/tui-input.tsx",
       "source_location": "L1",
       "id": "src_components_tui_input_tsx",
-      "community": 31,
+      "community": 23,
       "norm_label": "tui-input.tsx"
     },
     {
@@ -2088,7 +2088,7 @@
       "source_file": "src/components/tui-input.tsx",
       "source_location": "L7",
       "id": "components_tui_input_tuiinputprops",
-      "community": 31,
+      "community": 23,
       "norm_label": "tuiinputprops"
     },
     {
@@ -2097,7 +2097,7 @@
       "source_file": "src/components/tui-input.tsx",
       "source_location": "L14",
       "id": "components_tui_input_tuiinput",
-      "community": 31,
+      "community": 23,
       "norm_label": "tuiinput()"
     },
     {
@@ -2106,7 +2106,7 @@
       "source_file": "src/components/tui-input.tsx",
       "source_location": "L171",
       "id": "components_tui_input_styles",
-      "community": 31,
+      "community": 23,
       "norm_label": "styles"
     },
     {
@@ -2115,7 +2115,7 @@
       "source_file": "src/components/tui-nav.tsx",
       "source_location": "L1",
       "id": "src_components_tui_nav_tsx",
-      "community": 22,
+      "community": 0,
       "norm_label": "tui-nav.tsx"
     },
     {
@@ -2124,7 +2124,7 @@
       "source_file": "src/components/tui-nav.tsx",
       "source_location": "L8",
       "id": "components_tui_nav_screentype",
-      "community": 22,
+      "community": 0,
       "norm_label": "screentype"
     },
     {
@@ -2133,7 +2133,7 @@
       "source_file": "src/components/tui-nav.tsx",
       "source_location": "L10",
       "id": "components_tui_nav_tuitabbarprops",
-      "community": 22,
+      "community": 0,
       "norm_label": "tuitabbarprops"
     },
     {
@@ -2142,7 +2142,7 @@
       "source_file": "src/components/tui-nav.tsx",
       "source_location": "L19",
       "id": "components_tui_nav_tuitabbar",
-      "community": 22,
+      "community": 0,
       "norm_label": "tuitabbar()"
     },
     {
@@ -2151,7 +2151,7 @@
       "source_file": "src/components/tui-nav.tsx",
       "source_location": "L274",
       "id": "components_tui_nav_styles",
-      "community": 22,
+      "community": 0,
       "norm_label": "styles"
     },
     {
@@ -2160,7 +2160,7 @@
       "source_file": "src/components/tui-skeleton.tsx",
       "source_location": "L1",
       "id": "src_components_tui_skeleton_tsx",
-      "community": 2,
+      "community": 19,
       "norm_label": "tui-skeleton.tsx"
     },
     {
@@ -2169,7 +2169,7 @@
       "source_file": "src/components/tui-skeleton.tsx",
       "source_location": "L9",
       "id": "components_tui_skeleton_tuiskeletonloader",
-      "community": 22,
+      "community": 19,
       "norm_label": "tuiskeletonloader()"
     },
     {
@@ -2178,7 +2178,7 @@
       "source_file": "src/components/tui-skeleton.tsx",
       "source_location": "L284",
       "id": "components_tui_skeleton_styles",
-      "community": 2,
+      "community": 19,
       "norm_label": "styles"
     },
     {
@@ -2223,7 +2223,7 @@
       "source_file": "src/components/tui-text.tsx",
       "source_location": "L1",
       "id": "src_components_tui_text_tsx",
-      "community": 2,
+      "community": 28,
       "norm_label": "tui-text.tsx"
     },
     {
@@ -2232,7 +2232,7 @@
       "source_file": "src/components/tui-text.tsx",
       "source_location": "L5",
       "id": "components_tui_text_tuitextprops",
-      "community": 2,
+      "community": 28,
       "norm_label": "tuitextprops"
     },
     {
@@ -2241,7 +2241,7 @@
       "source_file": "src/components/tui-text.tsx",
       "source_location": "L11",
       "id": "components_tui_text_tuitext",
-      "community": 2,
+      "community": 28,
       "norm_label": "tuitext()"
     },
     {
@@ -2250,7 +2250,7 @@
       "source_file": "src/context/animation-lock.tsx",
       "source_location": "L1",
       "id": "src_context_animation_lock_tsx",
-      "community": 21,
+      "community": 0,
       "norm_label": "animation-lock.tsx"
     },
     {
@@ -2259,7 +2259,7 @@
       "source_file": "src/context/animation-lock.tsx",
       "source_location": "L14",
       "id": "context_animation_lock_animationlockcontextvalue",
-      "community": 21,
+      "community": 0,
       "norm_label": "animationlockcontextvalue"
     },
     {
@@ -2268,7 +2268,7 @@
       "source_file": "src/context/animation-lock.tsx",
       "source_location": "L25",
       "id": "context_animation_lock_animationlockcontext",
-      "community": 21,
+      "community": 0,
       "norm_label": "animationlockcontext"
     },
     {
@@ -2277,7 +2277,7 @@
       "source_file": "src/context/animation-lock.tsx",
       "source_location": "L32",
       "id": "context_animation_lock_animationlockprovider",
-      "community": 21,
+      "community": 0,
       "norm_label": "animationlockprovider()"
     },
     {
@@ -2286,7 +2286,7 @@
       "source_file": "src/context/animation-lock.tsx",
       "source_location": "L63",
       "id": "context_animation_lock_useanimationlock",
-      "community": 21,
+      "community": 0,
       "norm_label": "useanimationlock()"
     },
     {
@@ -2322,7 +2322,7 @@
       "source_file": "src/screens/FilesScreen.tsx",
       "source_location": "L45",
       "id": "screens_filesscreen_getfileicon",
-      "community": 7,
+      "community": 2,
       "norm_label": "getfileicon()"
     },
     {
@@ -2331,7 +2331,7 @@
       "source_file": "src/screens/FilesScreen.tsx",
       "source_location": "L90",
       "id": "screens_filesscreen_getfiletypelabel",
-      "community": 7,
+      "community": 2,
       "norm_label": "getfiletypelabel()"
     },
     {
@@ -2340,7 +2340,7 @@
       "source_file": "src/screens/FilesScreen.tsx",
       "source_location": "L126",
       "id": "screens_filesscreen_fileitem",
-      "community": 7,
+      "community": 2,
       "norm_label": "fileitem()"
     },
     {
@@ -2430,7 +2430,7 @@
       "source_file": "src/screens/PhotosScreen.tsx",
       "source_location": "L20",
       "id": "screens_photosscreen_photolayout",
-      "community": 7,
+      "community": 2,
       "norm_label": "photolayout"
     },
     {
@@ -2457,7 +2457,7 @@
       "source_file": "src/screens/PhotosScreen.tsx",
       "source_location": "L42",
       "id": "screens_photosscreen_photoitem",
-      "community": 19,
+      "community": 2,
       "norm_label": "photoitem()"
     },
     {
@@ -2916,7 +2916,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L1",
       "id": "src_utils_helpers_ts",
-      "community": 23,
+      "community": 2,
       "norm_label": "helpers.ts"
     },
     {
@@ -2943,7 +2943,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L16",
       "id": "utils_helpers_getwebsitename",
-      "community": 23,
+      "community": 2,
       "norm_label": "getwebsitename()"
     },
     {
@@ -2952,7 +2952,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L120",
       "id": "utils_helpers_handleopenurl",
-      "community": 23,
+      "community": 2,
       "norm_label": "handleopenurl()"
     },
     {
@@ -2961,7 +2961,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L145",
       "id": "utils_helpers_ensurefileuri",
-      "community": 19,
+      "community": 2,
       "norm_label": "ensurefileuri()"
     },
     {
@@ -2970,7 +2970,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L161",
       "id": "utils_helpers_getactualtype",
-      "community": 23,
+      "community": 2,
       "norm_label": "getactualtype()"
     },
     {
@@ -2979,7 +2979,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L181",
       "id": "utils_helpers_formatbytes",
-      "community": 7,
+      "community": 2,
       "norm_label": "formatbytes()"
     },
     {
@@ -2988,7 +2988,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L190",
       "id": "utils_helpers_base64tobytes",
-      "community": 23,
+      "community": 2,
       "norm_label": "base64tobytes()"
     },
     {
@@ -2997,7 +2997,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L232",
       "id": "utils_helpers_bytestobase64",
-      "community": 23,
+      "community": 2,
       "norm_label": "bytestobase64()"
     },
     {
@@ -3006,7 +3006,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L270",
       "id": "utils_helpers_extractaudioartwork",
-      "community": 23,
+      "community": 2,
       "norm_label": "extractaudioartwork()"
     },
     {
@@ -3060,7 +3060,7 @@
       "source_file": "src/utils/storage.ts",
       "source_location": "L5",
       "id": "utils_storage_dumptype",
-      "community": 23,
+      "community": 8,
       "norm_label": "dumptype"
     },
     {
@@ -3231,7 +3231,7 @@
       "source_file": "src/utils/sync-engine.ts",
       "source_location": "L163",
       "id": "utils_sync_engine_synctask",
-      "community": 23,
+      "community": 8,
       "norm_label": "synctask"
     },
     {
@@ -3321,7 +3321,7 @@
       "source_file": "src/utils/sync-engine.ts",
       "source_location": "L239",
       "id": "utils_sync_engine_enqueuetaskinput",
-      "community": 23,
+      "community": 8,
       "norm_label": "enqueuetaskinput"
     },
     {
@@ -3420,7 +3420,7 @@
       "source_file": "src/utils/sync-engine.ts",
       "source_location": "L421",
       "id": "utils_sync_engine_resolvelocalfile",
-      "community": 8,
+      "community": 2,
       "norm_label": "resolvelocalfile()"
     },
     {
@@ -3602,6 +3602,15 @@
       "id": "workflows_graphify_workflow_graphify",
       "community": 11,
       "norm_label": "workflow: graphify"
+    },
+    {
+      "label": "{ withDangerousMod }",
+      "file_type": "code",
+      "source_file": "plugins/withHostAppSchemeFix.js",
+      "source_location": "L1",
+      "community": 26,
+      "norm_label": "{ withdangerousmod }",
+      "id": "plugins_withhostappschemefix_withdangerousmod"
     },
     {
       "label": "askConflictResolution()",
@@ -3806,7 +3815,7 @@
       "file_type": "code",
       "source_file": "App.tsx",
       "source_location": "L1965",
-      "community": 19,
+      "community": 2,
       "norm_label": "contextmenuoverlay()",
       "id": "boothub_app_contextmenuoverlay"
     },
@@ -3833,7 +3842,7 @@
       "file_type": "code",
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L32",
-      "community": 2,
+      "community": 19,
       "norm_label": "{ width: screenwidth, height: screenheight }",
       "id": "components_photo_picker_sheet_width_screenwidth_height_screenheight"
     },
@@ -6279,9 +6288,9 @@
       "source_file": "plugins/withHostAppSchemeFix.js",
       "source_location": "L2",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "plugins_withhostappschemefix_js",
-      "target": "plugins_withhostappschemefix_fs",
-      "confidence_score": 1.0
+      "target": "plugins_withhostappschemefix_fs"
     },
     {
       "relation": "contains",
@@ -6289,9 +6298,9 @@
       "source_file": "plugins/withHostAppSchemeFix.js",
       "source_location": "L3",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "plugins_withhostappschemefix_js",
-      "target": "plugins_withhostappschemefix_path",
-      "confidence_score": 1.0
+      "target": "plugins_withhostappschemefix_path"
     },
     {
       "relation": "contains",
@@ -6299,9 +6308,29 @@
       "source_file": "plugins/withHostAppSchemeFix.js",
       "source_location": "L4",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "plugins_withhostappschemefix_js",
-      "target": "plugins_withhostappschemefix_plist",
-      "confidence_score": 1.0
+      "target": "plugins_withhostappschemefix_plist"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "plugins/withHostAppSchemeFix.js",
+      "source_location": "L1",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "plugins_withhostappschemefix_js",
+      "target": "plugins_withhostappschemefix_withdangerousmod"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "plugins/withHostAppSchemeFix.js",
+      "source_location": "L6",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "plugins_withhostappschemefix_js",
+      "target": "plugins_withhostappschemefix_withhostappschemefix"
     },
     {
       "relation": "contains",
@@ -6310,17 +6339,7 @@
       "source_location": "L1",
       "weight": 1.0,
       "source": "plugins_withhostappschemefix_js",
-      "target": "plugins_withhostappschemefix_withdangerousmod",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "plugins/withHostAppSchemeFix.js",
-      "source_location": "L6",
-      "weight": 1.0,
-      "source": "plugins_withhostappschemefix_js",
-      "target": "plugins_withhostappschemefix_withhostappschemefix",
+      "target": "plugins_withhostappschemefix_withinfoplist",
       "confidence_score": 1.0
     },
     {
@@ -13542,5 +13561,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "da9d55b5cda79984a5360349234155fd0219ed1f"
+  "built_at_commit": "766c6c19124f9bccc70c824d408759d54747dae2"
 }
