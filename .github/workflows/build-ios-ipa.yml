@@ -45,6 +45,97 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Patch expo-share-extension node module Swift template
+        run: |
+          python3 -c '
+          import os
+          path = "node_modules/expo-share-extension/plugin/swift/ShareExtensionViewController.swift"
+          if os.path.exists(path):
+              with open(path, "r") as f:
+                  content = f.read()
+              
+              old_img_guard = """              guard let appGroup = Bundle.main.object(forInfoDictionaryKey: "AppGroup") as? String else {
+                print("Could not find AppGroup in info.plist")
+                return
+              }
+              
+              guard let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup) else {
+                print("Could not set up file manager container URL for app group")
+                return
+              }"""
+              
+              new_img_guard = """              let appGroup = Bundle.main.object(forInfoDictionaryKey: "AppGroup") as? String
+              let containerUrl = appGroup != nil ? FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup!) : nil
+              
+              if containerUrl == nil {
+                print("AppGroup not available, falling back to pasteboard")
+                if let imageUri = imageItem as? NSURL {
+                  if let data = try? Data(contentsOf: imageUri as URL) {
+                    UIPasteboard.general.setData(data, forPasteboardType: "public.jpeg")
+                    if var imageArray = sharedItems["images"] as? [String] {
+                      imageArray.append("pasteboard:image")
+                      sharedItems["images"] = imageArray
+                    }
+                  }
+                } else if let image = imageItem as? UIImage {
+                  if let data = image.jpegData(compressionQuality: 1.0) {
+                    UIPasteboard.general.setData(data, forPasteboardType: "public.jpeg")
+                    if var imageArray = sharedItems["images"] as? [String] {
+                      imageArray.append("pasteboard:image")
+                      sharedItems["images"] = imageArray
+                    }
+                  }
+                } else if let data = imageItem as? Data {
+                  UIPasteboard.general.setData(data, forPasteboardType: "public.jpeg")
+                  if var imageArray = sharedItems["images"] as? [String] {
+                    imageArray.append("pasteboard:image")
+                    sharedItems["images"] = imageArray
+                  }
+                }
+                group.leave()
+                return
+              }"""
+              
+              old_mov_guard = """              guard let appGroup = Bundle.main.object(forInfoDictionaryKey: "AppGroup") as? String else {
+                print("Could not find AppGroup in info.plist")
+                return
+              }
+              
+              guard let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup) else {
+                print("Could not set up file manager container URL for app group")
+                return
+              }"""
+              
+              new_mov_guard = """              guard let appGroup = Bundle.main.object(forInfoDictionaryKey: "AppGroup") as? String else {
+                print("Could not find AppGroup in info.plist")
+                group.leave()
+                return
+              }
+              
+              guard let containerUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup) else {
+                print("Could not set up file manager container URL for app group")
+                group.leave()
+                return
+              }"""
+              
+              if old_img_guard in content:
+                  content = content.replace(old_img_guard, new_img_guard, 1)
+                  print("Patched image guard successfully.")
+              else:
+                  print("Warning: old_img_guard not found in ShareExtensionViewController.swift")
+                  
+              if old_mov_guard in content:
+                  content = content.replace(old_mov_guard, new_mov_guard, 1)
+                  print("Patched movie guard successfully.")
+              else:
+                  print("Warning: old_mov_guard not found in ShareExtensionViewController.swift")
+                  
+              with open(path, "w") as f:
+                  f.write(content)
+          else:
+              print("Warning: ShareExtensionViewController.swift not found in node_modules")
+          '
+
       - name: Expo Prebuild (Generate iOS folder)
         run: npx expo prebuild --platform ios --clean
 

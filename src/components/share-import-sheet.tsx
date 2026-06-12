@@ -39,6 +39,7 @@ export const ShareImportSheet: React.FC<ShareImportSheetProps> = ({
   const { colors, isDark } = useTheme();
   const [selectedFolderId, setSelectedFolderId] = useState<string | undefined>(undefined);
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+  const [clipboardImage, setClipboardImage] = useState<string | null>(null);
   const [previewData, setPreviewData] = useState<PreviewData | null>(() => {
     if (parsedShare.type === 'link') {
       return previewCache.get(parsedShare.value) || null;
@@ -56,40 +57,64 @@ export const ShareImportSheet: React.FC<ShareImportSheetProps> = ({
 
   useEffect(() => {
     if (parsedShare.type === 'photo') {
-      const uri = ensureFileUri(parsedShare.value);
-      console.log('[ShareImportSheet] Fetching image size for:', uri);
-      if (uri.startsWith('ph://')) {
-        const fetchPhSize = async () => {
+      if (parsedShare.value === 'pasteboard:image') {
+        const loadClipImage = async () => {
           try {
-            const assetId = uri.slice(5);
-            const assetInfo = await MediaLibrary.getAssetInfoAsync(assetId);
-            if (assetInfo && assetInfo.width > 0 && assetInfo.height > 0) {
-              setAspectRatio(assetInfo.width / assetInfo.height);
+            const Clipboard = require('expo-clipboard');
+            const img = await Clipboard.getImageAsync({ format: 'jpeg' });
+            if (img && img.data) {
+              const dataUri = `data:image/jpeg;base64,${img.data}`;
+              setClipboardImage(dataUri);
+              if (img.width > 0 && img.height > 0) {
+                setAspectRatio(img.width / img.height);
+              } else {
+                setAspectRatio(1);
+              }
             } else {
               setAspectRatio(1);
             }
           } catch (err) {
-            console.warn('[ShareImportSheet] Failed to get ph:// asset info:', err);
+            console.warn('[ShareImportSheet] Failed to load clipboard image:', err);
             setAspectRatio(1);
           }
         };
-        fetchPhSize();
+        loadClipImage();
       } else {
-        RNImage.getSize(
-          uri,
-          (w, h) => {
-            console.log('[ShareImportSheet] getSize success:', w, 'x', h);
-            if (w > 0 && h > 0) {
-              setAspectRatio(w / h);
-            } else {
+        const uri = ensureFileUri(parsedShare.value);
+        console.log('[ShareImportSheet] Fetching image size for:', uri);
+        if (uri.startsWith('ph://')) {
+          const fetchPhSize = async () => {
+            try {
+              const assetId = uri.slice(5);
+              const assetInfo = await MediaLibrary.getAssetInfoAsync(assetId);
+              if (assetInfo && assetInfo.width > 0 && assetInfo.height > 0) {
+                setAspectRatio(assetInfo.width / assetInfo.height);
+              } else {
+                setAspectRatio(1);
+              }
+            } catch (err) {
+              console.warn('[ShareImportSheet] Failed to get ph:// asset info:', err);
               setAspectRatio(1);
             }
-          },
-          (err) => {
-            console.warn('[ShareImportSheet] getSize error:', err, 'for URI:', uri);
-            setAspectRatio(1); // fallback to square to avoid loading forever
-          }
-        );
+          };
+          fetchPhSize();
+        } else {
+          RNImage.getSize(
+            uri,
+            (w, h) => {
+              console.log('[ShareImportSheet] getSize success:', w, 'x', h);
+              if (w > 0 && h > 0) {
+                setAspectRatio(w / h);
+              } else {
+                setAspectRatio(1);
+              }
+            },
+            (err) => {
+              console.warn('[ShareImportSheet] getSize error:', err, 'for URI:', uri);
+              setAspectRatio(1); // fallback to square to avoid loading forever
+            }
+          );
+        }
       }
     }
   }, [parsedShare]);
@@ -183,6 +208,10 @@ export const ShareImportSheet: React.FC<ShareImportSheetProps> = ({
           }
         }
 
+        const imageSource = parsedShare.value === 'pasteboard:image' && clipboardImage
+          ? { uri: clipboardImage }
+          : { uri: ensureFileUri(parsedShare.value) };
+
         return (
           <View style={{ alignItems: 'center', marginBottom: 16 }}>
             <View
@@ -196,7 +225,7 @@ export const ShareImportSheet: React.FC<ShareImportSheetProps> = ({
               }}
             >
               <Image
-                source={{ uri: ensureFileUri(parsedShare.value) }}
+                source={imageSource}
                 style={{ width: '100%', height: '100%' }}
                 contentFit="cover"
               />

@@ -73,9 +73,29 @@ export const processSharedItem = async (parsed: ParsedShare): Promise<{ type: 'l
         return { type: 'photo', label: fileName };
       }
 
-      // Copy the photo to our app's document directory to ensure it is not deleted
-      const fileName = parsed.value.split('/').pop() || `photo_${Date.now()}.jpg`;
+      const fileName = parsed.value === 'pasteboard:image' ? `photo_${Date.now()}.jpg` : (parsed.value.split('/').pop() || `photo_${Date.now()}.jpg`);
       const destinationUri = `${FileSystem.documentDirectory}${Date.now()}_${fileName}`;
+
+      if (parsed.value === 'pasteboard:image') {
+        const Clipboard = require('expo-clipboard');
+        const hasImage = await Clipboard.hasImageAsync();
+        if (!hasImage) {
+          throw new Error('No image found on clipboard or clipboard permission denied.');
+        }
+        const img = await Clipboard.getImageAsync({ format: 'jpeg' });
+        if (!img || !img.data) {
+          throw new Error('Failed to retrieve image data from clipboard.');
+        }
+        let base64Data = img.data;
+        if (base64Data.includes('base64,')) {
+          base64Data = base64Data.split('base64,')[1];
+        }
+        await FileSystem.writeAsStringAsync(destinationUri, base64Data, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        await addItem('photo', destinationUri);
+        return { type: 'photo', label: fileName };
+      }
       
       // Ensure the source file uri has a file:// prefix if it's a local path
       let sourceUri = parsed.value;
