@@ -90,6 +90,7 @@ import { TabButton } from './src/components/tab-button';
 import { ContextMenuOverlay } from './src/components/context-menu-overlay';
 import { FullscreenPhotoViewer } from './src/components/fullscreen-photo-viewer';
 import { parseShareUrl, processSharedItem, ParsedShare } from './src/utils/share-receiver';
+import { useShareIntent } from 'expo-share-intent';
 import { ShareImportSheet } from './src/components/share-import-sheet';
 import { TuiDrawer } from './src/components/tui-drawer';
 import { FolderPickerSheet } from './src/components/folder-picker-sheet';
@@ -108,6 +109,7 @@ const BAR_FADE_DELAY = 100;     // milliseconds
 
 function MainApp() {
   const { colors, isDark, setThemeMode, themeLoaded } = useTheme();
+  const { hasShareIntent, shareIntent, resetShareIntent } = useShareIntent();
   const { isLocked, lock, locked } = useAnimationLock();
   const [fontsLoaded] = useFonts({ JetBrainsMono_400Regular, JetBrainsMono_700Bold });
 
@@ -238,6 +240,65 @@ function MainApp() {
       subscription.remove();
     };
   }, []);
+
+  useEffect(() => {
+    if (hasShareIntent && shareIntent && shareIntent.type) {
+      Keyboard.dismiss();
+      mainInputRef.current?.blur();
+      editInputRef.current?.blur();
+      searchInputRef.current?.blur();
+
+      const handleIntent = async () => {
+        let parsedType: 'link' | 'text' | 'photo' | 'file' = 'text';
+        let parsedValue = '';
+        let parsedName: string | undefined = undefined;
+        let parsedSize: number | undefined = undefined;
+        let parsedMimeType: string | undefined = undefined;
+
+        if (shareIntent.type === 'weburl') {
+          parsedType = 'link';
+          parsedValue = shareIntent.webUrl || '';
+        } else if (shareIntent.type === 'text') {
+          parsedType = 'text';
+          parsedValue = shareIntent.text || '';
+        } else if ((shareIntent.type === 'file' || shareIntent.type === 'media') && shareIntent.files && shareIntent.files.length > 0) {
+          const file = shareIntent.files[0];
+          const isPhoto = /\.(png|jpe?g|gif|webp|heic)$/i.test(file.fileName || file.path) || (file.mimeType && file.mimeType.startsWith('image/'));
+          
+          parsedType = isPhoto ? 'photo' : 'file';
+          parsedValue = file.path;
+          parsedName = file.fileName;
+          parsedSize = file.size || undefined;
+          parsedMimeType = file.mimeType;
+        }
+
+        if (parsedType && parsedValue) {
+          const parsed: ParsedShare = {
+            type: parsedType,
+            value: parsedValue,
+            name: parsedName,
+            size: parsedSize,
+            mimeType: parsedMimeType,
+          };
+
+          if (parsed.type === 'link') {
+            try {
+              const { preFetchLinkMetadata } = require('./src/components/link-preview');
+              await preFetchLinkMetadata(parsed.value);
+            } catch (err) {
+              console.warn('[App] Failed to pre-fetch metadata:', err);
+            }
+          }
+
+          setPendingShare(parsed);
+          setIsShareSheetOpen(true);
+        }
+        resetShareIntent();
+      };
+
+      handleIntent();
+    }
+  }, [hasShareIntent, shareIntent]);
 
   const showDevShareMenu = () => {
     Keyboard.dismiss();

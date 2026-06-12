@@ -31,7 +31,7 @@
     "expo-image-picker": "^17.0.11",
     "expo-media-library": "~18.2.1",
     "expo-secure-store": "~15.0.8",
-    "expo-share-extension": "^5.0.6",
+    "expo-share-intent": "^7.0.0",
     "expo-sharing": "^14.0.8",
     "expo-splash-screen": "^31.0.13",
     "expo-status-bar": "~3.0.9",
