@@ -88,8 +88,7 @@
         }
       ],
       "expo-secure-store",
-      "expo-web-browser",
-      "./plugins/withHostAppSchemeFix"
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {

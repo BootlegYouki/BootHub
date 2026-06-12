@@ -27,6 +27,28 @@ jobs:
       - name: Expo Prebuild (Generate iOS folder with dev client)
         run: npx expo prebuild --platform ios --clean --no-install
 
+      - name: Fix HostAppScheme in ShareExtension Info.plist
+        run: |
+          python3 -c '
+          import plistlib, os
+          path = "ios/BootHubShareExtension/Info.plist"
+          if os.path.exists(path):
+              with open(path, "rb") as f:
+                  pl = plistlib.load(f)
+              host_app_scheme = pl.get("HostAppScheme")
+              print(f"Loaded HostAppScheme: {host_app_scheme} (type: {type(host_app_scheme)})")
+              if isinstance(host_app_scheme, list):
+                  print(f"Fixing HostAppScheme from array to string: {host_app_scheme}")
+                  pl["HostAppScheme"] = host_app_scheme[0]
+                  with open(path, "wb") as f:
+                      plistlib.dump(pl, f)
+                  print("Successfully updated Info.plist")
+              else:
+                  print("HostAppScheme is not a list, no change needed.")
+          else:
+              print(f"Error: {path} not found!")
+          '
+
       - name: Disable Xcode Code Signing
         run: |
           python3 -c '
