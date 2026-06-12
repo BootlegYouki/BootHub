@@ -1,10 +1,10 @@
-const { withInfoPlist } = require("expo/config-plugins");
+const { withXcodeProject } = require("expo/config-plugins");
 const fs = require("fs");
 const path = require("path");
 const plist = require("@expo/plist");
 
 const withHostAppSchemeFix = (config) => {
-  return withInfoPlist(config, (config) => {
+  return withXcodeProject(config, (config) => {
     const iosPath = config.modRequest?.platformProjectRoot || path.join(config.projectRoot || process.cwd(), 'ios');
     const targetName = config.name + "ShareExtension";
     const infoPlistPath = path.join(iosPath, targetName, "Info.plist");
