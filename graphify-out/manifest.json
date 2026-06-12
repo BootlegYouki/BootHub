@@ -150,8 +150,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\app.json": {
-    "mtime": 1781227363.246346,
-    "ast_hash": "6d9be5514b4c3885b5985a243dd44f79",
+    "mtime": 1781230043.9300327,
+    "ast_hash": "b82fd574dba34c152953af2680fe8432",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\App.tsx": {
@@ -270,8 +270,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\.github\\workflows\\build-ios-ipa.yml": {
-    "mtime": 1780972318.0198276,
-    "ast_hash": "77c13ecf1a01d5e345e6d5245c2e4a40",
+    "mtime": 1781229331.1179545,
+    "ast_hash": "88f48ce0d50c84b5e875415a0214e437",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\assets\\icon.png": {
@@ -345,8 +345,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\.github\\workflows\\build-dev-client.yml": {
-    "mtime": 1780972318.0193238,
-    "ast_hash": "9519d5054d6c18138a294df059b5d0b6",
+    "mtime": 1781229316.0916677,
+    "ast_hash": "f9e79c139fb863b35e5d6373b534ac03",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\components\\photo-picker-sheet.tsx": {
@@ -355,8 +355,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\sidestore.json": {
-    "mtime": 1781227363.247382,
-    "ast_hash": "43d7e4f6e0668fe4ae3801319f0e304b",
+    "mtime": 1781230043.935146,
+    "ast_hash": "8b3d3706ddf0c80c7ba3835b57f62f88",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\FilesScreen.tsx": {
@@ -479,9 +479,14 @@
     "ast_hash": "5ef6b44597741c63acc7ee60d75fffeb",
     "semantic_hash": ""
   },
-  "E:\\Github\\BootHub\\plugins\\withHostAppSchemeFix.js": {
-    "mtime": 1781227385.1398914,
-    "ast_hash": "25d19d3eb716deb6f767f6c7a3d2116e",
+  "E:\\Github\\BootHub\\run_log_info_plist.txt": {
+    "mtime": 1781229150.5298195,
+    "ast_hash": "425677bf680d7111d1ef25bad80e2e22",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\run_log_latest.txt": {
+    "mtime": 1781229138.4659858,
+    "ast_hash": "3fbe5ef95acc16bb13eb91afde11dc85",
     "semantic_hash": ""
   }
 }
