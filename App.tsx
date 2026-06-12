@@ -204,7 +204,14 @@ function MainApp() {
     Keyboard.dismiss();
     mainInputRef.current?.blur();
     editInputRef.current?.blur();
-    const parsed = parseShareUrl(url);
+    
+    let parsed: ParsedShare | null = null;
+    try {
+      parsed = parseShareUrl(url);
+    } catch (err) {
+      Alert.alert('Parse Error', `Failed to parse deep link URL:\n${url}\n\nError: ${err}`);
+    }
+
     if (parsed) {
       if (source === 'initial') {
         handledInitialShareUrl.current = url;
@@ -220,6 +227,8 @@ function MainApp() {
       // Open the custom slide-up import sheet drawer
       setPendingShare(parsed);
       setIsShareSheetOpen(true);
+    } else {
+      Alert.alert('Share Link Received', `URL: ${url}\n\nCould not identify any type/value to import.`);
     }
   };
 
@@ -2501,18 +2510,24 @@ function MainApp() {
             onCancel={() => setIsShareSheetOpen(false)}
             onSave={async (folderId) => {
               setIsShareSheetOpen(false);
-              const processed = await processSharedItem(pendingShare);
-              if (processed) {
-                const updatedList = await getItems();
-                if (folderId && updatedList.length > 0) {
-                  // Bind folderId to the newly added item (index 0)
-                  const finalUpdated = await setItemFolder(updatedList[0].id, folderId);
-                  setItems(finalUpdated);
+              try {
+                const processed = await processSharedItem(pendingShare);
+                if (processed) {
+                  const updatedList = await getItems();
+                  if (folderId && updatedList.length > 0) {
+                    // Bind folderId to the newly added item (index 0)
+                    const finalUpdated = await setItemFolder(updatedList[0].id, folderId);
+                    setItems(finalUpdated);
+                  } else {
+                    setItems(updatedList);
+                  }
+                  switchTab(processed.type);
+                  showToast('Saved!', processed.label);
                 } else {
-                  setItems(updatedList);
+                  Alert.alert('Save Failed', 'The shared item could not be processed.');
                 }
-                switchTab(processed.type);
-                showToast('Saved!', processed.label);
+              } catch (err) {
+                Alert.alert('Error Processing Share', `An error occurred while saving the shared item:\n\n${err}`);
               }
             }}
           />

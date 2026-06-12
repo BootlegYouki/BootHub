@@ -22,7 +22,19 @@ export const parseShareUrl = (urlStr: string): ParsedShare | null => {
     if (!type || !value) return null;
     if (type !== 'link' && type !== 'text' && type !== 'photo' && type !== 'file') return null;
     
-    const decodedValue = decodeURIComponent(value);
+    let decodedValue = value;
+    // Decode multiple times to handle double percent-encoding by URLQueryItem
+    for (let i = 0; i < 3; i++) {
+      if (decodedValue.includes('%')) {
+        try {
+          decodedValue = decodeURIComponent(decodedValue);
+        } catch (e) {
+          break;
+        }
+      } else {
+        break;
+      }
+    }
 
     // Auto-classify direct photo links as photo instead of link
     if (type === 'link') {
@@ -131,6 +143,7 @@ export const processSharedItem = async (parsed: ParsedShare): Promise<{ type: 'l
     }
   } catch (err) {
     console.error('Failed to process shared item:', err);
+    throw err;
   }
   return null;
 };
