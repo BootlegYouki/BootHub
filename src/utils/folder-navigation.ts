@@ -85,7 +85,8 @@ export const useFolderNavigation = (
       }
       
       if (current && current.folderId) {
-        current = sortedItems.find((x) => x.id === current.folderId);
+        const targetFolderId: string = current.folderId;
+        current = sortedItems.find((x) => x.id === targetFolderId);
       } else {
         current = undefined;
       }

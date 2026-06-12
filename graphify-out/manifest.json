@@ -150,12 +150,12 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\app.json": {
-    "mtime": 1781159601.4745972,
-    "ast_hash": "08a7d97a00c87f078c941095a4948211",
+    "mtime": 1781226401.7719185,
+    "ast_hash": "42e100ab5243918610d66b5c3fca7873",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\App.tsx": {
-    "mtime": 1781158662.10286,
+    "mtime": 1781226337.1795456,
     "ast_hash": "ec6c6235059d579019adc89f7a84536f",
     "semantic_hash": ""
   },
@@ -170,7 +170,7 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\package.json": {
-    "mtime": 1781155697.4592524,
+    "mtime": 1781226337.19476,
     "ast_hash": "5e1cbb713cb76126747ecff6b0b2e838",
     "semantic_hash": ""
   },
@@ -355,8 +355,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\sidestore.json": {
-    "mtime": 1781159601.4756284,
-    "ast_hash": "64e24faea41f8cab3f5ae42143da73fa",
+    "mtime": 1781226310.3472202,
+    "ast_hash": "0dc0bb4920a87d9f36a30d450a5262ee",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\FilesScreen.tsx": {
@@ -390,8 +390,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\ShareExtension.tsx": {
-    "mtime": 1781224352.9799595,
-    "ast_hash": "1b0256e4deaf1f4875d7f2ef66a8a9a6",
+    "mtime": 1781226337.1795456,
+    "ast_hash": "6f1815e48576f5381e59e7e15134ce48",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\utils\\share-receiver.ts": {
@@ -405,8 +405,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\index.share.js": {
-    "mtime": 1780637603.2598834,
-    "ast_hash": "278ed347118997bccdd24609c0003c36",
+    "mtime": 1781226337.1917315,
+    "ast_hash": "88969c307b2a00250b71579ef7cd8553",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\scripts\\parse-build-errors.py": {
@@ -450,8 +450,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\utils\\folder-navigation.ts": {
-    "mtime": 1781158116.5414443,
-    "ast_hash": "7fa69c6133c7ba68770bf99eb1dfffdc",
+    "mtime": 1781226405.921592,
+    "ast_hash": "57887a1d331b49d7470ec1128c526863",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\context\\animation-lock.tsx": {
@@ -477,6 +477,11 @@
   "E:\\Github\\BootHub\\src\\utils\\sync-engine.ts": {
     "mtime": 1781144148.6932058,
     "ast_hash": "5ef6b44597741c63acc7ee60d75fffeb",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\plugins\\withHostAppSchemeFix.js": {
+    "mtime": 1781226395.9260073,
+    "ast_hash": "6e7c534f21957958733bf7df0987f02f",
     "semantic_hash": ""
   }
 }
