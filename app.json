@@ -66,11 +66,25 @@
         }
       ],
       [
-        "expo-share-intent",
+        "expo-share-extension",
         {
-          "ios": {
-            "appGroupId": "group.com.bootlegyouki.boothub"
-          }
+          "activationRules": [
+            {
+              "type": "image",
+              "max": 10
+            },
+            {
+              "type": "file",
+              "max": 10
+            },
+            {
+              "type": "url",
+              "max": 1
+            },
+            {
+              "type": "text"
+            }
+          ]
         }
       ],
       "expo-secure-store",
