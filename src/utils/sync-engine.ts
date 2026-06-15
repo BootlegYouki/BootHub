@@ -119,7 +119,7 @@ export const notifyRemoteDevicesOfChange = async (): Promise<void> => {
     console.warn('[Realtime Sync] Failed to send remote notification:', err);
   }
 };
-import { ensureFileUri } from './helpers';
+import { ensureFileUri, formatSyncTimestamp } from './helpers';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system/legacy';
 
@@ -433,6 +433,7 @@ const resolveLocalFile = async (uri: string): Promise<string> => {
 /**
  * Process the local sync queue sequentially.
  */
+// fallow-ignore-next-line complexity
 export const processSyncQueue = async (): Promise<void> => {
   if (isProcessingQueue) return;
   isProcessingQueue = true;
@@ -732,11 +733,7 @@ export const processSyncQueue = async (): Promise<void> => {
     }
   }
 
-    const now = new Date();
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    const dateStr = `${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${now.getFullYear()}`;
-    const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    const lastSyncedLabel = `${dateStr} @ ${timeStr}`;
+    const lastSyncedLabel = formatSyncTimestamp();
 
     updateSyncStatus({ isSyncing: false, error: null, lastSynced: lastSyncedLabel });
 
@@ -812,6 +809,7 @@ export const deleteItemFilesFromDrive = async (accessToken: string, itemId: stri
 /**
  * Inbound synchronization: downloads new/updated items and folder structures from Google Drive.
  */
+// fallow-ignore-next-line complexity
 export const pullChangesFromDrive = async (): Promise<void> => {
   const accessToken = await getValidAccessToken();
   if (!accessToken) {

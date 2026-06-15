@@ -35,3 +35,4 @@ graphify-out/cache/
 .expo/
 /ios/
 /android/
+.fallow/

@@ -4,6 +4,7 @@ import { LayoutGrid, FileText, Landmark, Plus, TrendingUp } from 'lucide-react-n
 import { useTheme } from '../theme/theme-provider';
 import { TuiText } from './tui-text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SegmentedBorders } from './segmented-borders';
 
 export type ScreenType = 'screen1' | 'screen2' | 'action' | 'screen3' | 'screen4' | 'settings';
 
@@ -136,12 +137,7 @@ export const TuiTabBar: React.FC<TuiTabBarProps> = ({
                   },
                 ]}
               >
-                {/* Dynamic Segmented Borders */}
-                <View style={[styles.borderLeft, { backgroundColor: borderAccent }]} />
-                <View style={[styles.borderRight, { backgroundColor: borderAccent }]} />
-                <View style={[styles.borderBottom, { backgroundColor: borderAccent }]} />
-                <View style={[styles.borderTopLeft, { backgroundColor: borderAccent, width: topSegmentWidth }]} />
-                <View style={[styles.borderTopRight, { backgroundColor: borderAccent, width: topSegmentWidth }]} />
+                <SegmentedBorders borderAccent={borderAccent} topSegmentWidth={topSegmentWidth} />
 
                 {/* Brutalist legend resting on top border */}
                 <View
@@ -209,27 +205,9 @@ export const TuiTabBar: React.FC<TuiTabBarProps> = ({
               },
             ]}
           >
-            {/* Dynamic Segmented Borders */}
-            <View style={[styles.borderLeft, { backgroundColor: borderAccent }]} />
-            <View style={[styles.borderRight, { backgroundColor: borderAccent }]} />
-            <View style={[styles.borderBottom, { backgroundColor: borderAccent }]} />
-            <View
-              style={[
-                styles.borderTopLeft,
-                {
-                  backgroundColor: borderAccent,
-                  width: Math.max(0, ((buttonWidths['action'] || 52) - (legendWidths['action'] || 24)) / 2)
-                }
-              ]}
-            />
-            <View
-              style={[
-                styles.borderTopRight,
-                {
-                  backgroundColor: borderAccent,
-                  width: Math.max(0, ((buttonWidths['action'] || 52) - (legendWidths['action'] || 24)) / 2)
-                }
-              ]}
+            <SegmentedBorders
+              borderAccent={borderAccent}
+              topSegmentWidth={Math.max(0, ((buttonWidths['action'] || 52) - (legendWidths['action'] || 24)) / 2)}
             />
 
             {/* Brutalist legend resting on top border */}
@@ -298,44 +276,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-  },
-  borderLeft: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 1.5,
-    zIndex: 5,
-  },
-  borderRight: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: 1.5,
-    zIndex: 5,
-  },
-  borderBottom: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 1.5,
-    zIndex: 5,
-  },
-  borderTopLeft: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    height: 1.5,
-    zIndex: 5,
-  },
-  borderTopRight: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    height: 1.5,
-    zIndex: 5,
   },
   legendWrapper: {
     position: 'absolute',

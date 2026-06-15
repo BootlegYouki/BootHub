@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "ignorePatterns": [
+    "index.share.js",
+    "src/components/icon-svg.tsx",
+    "src/components/banner-svg.tsx",
+    "src/components/logo-svg.tsx"
+  ],
+  "ignoreDependencies": [
+    "expo-crypto",
+    "expo-dev-client",
+    "expo-font",
+    "expo-system-ui",
+    "react-native-web"
+  ],
+  "duplicates": {
+    "minOccurrences": 3,
+    "ignore": [
+      "src/screens/FilesScreen.tsx",
+      "src/screens/LinksScreen.tsx",
+      "src/screens/TextsScreen.tsx",
+      "src/screens/PhotosScreen.tsx"
+    ]
+  },
+  "health": {
+    "ignore": [
+      "App.tsx",
+      "src/components/**",
+      "src/hooks/**",
+      "src/screens/**",
+      "src/utils/**"
+    ]
+  },
+  "rules": {}
+}

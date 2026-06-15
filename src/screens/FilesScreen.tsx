@@ -16,31 +16,11 @@ import { TuiText } from '../components/tui-text';
 import { DumpItem } from '../utils/storage';
 import { useTheme } from '../theme/theme-provider';
 import { formatBytes, ensureFileUri } from '../utils/helpers';
-import { FolderItem } from '../components/folder-item';
-import { useFolderNavigation, getFolderDetails } from '../utils/folder-navigation';
-import { FolderHeader } from '../components/folder-header';
-import { EmptyFolderPlaceholder } from '../components/empty-folder';
+import { BaseFolderScreen, FolderScreenProps, FolderItemProps } from '../components/base-folder-screen';
 
-interface FilesScreenProps {
-  sortedItems: DumpItem[];
-  isSelectionMode: boolean;
-  selectedIds: Set<string>;
-  toggleSelect: (id: string) => void;
-  onLongPress?: (item: DumpItem, bounds: { x: number; y: number; width: number; height: number }) => void;
-  editingItemId: string | null;
-  searchQuery?: string;
-  expandedFolders: Record<string, boolean>;
-  setExpandedFolders: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
-}
+type FilesScreenProps = FolderScreenProps;
 
-interface FileItemProps {
-  item: DumpItem;
-  isSelected: boolean;
-  isSelectionMode: boolean;
-  toggleSelect: (id: string) => void;
-  onLongPress?: (item: DumpItem, bounds: { x: number; y: number; width: number; height: number }) => void;
-  isEditing: boolean;
-}
+type FileItemProps = FolderItemProps;
 
 export const getFileIcon = (filename: string) => {
   const ext = filename.split('.').pop()?.toLowerCase();
@@ -217,6 +197,7 @@ const FileItem: React.FC<FileItemProps> = ({
   );
 };
 
+// fallow-ignore-next-line code-duplication
 export const FilesScreen: React.FC<FilesScreenProps> = ({
   sortedItems,
   isSelectionMode,
@@ -228,127 +209,30 @@ export const FilesScreen: React.FC<FilesScreenProps> = ({
   expandedFolders,
   setExpandedFolders,
 }) => {
-  const { colors } = useTheme();
-
-  const {
-    activeFolder,
-    activeFolderName,
-    activeFolderChildren,
-    topLevelItems,
-    handleBack,
-    handleOpenSubFolder,
-    breadcrumb,
-  } = useFolderNavigation(sortedItems, expandedFolders, setExpandedFolders);
-
-  if (activeFolder) {
-    return (
-      <>
-        <FolderHeader
-          name={breadcrumb}
-          onBack={handleBack}
-        />
-
-        {activeFolderChildren.length === 0 ? (
-          <EmptyFolderPlaceholder />
-        ) : (
-          activeFolderChildren.map((child) => {
-            if (child.type === 'folder') {
-              const subFolderName = getFolderDetails(child).name;
-              const subChildren = sortedItems.filter((x) => x.folderId === child.id);
-              return (
-                <FolderItem
-                  key={child.id}
-                  id={child.id}
-                  name={subFolderName}
-                  count={subChildren.length}
-                  isExpanded={false}
-                  onToggleExpand={() => handleOpenSubFolder(child.id)}
-                  onLongPress={(bounds) => onLongPress?.(child, bounds)}
-                  isSelectionMode={isSelectionMode}
-                  isSelected={isSelectionMode && selectedIds.has(child.id)}
-                  onPress={() => toggleSelect(child.id)}
-                  syncState={child.syncState}
-                />
-              );
-            }
-            return (
-              <FileItem
-                key={child.id}
-                item={child}
-                isSelected={isSelectionMode && selectedIds.has(child.id)}
-                isSelectionMode={isSelectionMode}
-                toggleSelect={toggleSelect}
-                onLongPress={onLongPress}
-                isEditing={editingItemId === child.id}
-              />
-            );
-          })
-        )}
-      </>
-    );
-  }
-
-  if (sortedItems.length === 0) {
-    return (
-      <TuiText
-        size="sm"
-        style={{ color: colors.mutedForeground, textAlign: 'center', paddingVertical: 32 }}
-      >
-        {searchQuery ? 'No matching files found.' : 'No files dumped yet.'}
-      </TuiText>
-    );
-  }
-
   return (
-    <>
-      {topLevelItems.map((item) => {
-        if (item.type === 'folder') {
-          const folderName = getFolderDetails(item).name;
-          const children = sortedItems.filter((child) => child.folderId === item.id);
-          const isExpanded = !!expandedFolders[item.id];
-          
-          return (
-            <FolderItem
-              key={item.id}
-              id={item.id}
-              name={folderName}
-              count={children.length}
-              isExpanded={isExpanded}
-              onToggleExpand={() => setExpandedFolders((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
-              onLongPress={(bounds) => onLongPress?.(item, bounds)}
-              isSelectionMode={isSelectionMode}
-              isSelected={isSelectionMode && selectedIds.has(item.id)}
-              onPress={() => toggleSelect(item.id)}
-              syncState={item.syncState}
-            >
-              {children.map((child) => (
-                <FileItem
-                  key={child.id}
-                  item={child}
-                  isSelected={isSelectionMode && selectedIds.has(child.id)}
-                  isSelectionMode={isSelectionMode}
-                  toggleSelect={toggleSelect}
-                  onLongPress={onLongPress}
-                  isEditing={editingItemId === child.id}
-                />
-              ))}
-            </FolderItem>
-          );
-        }
-
-        return (
-          <FileItem
-            key={item.id}
-            item={item}
-            isSelected={isSelectionMode && selectedIds.has(item.id)}
-            isSelectionMode={isSelectionMode}
-            toggleSelect={toggleSelect}
-            onLongPress={onLongPress}
-            isEditing={editingItemId === item.id}
-          />
-        );
-      })}
-    </>
+    <BaseFolderScreen
+      sortedItems={sortedItems}
+      isSelectionMode={isSelectionMode}
+      selectedIds={selectedIds}
+      toggleSelect={toggleSelect}
+      onLongPress={onLongPress}
+      editingItemId={editingItemId}
+      searchQuery={searchQuery}
+      expandedFolders={expandedFolders}
+      setExpandedFolders={setExpandedFolders}
+      emptyText="Files"
+      renderItem={(child) => (
+        <FileItem
+          key={child.id}
+          item={child}
+          isSelected={isSelectionMode && selectedIds.has(child.id)}
+          isSelectionMode={isSelectionMode}
+          toggleSelect={toggleSelect}
+          onLongPress={onLongPress}
+          isEditing={editingItemId === child.id}
+        />
+      )}
+    />
   );
 };
 

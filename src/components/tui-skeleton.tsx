@@ -5,6 +5,7 @@ import { Wallet, TrendingUp, FileText, Landmark, Plus, LayoutGrid } from 'lucide
 import { useTheme } from '../theme/theme-provider';
 import { TuiContainer } from './tui-container';
 import { TuiText } from './tui-text';
+import { SegmentedBorders } from './segmented-borders';
 
 export const TuiSkeletonLoader: React.FC = () => {
   const { colors, isDark } = useTheme();
@@ -226,12 +227,7 @@ export const TuiSkeletonLoader: React.FC = () => {
                   },
                 ]}
               >
-                {/* Segmented Borders */}
-                <View style={[styles.borderLeft, { backgroundColor: borderAccent }]} />
-                <View style={[styles.borderRight, { backgroundColor: borderAccent }]} />
-                <View style={[styles.borderBottom, { backgroundColor: borderAccent }]} />
-                <View style={[styles.borderTopLeft, { backgroundColor: borderAccent, width: topSegmentWidth }]} />
-                <View style={[styles.borderTopRight, { backgroundColor: borderAccent, width: topSegmentWidth }]} />
+                <SegmentedBorders borderAccent={borderAccent} topSegmentWidth={topSegmentWidth} />
 
                 {/* Tab Label Legend */}
                 <View style={styles.legendWrapper}>
@@ -258,11 +254,7 @@ export const TuiSkeletonLoader: React.FC = () => {
               },
             ]}
           >
-            <View style={[styles.borderLeft, { backgroundColor: borderAccent }]} />
-            <View style={[styles.borderRight, { backgroundColor: borderAccent }]} />
-            <View style={[styles.borderBottom, { backgroundColor: borderAccent }]} />
-            <View style={[styles.borderTopLeft, { backgroundColor: borderAccent, width: 14 }]} />
-            <View style={[styles.borderTopRight, { backgroundColor: borderAccent, width: 14 }]} />
+            <SegmentedBorders borderAccent={borderAccent} topSegmentWidth={14} />
 
             <View style={styles.legendWrapper}>
               <TuiText weight="bold" style={[styles.legendText, { color: colors.mutedForeground }]}>
@@ -405,44 +397,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-  },
-  borderLeft: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 1.5,
-    zIndex: 5,
-  },
-  borderRight: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    bottom: 0,
-    width: 1.5,
-    zIndex: 5,
-  },
-  borderBottom: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 1.5,
-    zIndex: 5,
-  },
-  borderTopLeft: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    height: 1.5,
-    zIndex: 5,
-  },
-  borderTopRight: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    height: 1.5,
-    zIndex: 5,
   },
   legendWrapper: {
     position: 'absolute',

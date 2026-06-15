@@ -1,6 +1,7 @@
 import { Linking, Platform, Alert } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
-import { DumpType } from './storage';
+import * as MediaLibrary from 'expo-media-library';
+import type { DumpType } from './storage';
 
 export const formatBreakAll = (text: string) => {
   if (!text) return '';
@@ -267,6 +268,7 @@ const bytesToBase64 = (bytes: Uint8Array): string => {
   return result;
 };
 
+// fallow-ignore-next-line complexity
 export const extractAudioArtwork = async (fileUri: string): Promise<string | null> => {
   console.log(`[extractAudioArtwork] Starting extraction for: ${fileUri}`);
   try {
@@ -506,4 +508,36 @@ export const extractAudioArtwork = async (fileUri: string): Promise<string | nul
     console.warn('[extractAudioArtwork] Failed to extract audio artwork:', e);
   }
   return null;
+};
+
+export const formatSyncTimestamp = (date: Date = new Date()): string => {
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  const dateStr = `${pad(date.getMonth() + 1)}-${pad(date.getDate())}-${date.getFullYear()}`;
+  const timeStr = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  return `${dateStr} @ ${timeStr}`;
+};
+
+export const resolveToLocalFileUri = async (uri: string): Promise<string> => {
+  let fileUri = uri;
+
+  if (fileUri.startsWith('ph://')) {
+    const assetId = fileUri.slice(5);
+    const assetInfo = await MediaLibrary.getAssetInfoAsync(assetId);
+    if (assetInfo && assetInfo.localUri) {
+      fileUri = assetInfo.localUri;
+    } else {
+      throw new Error('Could not resolve local path for photo library asset.');
+    }
+  }
+
+  if (fileUri.startsWith('http://') || fileUri.startsWith('https://')) {
+    const filename = fileUri.split('/').pop()?.split('?')[0] || 'temp_image.jpg';
+    const tempFileUri = `${FileSystem.cacheDirectory}${Date.now()}_${filename}`;
+    const downloadResult = await FileSystem.downloadAsync(fileUri, tempFileUri, {
+      sessionType: FileSystem.FileSystemSessionType.FOREGROUND,
+    });
+    fileUri = downloadResult.uri;
+  }
+
+  return ensureFileUri(fileUri);
 };

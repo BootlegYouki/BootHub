@@ -1,8 +1,22 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
-import { enqueueSyncTask, enqueueSyncTasks, processSyncQueue } from './sync-engine';
+import { formatSyncTimestamp } from './helpers';
 
 export type DumpType = 'link' | 'text' | 'photo' | 'file' | 'folder';
+
+let onEnqueueTask: ((action: 'UPLOAD' | 'DELETE' | 'UPDATE', itemId: string, itemType: DumpType, extras?: any) => Promise<void>) | null = null;
+let onEnqueueTasks: ((tasks: any[]) => Promise<void>) | null = null;
+let onProcessQueue: (() => Promise<void>) | null = null;
+
+export const registerSyncTrigger = (
+  enqueue: typeof onEnqueueTask,
+  enqueueMultiple: typeof onEnqueueTasks,
+  process: typeof onProcessQueue
+) => {
+  onEnqueueTask = enqueue;
+  onEnqueueTasks = enqueueMultiple;
+  onProcessQueue = process;
+};
 
 export interface DumpItem {
   id: string;
@@ -62,11 +76,7 @@ export const addItem = async (type: DumpType, value: string, folderId?: string):
     const currentItems = await getItems();
     
     // Create simple timestamp label
-    const now = new Date();
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    const dateStr = `${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${now.getFullYear()}`;
-    const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    const label = `${dateStr} @ ${timeStr}`;
+    const label = formatSyncTimestamp();
  
     let itemLabel = label;
     if (type === 'folder') {
@@ -88,9 +98,11 @@ export const addItem = async (type: DumpType, value: string, folderId?: string):
     await saveItems(updated);
 
     // Enqueue UPLOAD sync task
-    enqueueSyncTask('UPLOAD', newItem.id, type, { fileUri: type === 'photo' || type === 'file' ? value : undefined })
-      .then(() => processSyncQueue())
-      .catch((e) => console.error('Failed to schedule item upload:', e));
+    if (onEnqueueTask) {
+      onEnqueueTask('UPLOAD', newItem.id, type, { fileUri: type === 'photo' || type === 'file' ? value : undefined })
+        .then(() => onProcessQueue?.())
+        .catch((e) => console.error('Failed to schedule item upload:', e));
+    }
 
     return updated;
   } catch (e) {
@@ -152,18 +164,20 @@ export const deleteItem = async (id: string): Promise<DumpItem[]> => {
       await saveItems(updated);
 
       // Enqueue deletion tasks atomically for Google Drive sync
-      await enqueueSyncTasks(
-        [targetItem, ...childrenToDelete].map((item) => ({
-          action: 'DELETE',
-          itemId: item.id,
-          itemType: item.type,
-          extras: {
-            driveMetaFileId: item.driveMetaFileId,
-            driveFileId: item.driveFileId,
-          },
-        }))
-      );
-      processSyncQueue().catch((e) => console.error('Failed to run sync after folder deletion:', e));
+      if (onEnqueueTasks) {
+        await onEnqueueTasks(
+          [targetItem, ...childrenToDelete].map((item) => ({
+            action: 'DELETE',
+            itemId: item.id,
+            itemType: item.type,
+            extras: {
+              driveMetaFileId: item.driveMetaFileId,
+              driveFileId: item.driveFileId,
+            },
+          }))
+        );
+      }
+      onProcessQueue?.().catch((e) => console.error('Failed to run sync after folder deletion:', e));
     } else {
       // Normal item deletion
       if (targetItem.type === 'file') {
@@ -173,12 +187,14 @@ export const deleteItem = async (id: string): Promise<DumpItem[]> => {
       await saveItems(updated);
 
       // Enqueue delete task for file/link/text
-      await enqueueSyncTask('DELETE', id, targetItem.type, {
-        driveMetaFileId: targetItem.driveMetaFileId,
-        driveFileId: targetItem.driveFileId,
-      });
+      if (onEnqueueTask) {
+        await onEnqueueTask('DELETE', id, targetItem.type, {
+          driveMetaFileId: targetItem.driveMetaFileId,
+          driveFileId: targetItem.driveFileId,
+        });
+      }
 
-      processSyncQueue().catch((e) => console.error('Failed to run sync after item deletion:', e));
+      onProcessQueue?.().catch((e) => console.error('Failed to run sync after item deletion:', e));
     }
 
     return updated;
@@ -231,9 +247,11 @@ export const updateItem = async (id: string, value: string): Promise<DumpItem[]>
     await saveItems(updated);
 
     // Enqueue update task
-    enqueueSyncTask('UPDATE', id, targetItem.type)
-      .then(() => processSyncQueue())
-      .catch((e) => console.error('Failed to schedule item update:', e));
+    if (onEnqueueTask) {
+      onEnqueueTask('UPDATE', id, targetItem.type)
+        .then(() => onProcessQueue?.())
+        .catch((e) => console.error('Failed to schedule item update:', e));
+    }
 
     return updated;
   } catch (e) {
@@ -246,11 +264,7 @@ export const addMultiplePhotos = async (uris: string[], folderId?: string): Prom
   try {
     const currentItems = await getItems();
     
-    const now = new Date();
-    const pad = (n: number) => n.toString().padStart(2, '0');
-    const dateStr = `${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${now.getFullYear()}`;
-    const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    const label = `${dateStr} @ ${timeStr}`;
+    const label = formatSyncTimestamp();
 
     const newItems: DumpItem[] = uris.map((uri, index) => ({
       id: `${Date.now()}_${index}`,
@@ -265,15 +279,17 @@ export const addMultiplePhotos = async (uris: string[], folderId?: string): Prom
     await saveItems(updated);
 
     // Enqueue upload tasks atomically for each photo
-    await enqueueSyncTasks(
-      newItems.map((item) => ({
-        action: 'UPLOAD',
-        itemId: item.id,
-        itemType: 'photo',
-        extras: { fileUri: item.value },
-      }))
-    );
-    processSyncQueue().catch((e) => console.error('Failed to schedule batch photo uploads:', e));
+    if (onEnqueueTasks) {
+      await onEnqueueTasks(
+        newItems.map((item) => ({
+          action: 'UPLOAD',
+          itemId: item.id,
+          itemType: 'photo',
+          extras: { fileUri: item.value },
+        }))
+      );
+    }
+    onProcessQueue?.().catch((e) => console.error('Failed to schedule batch photo uploads:', e));
 
     return updated;
   } catch (e) {
@@ -301,9 +317,11 @@ export const setItemFolder = async (id: string, folderId: string | undefined): P
     await saveItems(updated);
 
     // Enqueue update task
-    enqueueSyncTask('UPDATE', id, targetItem.type)
-      .then(() => processSyncQueue())
-      .catch((e) => console.error('Failed to schedule folder change update:', e));
+    if (onEnqueueTask) {
+      onEnqueueTask('UPDATE', id, targetItem.type)
+        .then(() => onProcessQueue?.())
+        .catch((e) => console.error('Failed to schedule folder change update:', e));
+    }
 
     return updated;
   } catch (e) {
