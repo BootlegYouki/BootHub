@@ -217,10 +217,18 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
     );
   };
 
-  const handleManualSync = () => {
-    processSyncQueue().catch((err) => {
+  const handleManualSync = async () => {
+    updateSyncStatus({ isSyncing: true, error: null });
+    try {
+      await pullChangesFromDrive();
+      await processSyncQueue();
+    } catch (err: any) {
       console.error('Manual sync execution failed:', err);
-    });
+      updateSyncStatus({
+        isSyncing: false,
+        error: 'Sync failed: ' + (err.message || String(err)),
+      });
+    }
   };
 
   return (

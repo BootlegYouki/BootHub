@@ -104,11 +104,6 @@
     "ast_hash": "637776aa6f7496d069afe7520c845c8a",
     "semantic_hash": ""
   },
-  "E:\\Github\\tui-template-native\\.github\\workflows\\build-ios-ipa.yml": {
-    "mtime": 1780528123.1322792,
-    "ast_hash": "3a5644494d1d2f974d736404e6e53aeb",
-    "semantic_hash": ""
-  },
   "E:\\Github\\tui-template-native\\assets\\icon.png": {
     "mtime": 1780448726.4712076,
     "ast_hash": "fb994e4003011fffaccb9de53425828c",
@@ -465,8 +460,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\SettingsScreen.tsx": {
-    "mtime": 1781092357.2696,
-    "ast_hash": "564e9420e78f1ab7d87c8ab829035d80",
+    "mtime": 1781615476.35719,
+    "ast_hash": "94d421ff2c46b80a2e51a1218c1823f5",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\utils\\google-drive.ts": {
@@ -477,16 +472,6 @@
   "E:\\Github\\BootHub\\src\\utils\\sync-engine.ts": {
     "mtime": 1781497413.1708755,
     "ast_hash": "e19e7f9f83c61c88e17c9dd6a750ab7d",
-    "semantic_hash": ""
-  },
-  "E:\\Github\\BootHub\\run_log_info_plist.txt": {
-    "mtime": 1781229150.5298195,
-    "ast_hash": "425677bf680d7111d1ef25bad80e2e22",
-    "semantic_hash": ""
-  },
-  "E:\\Github\\BootHub\\run_log_latest.txt": {
-    "mtime": 1781232281.5740364,
-    "ast_hash": "50108ab234822e45eb7e32eb5d340ecf",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\skills-lock.json": {
