@@ -145,8 +145,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\app.json": {
-    "mtime": 1781232105.761359,
-    "ast_hash": "b32dc782728647932c64c8759f4abac6",
+    "mtime": 1781615520.0488138,
+    "ast_hash": "64616388814a87105f66c53c567d771d",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\App.tsx": {
@@ -350,8 +350,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\sidestore.json": {
-    "mtime": 1781232105.761874,
-    "ast_hash": "5447f043bd28bd9d25d36a659637b019",
+    "mtime": 1781615520.0488138,
+    "ast_hash": "e760b6da23210a72a912719cdfeefb8a",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\FilesScreen.tsx": {
@@ -555,8 +555,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\hooks\\use-sync.ts": {
-    "mtime": 1781496926.1613214,
-    "ast_hash": "9de63e241d5e8079cc64ef2226bc10e4",
+    "mtime": 1781615812.8728662,
+    "ast_hash": "7747a46f4249f2c52ac28e59b79553ff",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\hooks\\use-tab-filter.ts": {

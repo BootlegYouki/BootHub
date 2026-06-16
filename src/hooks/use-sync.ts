@@ -4,12 +4,16 @@ import {
   processSyncQueue,
   enqueueUnsyncedLocalItems,
   initializeRealtimeSync,
+  pullChangesFromDrive,
 } from '../utils/sync-engine';
 
 export function useSync(): void {
   useEffect(() => {
     const runSync = async () => {
       try {
+        await pullChangesFromDrive().catch((err) =>
+          console.error('[App] Pull failed:', err)
+        );
         await enqueueUnsyncedLocalItems();
       } catch (err) {
         console.error('[App] Failed to enqueue unsynced local items:', err);

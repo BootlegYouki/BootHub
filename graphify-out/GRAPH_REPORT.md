@@ -1,16 +1,16 @@
 # Graph Report - BootHub  (2026-06-16)
 
 ## Corpus Check
-- 74 files · ~116,033 words
+- 74 files · ~116,042 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 777 nodes · 1360 edges · 69 communities (64 shown, 5 thin omitted)
+- 777 nodes · 1361 edges · 67 communities (62 shown, 5 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `1dc4c369`
+- Built from commit: `fd306789`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -41,7 +41,6 @@
 - [[_COMMUNITY_Community 28|Community 28]]
 - [[_COMMUNITY_Community 29|Community 29]]
 - [[_COMMUNITY_Community 30|Community 30]]
-- [[_COMMUNITY_Community 31|Community 31]]
 - [[_COMMUNITY_Community 33|Community 33]]
 - [[_COMMUNITY_Community 34|Community 34]]
 - [[_COMMUNITY_Community 35|Community 35]]
@@ -72,7 +71,6 @@
 - [[_COMMUNITY_Community 60|Community 60]]
 - [[_COMMUNITY_Community 61|Community 61]]
 - [[_COMMUNITY_Community 62|Community 62]]
-- [[_COMMUNITY_Community 63|Community 63]]
 - [[_COMMUNITY_Community 64|Community 64]]
 - [[_COMMUNITY_Community 65|Community 65]]
 - [[_COMMUNITY_Community 66|Community 66]]
@@ -103,7 +101,7 @@
 - `MainApp()` --calls--> `useTheme()`  [EXTRACTED]
   App.tsx → src/theme/theme-provider.tsx
 
-## Communities (69 total, 5 thin omitted)
+## Communities (67 total, 5 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.09
@@ -122,8 +120,8 @@ Cohesion: 0.06
 Nodes (33): dependencies, axios, expo, expo-auth-session, expo-clipboard, expo-crypto, expo-dev-client, expo-document-picker (+25 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.18
-Nodes (11): devDependencies, eslint, @eslint/js, eslint-plugin-react-hooks, eslint-plugin-react-refresh, globals, prettier, @types/node (+3 more)
+Cohesion: 0.07
+Nodes (26): author, devDependencies, eslint, @eslint/js, eslint-plugin-react-hooks, eslint-plugin-react-refresh, globals, prettier (+18 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.08
@@ -192,10 +190,6 @@ Nodes (9): duplicates, ignore, minOccurrences, health, ignore, ignoreDependencie
 ### Community 30 - "Community 30"
 Cohesion: 0.15
 Nodes (12): Combined Dead Code + Duplication, Custom Plugin Setup, Fallow: Common Workflow Patterns & Recipes, Full audit (default), Option 1: Inline framework config, Option 2: External plugin file, Option 3: Plugin directory, Production audit (+4 more)
-
-### Community 31 - "Community 31"
-Cohesion: 0.20
-Nodes (10): scripts, android, dev, format, ios, lint, rename, start (+2 more)
 
 ### Community 33 - "Community 33"
 Cohesion: 0.22
@@ -316,10 +310,6 @@ Nodes (4): Examples, Flags, `flags`: Feature Flag Detection, JSON Output Structu
 ### Community 62 - "Community 62"
 Cohesion: 0.50
 Nodes (4): All-in-one with `--ci`, GitHub Code Scanning Integration, Step 1: Generate SARIF output, Step 2: Upload via GitHub Action
-
-### Community 63 - "Community 63"
-Cohesion: 0.33
-Nodes (5): author, main, name, private, version
 
 ### Community 64 - "Community 64"
 Cohesion: 0.67
