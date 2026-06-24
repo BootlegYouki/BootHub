@@ -151,9 +151,7 @@ const FileItem: React.FC<FileItemProps> = ({
       <TuiContainer
         label={item.label}
         badge={
-          item.syncState === 'pending'
-            ? 'Pending'
-            : item.syncState === 'error'
+          item.syncState === 'error'
             ? 'Error'
             : item.syncState === 'synced'
             ? 'Synced'

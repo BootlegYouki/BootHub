@@ -499,9 +499,13 @@ export const pullChangesFromDrive = async (): Promise<void> => {
 
     const remoteItemIds = new Set((remoteItems || []).map((x) => x.id));
 
-    // Identify remote deletions (only for items synced to Supabase)
     const itemsDeletedRemotely = localItems.filter((item) => {
-      const isSupabaseSynced = item.syncState === 'synced' && item.driveFileId && item.driveFileId.includes('/');
+      const isSupabaseSynced =
+        item.syncState === 'synced' &&
+        (item.type === 'text' ||
+          item.type === 'link' ||
+          item.type === 'folder' ||
+          (item.driveFileId && item.driveFileId.includes('/')));
       return isSupabaseSynced && !remoteItemIds.has(item.id);
     });
 

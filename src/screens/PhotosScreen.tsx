@@ -171,19 +171,6 @@ const PhotoItem: React.FC<PhotoItemProps> = ({
           />
         )}
       </View>
-      {item.syncState === 'pending' && (
-        <View style={[styles.progressBarContainer, { backgroundColor: colors.border }]}>
-          <View
-            style={[
-              styles.progressBar,
-              {
-                backgroundColor: colors.primary,
-                width: `${Math.round(uploadProgress * 100)}%`,
-              },
-            ]}
-          />
-        </View>
-      )}
     </AnimatedPressable>
   );
 };
