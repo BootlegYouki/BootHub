@@ -2547,7 +2547,7 @@
       "source_file": "src/context/animation-lock.tsx",
       "source_location": "L1",
       "id": "src_context_animation_lock_tsx",
-      "community": 44,
+      "community": 22,
       "norm_label": "animation-lock.tsx"
     },
     {
@@ -2556,7 +2556,7 @@
       "source_file": "src/context/animation-lock.tsx",
       "source_location": "L14",
       "id": "context_animation_lock_animationlockcontextvalue",
-      "community": 44,
+      "community": 22,
       "norm_label": "animationlockcontextvalue"
     },
     {
@@ -2565,7 +2565,7 @@
       "source_file": "src/context/animation-lock.tsx",
       "source_location": "L25",
       "id": "context_animation_lock_animationlockcontext",
-      "community": 44,
+      "community": 22,
       "norm_label": "animationlockcontext"
     },
     {
@@ -2574,7 +2574,7 @@
       "source_file": "src/context/animation-lock.tsx",
       "source_location": "L32",
       "id": "context_animation_lock_animationlockprovider",
-      "community": 44,
+      "community": 22,
       "norm_label": "animationlockprovider()"
     },
     {
@@ -2583,7 +2583,7 @@
       "source_file": "src/context/animation-lock.tsx",
       "source_location": "L63",
       "id": "context_animation_lock_useanimationlock",
-      "community": 44,
+      "community": 22,
       "norm_label": "useanimationlock()"
     },
     {
@@ -4039,7 +4039,7 @@
       "label": "resolveLocalFile()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L303",
+      "source_location": "L304",
       "id": "utils_sync_engine_resolvelocalfile",
       "community": 43,
       "norm_label": "resolvelocalfile()"
@@ -4048,7 +4048,7 @@
       "label": "processSyncQueue()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L315",
+      "source_location": "L316",
       "id": "utils_sync_engine_processsyncqueue",
       "community": 8,
       "norm_label": "processsyncqueue()"
@@ -4057,7 +4057,7 @@
       "label": "dequeueTask()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L466",
+      "source_location": "L467",
       "id": "utils_sync_engine_dequeuetask",
       "community": 8,
       "norm_label": "dequeuetask()"
@@ -4066,7 +4066,7 @@
       "label": "pullChangesFromDrive()",
       "file_type": "code",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L474",
+      "source_location": "L475",
       "id": "utils_sync_engine_pullchangesfromdrive",
       "community": 8,
       "norm_label": "pullchangesfromdrive()"
@@ -6453,7 +6453,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L621",
       "id": "references_patterns_combined_dead_code_duplication",
-      "community": 30,
+      "community": 44,
       "norm_label": "combined dead code + duplication"
     },
     {
@@ -6462,7 +6462,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L625",
       "id": "references_patterns_step_1_run_combined_analysis",
-      "community": 30,
+      "community": 44,
       "norm_label": "step 1: run combined analysis"
     },
     {
@@ -6471,7 +6471,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L633",
       "id": "references_patterns_step_2_prioritize_cleanup",
-      "community": 30,
+      "community": 44,
       "norm_label": "step 2: prioritize cleanup"
     },
     {
@@ -6516,7 +6516,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L690",
       "id": "references_patterns_github_code_scanning_integration",
-      "community": 62,
+      "community": 30,
       "norm_label": "github code scanning integration"
     },
     {
@@ -6525,7 +6525,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L694",
       "id": "references_patterns_step_1_generate_sarif_output",
-      "community": 62,
+      "community": 30,
       "norm_label": "step 1: generate sarif output"
     },
     {
@@ -6534,7 +6534,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L700",
       "id": "references_patterns_step_2_upload_via_github_action",
-      "community": 62,
+      "community": 30,
       "norm_label": "step 2: upload via github action"
     },
     {
@@ -6543,7 +6543,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L709",
       "id": "references_patterns_all_in_one_with_ci",
-      "community": 62,
+      "community": 30,
       "norm_label": "all-in-one with `--ci`"
     },
     {
@@ -9565,9 +9565,9 @@
       "source_file": "package.json",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "boothub_package_dependencies",
-      "target": "boothub_package_dependencies_supabase_supabase_js",
-      "confidence_score": 1.0
+      "target": "boothub_package_dependencies_supabase_supabase_js"
     },
     {
       "relation": "contains",
@@ -15499,9 +15499,9 @@
       "source_file": "src/screens/SettingsScreen.tsx",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_screens_settingsscreen_tsx",
-      "target": "src_utils_supabase_ts",
-      "confidence_score": 1.0
+      "target": "src_utils_supabase_ts"
     },
     {
       "relation": "imports_from",
@@ -15642,9 +15642,9 @@
       "source_file": "src/screens/SettingsScreen.tsx",
       "source_location": "L20",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_screens_settingsscreen_tsx",
-      "target": "utils_supabase_supabase",
-      "confidence_score": 1.0
+      "target": "utils_supabase_supabase"
     },
     {
       "relation": "imports",
@@ -17870,9 +17870,9 @@
       "source_file": "src/utils/supabase.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_utils_supabase_ts",
-      "target": "utils_supabase_supabase",
-      "confidence_score": 1.0
+      "target": "utils_supabase_supabase"
     },
     {
       "relation": "imports_from",
@@ -17881,9 +17881,9 @@
       "source_file": "src/utils/sync-engine.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_utils_sync_engine_ts",
-      "target": "src_utils_supabase_ts",
-      "confidence_score": 1.0
+      "target": "src_utils_supabase_ts"
     },
     {
       "relation": "imports",
@@ -17892,9 +17892,9 @@
       "source_file": "src/utils/sync-engine.ts",
       "source_location": "L6",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_utils_sync_engine_ts",
-      "target": "utils_supabase_supabase",
-      "confidence_score": 1.0
+      "target": "utils_supabase_supabase"
     },
     {
       "relation": "contains",
@@ -21392,5 +21392,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "0d9e4f92460178571dc3181ffa8f7d48e48587a2"
+  "built_at_commit": "5371ad628cc88500ae68f1c7748ca5fcca22efd9"
 }

@@ -1,16 +1,16 @@
 # Graph Report - BootHub  (2026-06-24)
 
 ## Corpus Check
-- 75 files · ~114,574 words
+- 75 files · ~114,603 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 780 nodes · 1370 edges · 71 communities (66 shown, 5 thin omitted)
+- 780 nodes · 1370 edges · 70 communities (65 shown, 5 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0d9e4f92`
+- Built from commit: `5371ad62`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -71,7 +71,6 @@
 - [[_COMMUNITY_Community 59|Community 59]]
 - [[_COMMUNITY_Community 60|Community 60]]
 - [[_COMMUNITY_Community 61|Community 61]]
-- [[_COMMUNITY_Community 62|Community 62]]
 - [[_COMMUNITY_Community 63|Community 63]]
 - [[_COMMUNITY_Community 64|Community 64]]
 - [[_COMMUNITY_Community 65|Community 65]]
@@ -98,14 +97,14 @@
   App.tsx → src/theme/theme-provider.tsx
 - `MainApp()` --calls--> `useTheme()`  [EXTRACTED]
   App.tsx → src/theme/theme-provider.tsx
-- `MainApp()` --calls--> `useAnimationLock()`  [EXTRACTED]
-  App.tsx → src/context/animation-lock.tsx
 - `MainApp()` --calls--> `useTabFilter()`  [EXTRACTED]
   App.tsx → src/hooks/use-tab-filter.ts
 - `MainApp()` --calls--> `useTheme()`  [EXTRACTED]
   App.tsx → src/theme/theme-provider.tsx
+- `MainApp()` --calls--> `ensureFileUri()`  [EXTRACTED]
+  App.tsx → src/utils/helpers.ts
 
-## Communities (71 total, 5 thin omitted)
+## Communities (70 total, 5 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.08
@@ -160,8 +159,8 @@ Cohesion: 0.09
 Nodes (28): styles, TuiButton(), TuiButtonProps, ChartItem, MeterSegment, styles, TuiBarChart(), TuiBarChartProps (+20 more)
 
 ### Community 22 - "Community 22"
-Cohesion: 0.15
-Nodes (11): MainApp(), useAppData(), useBottomBarAnimation(), UseBottomBarAnimationOptions, UseBottomBarAnimationReturn, useDeepLink(), useEditItem(), useHeaderMenu() (+3 more)
+Cohesion: 0.11
+Nodes (15): MainApp(), AnimationLockContext, AnimationLockContextValue, AnimationLockProvider(), useAnimationLock(), useAppData(), useBottomBarAnimation(), UseBottomBarAnimationOptions (+7 more)
 
 ### Community 23 - "Community 23"
 Cohesion: 0.18
@@ -192,8 +191,8 @@ Cohesion: 0.20
 Nodes (9): duplicates, ignore, minOccurrences, health, ignore, ignoreDependencies, ignorePatterns, rules (+1 more)
 
 ### Community 30 - "Community 30"
-Cohesion: 0.22
-Nodes (8): Combined Dead Code + Duplication, Fallow: Common Workflow Patterns & Recipes, PR Dead Code Check, Step 1: Analyze changed files, Step 1: Run combined analysis, Step 2: If issues found, show specifics, Step 2: Prioritize cleanup, Table of Contents
+Cohesion: 0.20
+Nodes (9): All-in-one with `--ci`, Fallow: Common Workflow Patterns & Recipes, GitHub Code Scanning Integration, PR Dead Code Check, Step 1: Analyze changed files, Step 1: Generate SARIF output, Step 2: If issues found, show specifics, Step 2: Upload via GitHub Action (+1 more)
 
 ### Community 31 - "Community 31"
 Cohesion: 0.20
@@ -244,8 +243,8 @@ Cohesion: 0.22
 Nodes (14): ContextMenuOverlay(), ContextMenuOverlay(), handleCopyItem(), base64ToBytes(), bytesToBase64(), ensureFileUri(), extractAudioArtwork(), getActualType() (+6 more)
 
 ### Community 44 - "Community 44"
-Cohesion: 0.40
-Nodes (4): AnimationLockContext, AnimationLockContextValue, AnimationLockProvider(), useAnimationLock()
+Cohesion: 0.67
+Nodes (3): Combined Dead Code + Duplication, Step 1: Run combined analysis, Step 2: Prioritize cleanup
 
 ### Community 45 - "Community 45"
 Cohesion: 0.33
@@ -314,10 +313,6 @@ Nodes (4): Examples, Flags, JSON Output Structure, `security`: Security Candidat
 ### Community 61 - "Community 61"
 Cohesion: 0.50
 Nodes (4): Examples, Flags, `flags`: Feature Flag Detection, JSON Output Structure
-
-### Community 62 - "Community 62"
-Cohesion: 0.50
-Nodes (4): All-in-one with `--ci`, GitHub Code Scanning Integration, Step 1: Generate SARIF output, Step 2: Upload via GitHub Action
 
 ### Community 63 - "Community 63"
 Cohesion: 0.33
