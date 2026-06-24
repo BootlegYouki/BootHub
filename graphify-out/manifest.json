@@ -145,8 +145,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\app.json": {
-    "mtime": 1782303268.5341191,
-    "ast_hash": "373dc114197044525eaf7d41ecaf1983",
+    "mtime": 1782306666.6449285,
+    "ast_hash": "835e925762a2c6636980afe713bc7b6b",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\App.tsx": {
@@ -350,8 +350,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\sidestore.json": {
-    "mtime": 1782303268.549811,
-    "ast_hash": "d228ebed41642306c091206ab10c9abe",
+    "mtime": 1782306666.6602628,
+    "ast_hash": "730d9ee0872d3717a258c6911e44b65e",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\FilesScreen.tsx": {
@@ -460,18 +460,13 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\SettingsScreen.tsx": {
-    "mtime": 1782303806.0521545,
-    "ast_hash": "aa504bb0e508df66be5e13012978bd2f",
-    "semantic_hash": ""
-  },
-  "E:\\Github\\BootHub\\src\\utils\\google-drive.ts": {
-    "mtime": 1781092846.4987612,
-    "ast_hash": "32b400184fe5e35d959a9f84ddfa9bc4",
+    "mtime": 1782307232.7856581,
+    "ast_hash": "4fa4af87676dbe000837291078d57ec1",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\utils\\sync-engine.ts": {
-    "mtime": 1782305280.9381452,
-    "ast_hash": "431309b50c3c6244d0a151c87fa0db46",
+    "mtime": 1782307239.447292,
+    "ast_hash": "69d4865aa925430a926fb9c43bec0010",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\skills-lock.json": {
@@ -577,6 +572,11 @@
   "E:\\Github\\BootHub\\src\\utils\\supabase.ts": {
     "mtime": 1782303762.629153,
     "ast_hash": "ef86dea3f12350bb2e42cf4069c479e3",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\utils\\google-auth.ts": {
+    "mtime": 1782307221.868705,
+    "ast_hash": "4b64bc2af4ca38ea42b63024e37ae242",
     "semantic_hash": ""
   }
 }

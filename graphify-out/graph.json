@@ -1359,7 +1359,7 @@
       "source_file": "src/components/base-folder-screen.tsx",
       "source_location": "L1",
       "id": "src_components_base_folder_screen_tsx",
-      "community": 2,
+      "community": 21,
       "norm_label": "base-folder-screen.tsx"
     },
     {
@@ -1368,7 +1368,7 @@
       "source_file": "src/components/base-folder-screen.tsx",
       "source_location": "L10",
       "id": "components_base_folder_screen_folderscreenprops",
-      "community": 2,
+      "community": 21,
       "norm_label": "folderscreenprops"
     },
     {
@@ -1377,7 +1377,7 @@
       "source_file": "src/components/base-folder-screen.tsx",
       "source_location": "L22",
       "id": "components_base_folder_screen_folderitemprops",
-      "community": 2,
+      "community": 21,
       "norm_label": "folderitemprops"
     },
     {
@@ -1386,7 +1386,7 @@
       "source_file": "src/components/base-folder-screen.tsx",
       "source_location": "L31",
       "id": "components_base_folder_screen_basefolderscreenprops",
-      "community": 2,
+      "community": 28,
       "norm_label": "basefolderscreenprops"
     },
     {
@@ -1395,7 +1395,7 @@
       "source_file": "src/components/base-folder-screen.tsx",
       "source_location": "L36",
       "id": "components_base_folder_screen_basefolderscreen",
-      "community": 2,
+      "community": 21,
       "norm_label": "basefolderscreen()"
     },
     {
@@ -1413,7 +1413,7 @@
       "source_file": "src/components/context-menu-overlay.tsx",
       "source_location": "L27",
       "id": "components_context_menu_overlay_contextmenuoverlayprops",
-      "community": 54,
+      "community": 7,
       "norm_label": "contextmenuoverlayprops"
     },
     {
@@ -1422,7 +1422,7 @@
       "source_file": "src/components/context-menu-overlay.tsx",
       "source_location": "L39",
       "id": "components_context_menu_overlay_contextmenuoverlay",
-      "community": 43,
+      "community": 7,
       "norm_label": "contextmenuoverlay()"
     },
     {
@@ -1440,7 +1440,7 @@
       "source_file": "src/components/empty-folder.tsx",
       "source_location": "L1",
       "id": "src_components_empty_folder_tsx",
-      "community": 2,
+      "community": 21,
       "norm_label": "empty-folder.tsx"
     },
     {
@@ -1449,7 +1449,7 @@
       "source_file": "src/components/empty-folder.tsx",
       "source_location": "L6",
       "id": "components_empty_folder_emptyfolderplaceholder",
-      "community": 2,
+      "community": 21,
       "norm_label": "emptyfolderplaceholder()"
     },
     {
@@ -1458,7 +1458,7 @@
       "source_file": "src/components/empty-folder.tsx",
       "source_location": "L18",
       "id": "components_empty_folder_styles",
-      "community": 2,
+      "community": 21,
       "norm_label": "styles"
     },
     {
@@ -1467,7 +1467,7 @@
       "source_file": "src/components/folder-header.tsx",
       "source_location": "L1",
       "id": "src_components_folder_header_tsx",
-      "community": 38,
+      "community": 21,
       "norm_label": "folder-header.tsx"
     },
     {
@@ -1476,7 +1476,7 @@
       "source_file": "src/components/folder-header.tsx",
       "source_location": "L7",
       "id": "components_folder_header_folderheaderprops",
-      "community": 38,
+      "community": 21,
       "norm_label": "folderheaderprops"
     },
     {
@@ -1485,7 +1485,7 @@
       "source_file": "src/components/folder-header.tsx",
       "source_location": "L13",
       "id": "components_folder_header_folderheader",
-      "community": 38,
+      "community": 21,
       "norm_label": "folderheader()"
     },
     {
@@ -1494,7 +1494,7 @@
       "source_file": "src/components/folder-header.tsx",
       "source_location": "L37",
       "id": "components_folder_header_styles",
-      "community": 38,
+      "community": 21,
       "norm_label": "styles"
     },
     {
@@ -1503,7 +1503,7 @@
       "source_file": "src/components/folder-item.tsx",
       "source_location": "L1",
       "id": "src_components_folder_item_tsx",
-      "community": 2,
+      "community": 21,
       "norm_label": "folder-item.tsx"
     },
     {
@@ -1512,7 +1512,7 @@
       "source_file": "src/components/folder-item.tsx",
       "source_location": "L8",
       "id": "components_folder_item_folderitemprops",
-      "community": 2,
+      "community": 21,
       "norm_label": "folderitemprops"
     },
     {
@@ -1521,7 +1521,7 @@
       "source_file": "src/components/folder-item.tsx",
       "source_location": "L23",
       "id": "components_folder_item_folderitem",
-      "community": 2,
+      "community": 21,
       "norm_label": "folderitem()"
     },
     {
@@ -1530,7 +1530,7 @@
       "source_file": "src/components/folder-item.tsx",
       "source_location": "L120",
       "id": "components_folder_item_styles",
-      "community": 2,
+      "community": 21,
       "norm_label": "styles"
     },
     {
@@ -1539,7 +1539,7 @@
       "source_file": "src/components/folder-picker-sheet.tsx",
       "source_location": "L1",
       "id": "src_components_folder_picker_sheet_tsx",
-      "community": 35,
+      "community": 21,
       "norm_label": "folder-picker-sheet.tsx"
     },
     {
@@ -1548,7 +1548,7 @@
       "source_file": "src/components/folder-picker-sheet.tsx",
       "source_location": "L17",
       "id": "components_folder_picker_sheet_folderpickersheetprops",
-      "community": 35,
+      "community": 28,
       "norm_label": "folderpickersheetprops"
     },
     {
@@ -1557,7 +1557,7 @@
       "source_file": "src/components/folder-picker-sheet.tsx",
       "source_location": "L25",
       "id": "components_folder_picker_sheet_height_screenheight",
-      "community": 35,
+      "community": 21,
       "norm_label": "{ height: screenheight }"
     },
     {
@@ -1566,7 +1566,7 @@
       "source_file": "src/components/folder-picker-sheet.tsx",
       "source_location": "L27",
       "id": "components_folder_picker_sheet_folderpickersheet",
-      "community": 35,
+      "community": 21,
       "norm_label": "folderpickersheet()"
     },
     {
@@ -1575,7 +1575,7 @@
       "source_file": "src/components/folder-picker-sheet.tsx",
       "source_location": "L340",
       "id": "components_folder_picker_sheet_styles",
-      "community": 35,
+      "community": 21,
       "norm_label": "styles"
     },
     {
@@ -1584,7 +1584,7 @@
       "source_file": "src/components/fullscreen-photo-viewer.tsx",
       "source_location": "L1",
       "id": "src_components_fullscreen_photo_viewer_tsx",
-      "community": 54,
+      "community": 7,
       "norm_label": "fullscreen-photo-viewer.tsx"
     },
     {
@@ -1593,7 +1593,7 @@
       "source_file": "src/components/fullscreen-photo-viewer.tsx",
       "source_location": "L27",
       "id": "components_fullscreen_photo_viewer_fullscreenphotoviewerprops",
-      "community": 54,
+      "community": 7,
       "norm_label": "fullscreenphotoviewerprops"
     },
     {
@@ -1602,7 +1602,7 @@
       "source_file": "src/components/fullscreen-photo-viewer.tsx",
       "source_location": "L38",
       "id": "components_fullscreen_photo_viewer_calculatefullscreenimagebounds",
-      "community": 54,
+      "community": 7,
       "norm_label": "calculatefullscreenimagebounds()"
     },
     {
@@ -1611,7 +1611,7 @@
       "source_file": "src/components/fullscreen-photo-viewer.tsx",
       "source_location": "L69",
       "id": "components_fullscreen_photo_viewer_fullscreenphotoviewer",
-      "community": 54,
+      "community": 7,
       "norm_label": "fullscreenphotoviewer()"
     },
     {
@@ -1620,7 +1620,7 @@
       "source_file": "src/components/fullscreen-photo-viewer.tsx",
       "source_location": "L629",
       "id": "components_fullscreen_photo_viewer_styles",
-      "community": 54,
+      "community": 7,
       "norm_label": "styles"
     },
     {
@@ -1764,7 +1764,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L1",
       "id": "src_components_photo_picker_sheet_tsx",
-      "community": 27,
+      "community": 21,
       "norm_label": "photo-picker-sheet.tsx"
     },
     {
@@ -1773,7 +1773,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L19",
       "id": "components_photo_picker_sheet_photopickersheetprops",
-      "community": 27,
+      "community": 21,
       "norm_label": "photopickersheetprops"
     },
     {
@@ -1782,7 +1782,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L27",
       "id": "components_photo_picker_sheet_width_screenwidth",
-      "community": 27,
+      "community": 21,
       "norm_label": "{ width: screenwidth }"
     },
     {
@@ -1791,7 +1791,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L32",
       "id": "components_photo_picker_sheet_photopickersheet",
-      "community": 27,
+      "community": 21,
       "norm_label": "photopickersheet()"
     },
     {
@@ -1800,7 +1800,7 @@
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L328",
       "id": "components_photo_picker_sheet_styles",
-      "community": 27,
+      "community": 21,
       "norm_label": "styles"
     },
     {
@@ -1962,7 +1962,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L1",
       "id": "src_components_tui_calendar_tsx",
-      "community": 45,
+      "community": 21,
       "norm_label": "tui-calendar.tsx"
     },
     {
@@ -1971,7 +1971,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L7",
       "id": "components_tui_calendar_tuicalendarprops",
-      "community": 45,
+      "community": 21,
       "norm_label": "tuicalendarprops"
     },
     {
@@ -1980,7 +1980,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L13",
       "id": "components_tui_calendar_months",
-      "community": 45,
+      "community": 21,
       "norm_label": "months"
     },
     {
@@ -1989,7 +1989,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L19",
       "id": "components_tui_calendar_weekdays",
-      "community": 45,
+      "community": 21,
       "norm_label": "weekdays"
     },
     {
@@ -1998,7 +1998,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L21",
       "id": "components_tui_calendar_tuicalendar",
-      "community": 45,
+      "community": 21,
       "norm_label": "tuicalendar()"
     },
     {
@@ -2007,7 +2007,7 @@
       "source_file": "src/components/tui-calendar.tsx",
       "source_location": "L239",
       "id": "components_tui_calendar_styles",
-      "community": 45,
+      "community": 21,
       "norm_label": "styles"
     },
     {
@@ -2142,7 +2142,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L1",
       "id": "src_components_tui_container_tsx",
-      "community": 27,
+      "community": 21,
       "norm_label": "tui-container.tsx"
     },
     {
@@ -2151,7 +2151,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L11",
       "id": "components_tui_container_tuicontainerprops",
-      "community": 27,
+      "community": 21,
       "norm_label": "tuicontainerprops"
     },
     {
@@ -2160,7 +2160,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L25",
       "id": "components_tui_container_animatedpressable",
-      "community": 27,
+      "community": 21,
       "norm_label": "animatedpressable"
     },
     {
@@ -2169,7 +2169,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L27",
       "id": "components_tui_container_tuicontainer",
-      "community": 27,
+      "community": 21,
       "norm_label": "tuicontainer()"
     },
     {
@@ -2178,7 +2178,7 @@
       "source_file": "src/components/tui-container.tsx",
       "source_location": "L182",
       "id": "components_tui_container_styles",
-      "community": 27,
+      "community": 21,
       "norm_label": "styles"
     },
     {
@@ -2268,7 +2268,7 @@
       "source_file": "src/components/tui-input.tsx",
       "source_location": "L1",
       "id": "src_components_tui_input_tsx",
-      "community": 35,
+      "community": 21,
       "norm_label": "tui-input.tsx"
     },
     {
@@ -2277,7 +2277,7 @@
       "source_file": "src/components/tui-input.tsx",
       "source_location": "L7",
       "id": "components_tui_input_tuiinputprops",
-      "community": 35,
+      "community": 21,
       "norm_label": "tuiinputprops"
     },
     {
@@ -2286,7 +2286,7 @@
       "source_file": "src/components/tui-input.tsx",
       "source_location": "L14",
       "id": "components_tui_input_tuiinput",
-      "community": 35,
+      "community": 21,
       "norm_label": "tuiinput()"
     },
     {
@@ -2295,7 +2295,7 @@
       "source_file": "src/components/tui-input.tsx",
       "source_location": "L171",
       "id": "components_tui_input_styles",
-      "community": 35,
+      "community": 21,
       "norm_label": "styles"
     },
     {
@@ -2349,7 +2349,7 @@
       "source_file": "src/components/tui-skeleton.tsx",
       "source_location": "L1",
       "id": "src_components_tui_skeleton_tsx",
-      "community": 27,
+      "community": 21,
       "norm_label": "tui-skeleton.tsx"
     },
     {
@@ -2358,7 +2358,7 @@
       "source_file": "src/components/tui-skeleton.tsx",
       "source_location": "L10",
       "id": "components_tui_skeleton_tuiskeletonloader",
-      "community": 27,
+      "community": 21,
       "norm_label": "tuiskeletonloader()"
     },
     {
@@ -2367,7 +2367,7 @@
       "source_file": "src/components/tui-skeleton.tsx",
       "source_location": "L276",
       "id": "components_tui_skeleton_styles",
-      "community": 27,
+      "community": 21,
       "norm_label": "styles"
     },
     {
@@ -2547,7 +2547,7 @@
       "source_file": "src/context/animation-lock.tsx",
       "source_location": "L1",
       "id": "src_context_animation_lock_tsx",
-      "community": 22,
+      "community": 2,
       "norm_label": "animation-lock.tsx"
     },
     {
@@ -2556,7 +2556,7 @@
       "source_file": "src/context/animation-lock.tsx",
       "source_location": "L14",
       "id": "context_animation_lock_animationlockcontextvalue",
-      "community": 22,
+      "community": 2,
       "norm_label": "animationlockcontextvalue"
     },
     {
@@ -2565,7 +2565,7 @@
       "source_file": "src/context/animation-lock.tsx",
       "source_location": "L25",
       "id": "context_animation_lock_animationlockcontext",
-      "community": 22,
+      "community": 2,
       "norm_label": "animationlockcontext"
     },
     {
@@ -2574,7 +2574,7 @@
       "source_file": "src/context/animation-lock.tsx",
       "source_location": "L32",
       "id": "context_animation_lock_animationlockprovider",
-      "community": 22,
+      "community": 2,
       "norm_label": "animationlockprovider()"
     },
     {
@@ -2583,7 +2583,7 @@
       "source_file": "src/context/animation-lock.tsx",
       "source_location": "L63",
       "id": "context_animation_lock_useanimationlock",
-      "community": 22,
+      "community": 2,
       "norm_label": "useanimationlock()"
     },
     {
@@ -2601,7 +2601,7 @@
       "source_file": "src/hooks/use-app-data.ts",
       "source_location": "L5",
       "id": "hooks_use_app_data_useappdatareturn",
-      "community": 8,
+      "community": 28,
       "norm_label": "useappdatareturn"
     },
     {
@@ -2673,7 +2673,7 @@
       "source_file": "src/hooks/use-deep-link.ts",
       "source_location": "L11",
       "id": "hooks_use_deep_link_usedeeplink",
-      "community": 22,
+      "community": 49,
       "norm_label": "usedeeplink()"
     },
     {
@@ -2700,7 +2700,7 @@
       "source_file": "src/hooks/use-edit-item.ts",
       "source_location": "L14",
       "id": "hooks_use_edit_item_useedititemreturn",
-      "community": 8,
+      "community": 28,
       "norm_label": "useedititemreturn"
     },
     {
@@ -2718,7 +2718,7 @@
       "source_file": "src/hooks/use-header-menu.ts",
       "source_location": "L1",
       "id": "src_hooks_use_header_menu_ts",
-      "community": 22,
+      "community": 27,
       "norm_label": "use-header-menu.ts"
     },
     {
@@ -2727,7 +2727,7 @@
       "source_file": "src/hooks/use-header-menu.ts",
       "source_location": "L4",
       "id": "hooks_use_header_menu_useheadermenuoptions",
-      "community": 22,
+      "community": 27,
       "norm_label": "useheadermenuoptions"
     },
     {
@@ -2736,7 +2736,7 @@
       "source_file": "src/hooks/use-header-menu.ts",
       "source_location": "L10",
       "id": "hooks_use_header_menu_useheadermenureturn",
-      "community": 22,
+      "community": 27,
       "norm_label": "useheadermenureturn"
     },
     {
@@ -2745,7 +2745,7 @@
       "source_file": "src/hooks/use-header-menu.ts",
       "source_location": "L17",
       "id": "hooks_use_header_menu_useheadermenu",
-      "community": 22,
+      "community": 27,
       "norm_label": "useheadermenu()"
     },
     {
@@ -2835,7 +2835,7 @@
       "source_file": "src/hooks/use-tab-filter.ts",
       "source_location": "L87",
       "id": "hooks_use_tab_filter_usetabfilter",
-      "community": 28,
+      "community": 22,
       "norm_label": "usetabfilter()"
     },
     {
@@ -2844,7 +2844,7 @@
       "source_file": "src/screens/FilesScreen.tsx",
       "source_location": "L1",
       "id": "src_screens_filesscreen_tsx",
-      "community": 2,
+      "community": 21,
       "norm_label": "filesscreen.tsx"
     },
     {
@@ -2853,7 +2853,7 @@
       "source_file": "src/screens/FilesScreen.tsx",
       "source_location": "L21",
       "id": "screens_filesscreen_filesscreenprops",
-      "community": 2,
+      "community": 28,
       "norm_label": "filesscreenprops"
     },
     {
@@ -2862,7 +2862,7 @@
       "source_file": "src/screens/FilesScreen.tsx",
       "source_location": "L23",
       "id": "screens_filesscreen_fileitemprops",
-      "community": 2,
+      "community": 28,
       "norm_label": "fileitemprops"
     },
     {
@@ -2898,7 +2898,7 @@
       "source_file": "src/screens/FilesScreen.tsx",
       "source_location": "L201",
       "id": "screens_filesscreen_filesscreen",
-      "community": 2,
+      "community": 21,
       "norm_label": "filesscreen()"
     },
     {
@@ -2907,7 +2907,7 @@
       "source_file": "src/screens/FilesScreen.tsx",
       "source_location": "L239",
       "id": "screens_filesscreen_styles",
-      "community": 2,
+      "community": 21,
       "norm_label": "styles"
     },
     {
@@ -2916,7 +2916,7 @@
       "source_file": "src/screens/LinksScreen.tsx",
       "source_location": "L1",
       "id": "src_screens_linksscreen_tsx",
-      "community": 2,
+      "community": 21,
       "norm_label": "linksscreen.tsx"
     },
     {
@@ -2925,7 +2925,7 @@
       "source_file": "src/screens/LinksScreen.tsx",
       "source_location": "L12",
       "id": "screens_linksscreen_linksscreenprops",
-      "community": 2,
+      "community": 28,
       "norm_label": "linksscreenprops"
     },
     {
@@ -2934,7 +2934,7 @@
       "source_file": "src/screens/LinksScreen.tsx",
       "source_location": "L14",
       "id": "screens_linksscreen_linkitemprops",
-      "community": 2,
+      "community": 28,
       "norm_label": "linkitemprops"
     },
     {
@@ -2943,7 +2943,7 @@
       "source_file": "src/screens/LinksScreen.tsx",
       "source_location": "L16",
       "id": "screens_linksscreen_linkitem",
-      "community": 2,
+      "community": 21,
       "norm_label": "linkitem()"
     },
     {
@@ -2952,7 +2952,7 @@
       "source_file": "src/screens/LinksScreen.tsx",
       "source_location": "L94",
       "id": "screens_linksscreen_linksscreen",
-      "community": 2,
+      "community": 21,
       "norm_label": "linksscreen()"
     },
     {
@@ -2961,7 +2961,7 @@
       "source_file": "src/screens/LinksScreen.tsx",
       "source_location": "L132",
       "id": "screens_linksscreen_styles",
-      "community": 2,
+      "community": 21,
       "norm_label": "styles"
     },
     {
@@ -2970,7 +2970,7 @@
       "source_file": "src/screens/PhotosScreen.tsx",
       "source_location": "L1",
       "id": "src_screens_photosscreen_tsx",
-      "community": 38,
+      "community": 21,
       "norm_label": "photosscreen.tsx"
     },
     {
@@ -2979,7 +2979,7 @@
       "source_file": "src/screens/PhotosScreen.tsx",
       "source_location": "L20",
       "id": "screens_photosscreen_photolayout",
-      "community": 54,
+      "community": 7,
       "norm_label": "photolayout"
     },
     {
@@ -2988,7 +2988,7 @@
       "source_file": "src/screens/PhotosScreen.tsx",
       "source_location": "L27",
       "id": "screens_photosscreen_photoitemprops",
-      "community": 38,
+      "community": 28,
       "norm_label": "photoitemprops"
     },
     {
@@ -2997,7 +2997,7 @@
       "source_file": "src/screens/PhotosScreen.tsx",
       "source_location": "L40",
       "id": "screens_photosscreen_animatedpressable",
-      "community": 38,
+      "community": 21,
       "norm_label": "animatedpressable"
     },
     {
@@ -3006,7 +3006,7 @@
       "source_file": "src/screens/PhotosScreen.tsx",
       "source_location": "L42",
       "id": "screens_photosscreen_photoitem",
-      "community": 38,
+      "community": 21,
       "norm_label": "photoitem()"
     },
     {
@@ -3015,7 +3015,7 @@
       "source_file": "src/screens/PhotosScreen.tsx",
       "source_location": "L191",
       "id": "screens_photosscreen_photosscreenprops",
-      "community": 38,
+      "community": 28,
       "norm_label": "photosscreenprops"
     },
     {
@@ -3024,7 +3024,7 @@
       "source_file": "src/screens/PhotosScreen.tsx",
       "source_location": "L206",
       "id": "screens_photosscreen_photosscreen",
-      "community": 38,
+      "community": 21,
       "norm_label": "photosscreen()"
     },
     {
@@ -3033,7 +3033,7 @@
       "source_file": "src/screens/PhotosScreen.tsx",
       "source_location": "L396",
       "id": "screens_photosscreen_styles",
-      "community": 38,
+      "community": 21,
       "norm_label": "styles"
     },
     {
@@ -3067,7 +3067,7 @@
       "label": "styles",
       "file_type": "code",
       "source_file": "src/screens/SettingsScreen.tsx",
-      "source_location": "L339",
+      "source_location": "L338",
       "id": "screens_settingsscreen_styles",
       "community": 8,
       "norm_label": "styles"
@@ -3078,7 +3078,7 @@
       "source_file": "src/screens/TextsScreen.tsx",
       "source_location": "L1",
       "id": "src_screens_textsscreen_tsx",
-      "community": 2,
+      "community": 21,
       "norm_label": "textsscreen.tsx"
     },
     {
@@ -3087,7 +3087,7 @@
       "source_file": "src/screens/TextsScreen.tsx",
       "source_location": "L10",
       "id": "screens_textsscreen_textsscreenprops",
-      "community": 2,
+      "community": 28,
       "norm_label": "textsscreenprops"
     },
     {
@@ -3096,7 +3096,7 @@
       "source_file": "src/screens/TextsScreen.tsx",
       "source_location": "L12",
       "id": "screens_textsscreen_textitemprops",
-      "community": 2,
+      "community": 28,
       "norm_label": "textitemprops"
     },
     {
@@ -3105,7 +3105,7 @@
       "source_file": "src/screens/TextsScreen.tsx",
       "source_location": "L14",
       "id": "screens_textsscreen_textitem",
-      "community": 2,
+      "community": 21,
       "norm_label": "textitem()"
     },
     {
@@ -3114,7 +3114,7 @@
       "source_file": "src/screens/TextsScreen.tsx",
       "source_location": "L67",
       "id": "screens_textsscreen_textsscreen",
-      "community": 2,
+      "community": 21,
       "norm_label": "textsscreen()"
     },
     {
@@ -3123,7 +3123,7 @@
       "source_file": "src/screens/TextsScreen.tsx",
       "source_location": "L105",
       "id": "screens_textsscreen_styles",
-      "community": 2,
+      "community": 21,
       "norm_label": "styles"
     },
     {
@@ -3132,7 +3132,7 @@
       "source_file": "src/theme/theme-provider.tsx",
       "source_location": "L1",
       "id": "src_theme_theme_provider_tsx",
-      "community": 35,
+      "community": 21,
       "norm_label": "theme-provider.tsx"
     },
     {
@@ -3141,7 +3141,7 @@
       "source_file": "src/theme/theme-provider.tsx",
       "source_location": "L5",
       "id": "theme_theme_provider_thememode",
-      "community": 35,
+      "community": 21,
       "norm_label": "thememode"
     },
     {
@@ -3150,7 +3150,7 @@
       "source_file": "src/theme/theme-provider.tsx",
       "source_location": "L6",
       "id": "theme_theme_provider_accenttheme",
-      "community": 35,
+      "community": 21,
       "norm_label": "accenttheme"
     },
     {
@@ -3168,7 +3168,7 @@
       "source_file": "src/theme/theme-provider.tsx",
       "source_location": "L26",
       "id": "theme_theme_provider_themecontexttype",
-      "community": 35,
+      "community": 21,
       "norm_label": "themecontexttype"
     },
     {
@@ -3177,7 +3177,7 @@
       "source_file": "src/theme/theme-provider.tsx",
       "source_location": "L36",
       "id": "theme_theme_provider_accent_colors",
-      "community": 35,
+      "community": 21,
       "norm_label": "accent_colors"
     },
     {
@@ -3186,7 +3186,7 @@
       "source_file": "src/theme/theme-provider.tsx",
       "source_location": "L45",
       "id": "theme_theme_provider_themecontext",
-      "community": 35,
+      "community": 21,
       "norm_label": "themecontext"
     },
     {
@@ -3222,7 +3222,7 @@
       "source_file": "src/utils/clipboard-utils.ts",
       "source_location": "L1",
       "id": "src_utils_clipboard_utils_ts",
-      "community": 43,
+      "community": 7,
       "norm_label": "clipboard-utils.ts"
     },
     {
@@ -3231,7 +3231,7 @@
       "source_file": "src/utils/clipboard-utils.ts",
       "source_location": "L7",
       "id": "utils_clipboard_utils_handlecopyitem",
-      "community": 43,
+      "community": 7,
       "norm_label": "handlecopyitem()"
     },
     {
@@ -3240,7 +3240,7 @@
       "source_file": "src/utils/folder-navigation.ts",
       "source_location": "L1",
       "id": "src_utils_folder_navigation_ts",
-      "community": 2,
+      "community": 21,
       "norm_label": "folder-navigation.ts"
     },
     {
@@ -3249,7 +3249,7 @@
       "source_file": "src/utils/folder-navigation.ts",
       "source_location": "L4",
       "id": "utils_folder_navigation_getfolderdetails",
-      "community": 2,
+      "community": 21,
       "norm_label": "getfolderdetails()"
     },
     {
@@ -3258,224 +3258,134 @@
       "source_file": "src/utils/folder-navigation.ts",
       "source_location": "L12",
       "id": "utils_folder_navigation_usefoldernavigation",
-      "community": 2,
+      "community": 21,
       "norm_label": "usefoldernavigation()"
     },
     {
-      "label": "google-drive.ts",
+      "label": "google-auth.ts",
       "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
+      "source_file": "src/utils/google-auth.ts",
       "source_location": "L1",
-      "id": "src_utils_google_drive_ts",
+      "id": "src_utils_google_auth_ts",
       "community": 8,
-      "norm_label": "google-drive.ts"
+      "norm_label": "google-auth.ts"
     },
     {
       "label": "SECURE_KEYS",
       "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L15",
-      "id": "utils_google_drive_secure_keys",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L13",
+      "id": "utils_google_auth_secure_keys",
       "community": 8,
       "norm_label": "secure_keys"
     },
     {
       "label": "discovery",
       "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L22",
-      "id": "utils_google_drive_discovery",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L20",
+      "id": "utils_google_auth_discovery",
       "community": 8,
       "norm_label": "discovery"
     },
     {
       "label": "getClientId()",
       "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L28",
-      "id": "utils_google_drive_getclientid",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L26",
+      "id": "utils_google_auth_getclientid",
       "community": 8,
       "norm_label": "getclientid()"
     },
     {
       "label": "getRedirectScheme()",
       "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L38",
-      "id": "utils_google_drive_getredirectscheme",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L36",
+      "id": "utils_google_auth_getredirectscheme",
       "community": 8,
       "norm_label": "getredirectscheme()"
     },
     {
       "label": "GoogleUserInfo",
       "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L51",
-      "id": "utils_google_drive_googleuserinfo",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L49",
+      "id": "utils_google_auth_googleuserinfo",
       "community": 8,
       "norm_label": "googleuserinfo"
     },
     {
       "label": "saveAuthSession()",
       "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L57",
-      "id": "utils_google_drive_saveauthsession",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L55",
+      "id": "utils_google_auth_saveauthsession",
       "community": 8,
       "norm_label": "saveauthsession()"
     },
     {
       "label": "clearAuthSession()",
       "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L74",
-      "id": "utils_google_drive_clearauthsession",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L72",
+      "id": "utils_google_auth_clearauthsession",
       "community": 8,
       "norm_label": "clearauthsession()"
     },
     {
       "label": "getGoogleUserInfo()",
       "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L83",
-      "id": "utils_google_drive_getgoogleuserinfo",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L79",
+      "id": "utils_google_auth_getgoogleuserinfo",
       "community": 8,
       "norm_label": "getgoogleuserinfo()"
     },
     {
       "label": "isUserSignedIn()",
       "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L92",
-      "id": "utils_google_drive_isusersignedin",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L88",
+      "id": "utils_google_auth_isusersignedin",
       "community": 8,
       "norm_label": "isusersignedin()"
     },
     {
       "label": "refreshAccessToken()",
       "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L101",
-      "id": "utils_google_drive_refreshaccesstoken",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L97",
+      "id": "utils_google_auth_refreshaccesstoken",
       "community": 8,
       "norm_label": "refreshaccesstoken()"
     },
     {
       "label": "getValidAccessToken()",
       "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L124",
-      "id": "utils_google_drive_getvalidaccesstoken",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L120",
+      "id": "utils_google_auth_getvalidaccesstoken",
       "community": 8,
       "norm_label": "getvalidaccesstoken()"
     },
     {
       "label": "fetchUserInfo()",
       "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L145",
-      "id": "utils_google_drive_fetchuserinfo",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L140",
+      "id": "utils_google_auth_fetchuserinfo",
       "community": 8,
       "norm_label": "fetchuserinfo()"
     },
     {
       "label": "exchangeCodeForTokens()",
       "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L156",
-      "id": "utils_google_drive_exchangecodefortokens",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L151",
+      "id": "utils_google_auth_exchangecodefortokens",
       "community": 8,
       "norm_label": "exchangecodefortokens()"
-    },
-    {
-      "label": "subFolderIdCache",
-      "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L183",
-      "id": "utils_google_drive_subfolderidcache",
-      "community": 8,
-      "norm_label": "subfolderidcache"
-    },
-    {
-      "label": "getOrCreateSyncFolder()",
-      "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L185",
-      "id": "utils_google_drive_getorcreatesyncfolder",
-      "community": 8,
-      "norm_label": "getorcreatesyncfolder()"
-    },
-    {
-      "label": "DriveUploadResponse",
-      "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L223",
-      "id": "utils_google_drive_driveuploadresponse",
-      "community": 8,
-      "norm_label": "driveuploadresponse"
-    },
-    {
-      "label": "uploadJsonToDrive()",
-      "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L232",
-      "id": "utils_google_drive_uploadjsontodrive",
-      "community": 8,
-      "norm_label": "uploadjsontodrive()"
-    },
-    {
-      "label": "uploadBinaryToDrive()",
-      "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L287",
-      "id": "utils_google_drive_uploadbinarytodrive",
-      "community": 8,
-      "norm_label": "uploadbinarytodrive()"
-    },
-    {
-      "label": "deleteFileFromDrive()",
-      "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L366",
-      "id": "utils_google_drive_deletefilefromdrive",
-      "community": 8,
-      "norm_label": "deletefilefromdrive()"
-    },
-    {
-      "label": "getOrCreateSubFolder()",
-      "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L375",
-      "id": "utils_google_drive_getorcreatesubfolder",
-      "community": 8,
-      "norm_label": "getorcreatesubfolder()"
-    },
-    {
-      "label": "ensureFileParent()",
-      "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L423",
-      "id": "utils_google_drive_ensurefileparent",
-      "community": 8,
-      "norm_label": "ensurefileparent()"
-    },
-    {
-      "label": "fetchAllMetadataFromDrive()",
-      "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L451",
-      "id": "utils_google_drive_fetchallmetadatafromdrive",
-      "community": 8,
-      "norm_label": "fetchallmetadatafromdrive()"
-    },
-    {
-      "label": "downloadJsonContent()",
-      "file_type": "code",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L480",
-      "id": "utils_google_drive_downloadjsoncontent",
-      "community": 8,
-      "norm_label": "downloadjsoncontent()"
     },
     {
       "label": "helpers.ts",
@@ -3483,7 +3393,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L1",
       "id": "src_utils_helpers_ts",
-      "community": 43,
+      "community": 7,
       "norm_label": "helpers.ts"
     },
     {
@@ -3492,7 +3402,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L6",
       "id": "utils_helpers_formatbreakall",
-      "community": 2,
+      "community": 7,
       "norm_label": "formatbreakall()"
     },
     {
@@ -3501,7 +3411,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L11",
       "id": "utils_helpers_truncatetext",
-      "community": 2,
+      "community": 21,
       "norm_label": "truncatetext()"
     },
     {
@@ -3510,7 +3420,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L17",
       "id": "utils_helpers_getwebsitename",
-      "community": 43,
+      "community": 7,
       "norm_label": "getwebsitename()"
     },
     {
@@ -3519,7 +3429,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L121",
       "id": "utils_helpers_handleopenurl",
-      "community": 43,
+      "community": 7,
       "norm_label": "handleopenurl()"
     },
     {
@@ -3528,7 +3438,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L146",
       "id": "utils_helpers_ensurefileuri",
-      "community": 43,
+      "community": 7,
       "norm_label": "ensurefileuri()"
     },
     {
@@ -3537,7 +3447,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L162",
       "id": "utils_helpers_getactualtype",
-      "community": 43,
+      "community": 7,
       "norm_label": "getactualtype()"
     },
     {
@@ -3555,7 +3465,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L191",
       "id": "utils_helpers_base64tobytes",
-      "community": 43,
+      "community": 7,
       "norm_label": "base64tobytes()"
     },
     {
@@ -3564,7 +3474,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L233",
       "id": "utils_helpers_bytestobase64",
-      "community": 43,
+      "community": 7,
       "norm_label": "bytestobase64()"
     },
     {
@@ -3573,7 +3483,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L272",
       "id": "utils_helpers_extractaudioartwork",
-      "community": 43,
+      "community": 7,
       "norm_label": "extractaudioartwork()"
     },
     {
@@ -3591,7 +3501,7 @@
       "source_file": "src/utils/helpers.ts",
       "source_location": "L520",
       "id": "utils_helpers_resolvetolocalfileuri",
-      "community": 43,
+      "community": 7,
       "norm_label": "resolvetolocalfileuri()"
     },
     {
@@ -3636,7 +3546,7 @@
       "source_file": "src/utils/share-utils.ts",
       "source_location": "L1",
       "id": "src_utils_share_utils_ts",
-      "community": 43,
+      "community": 7,
       "norm_label": "share-utils.ts"
     },
     {
@@ -3645,7 +3555,7 @@
       "source_file": "src/utils/share-utils.ts",
       "source_location": "L9",
       "id": "utils_share_utils_handleshareitem",
-      "community": 43,
+      "community": 7,
       "norm_label": "handleshareitem()"
     },
     {
@@ -3654,7 +3564,7 @@
       "source_file": "src/utils/share-utils.ts",
       "source_location": "L71",
       "id": "utils_share_utils_handlebulkshare",
-      "community": 43,
+      "community": 7,
       "norm_label": "handlebulkshare()"
     },
     {
@@ -3690,7 +3600,7 @@
       "source_file": "src/utils/storage.ts",
       "source_location": "L21",
       "id": "utils_storage_dumpitem",
-      "community": 2,
+      "community": 28,
       "norm_label": "dumpitem"
     },
     {
@@ -4041,7 +3951,7 @@
       "source_file": "src/utils/sync-engine.ts",
       "source_location": "L304",
       "id": "utils_sync_engine_resolvelocalfile",
-      "community": 43,
+      "community": 8,
       "norm_label": "resolvelocalfile()"
     },
     {
@@ -5805,7 +5715,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L1",
       "id": "agents_skills_fallow_references_patterns_md",
-      "community": 30,
+      "community": 69,
       "norm_label": "patterns.md"
     },
     {
@@ -5814,7 +5724,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L1",
       "id": "references_patterns_fallow_common_workflow_patterns_recipes",
-      "community": 30,
+      "community": 69,
       "norm_label": "fallow: common workflow patterns & recipes"
     },
     {
@@ -5823,7 +5733,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L7",
       "id": "references_patterns_table_of_contents",
-      "community": 30,
+      "community": 69,
       "norm_label": "table of contents"
     },
     {
@@ -5895,7 +5805,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L67",
       "id": "references_patterns_pr_dead_code_check",
-      "community": 30,
+      "community": 35,
       "norm_label": "pr dead code check"
     },
     {
@@ -5904,7 +5814,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L71",
       "id": "references_patterns_step_1_analyze_changed_files",
-      "community": 30,
+      "community": 35,
       "norm_label": "step 1: analyze changed files"
     },
     {
@@ -5913,7 +5823,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L79",
       "id": "references_patterns_step_2_if_issues_found_show_specifics",
-      "community": 30,
+      "community": 35,
       "norm_label": "step 2: if issues found, show specifics"
     },
     {
@@ -6372,7 +6282,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L541",
       "id": "references_patterns_production_vs_full_audit",
-      "community": 70,
+      "community": 69,
       "norm_label": "production vs full audit"
     },
     {
@@ -6381,7 +6291,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L543",
       "id": "references_patterns_full_audit_default",
-      "community": 70,
+      "community": 69,
       "norm_label": "full audit (default)"
     },
     {
@@ -6390,7 +6300,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L551",
       "id": "references_patterns_production_audit",
-      "community": 70,
+      "community": 69,
       "norm_label": "production audit"
     },
     {
@@ -6453,7 +6363,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L621",
       "id": "references_patterns_combined_dead_code_duplication",
-      "community": 44,
+      "community": 69,
       "norm_label": "combined dead code + duplication"
     },
     {
@@ -6462,7 +6372,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L625",
       "id": "references_patterns_step_1_run_combined_analysis",
-      "community": 44,
+      "community": 69,
       "norm_label": "step 1: run combined analysis"
     },
     {
@@ -6471,7 +6381,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L633",
       "id": "references_patterns_step_2_prioritize_cleanup",
-      "community": 44,
+      "community": 69,
       "norm_label": "step 2: prioritize cleanup"
     },
     {
@@ -6848,7 +6758,7 @@
       "file_type": "code",
       "source_file": "App.tsx",
       "source_location": "L1965",
-      "community": 43,
+      "community": 7,
       "norm_label": "contextmenuoverlay()",
       "id": "boothub_app_contextmenuoverlay"
     },
@@ -6875,7 +6785,7 @@
       "file_type": "code",
       "source_file": "src/components/photo-picker-sheet.tsx",
       "source_location": "L32",
-      "community": 27,
+      "community": 21,
       "norm_label": "{ width: screenwidth, height: screenheight }",
       "id": "components_photo_picker_sheet_width_screenwidth_height_screenheight"
     },
@@ -15488,9 +15398,9 @@
       "source_file": "src/screens/SettingsScreen.tsx",
       "source_location": "L9",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_screens_settingsscreen_tsx",
-      "target": "src_utils_google_drive_ts"
+      "target": "src_utils_google_auth_ts",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -15532,9 +15442,9 @@
       "source_file": "src/screens/SettingsScreen.tsx",
       "source_location": "L9",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_screens_settingsscreen_tsx",
-      "target": "utils_google_drive_clearauthsession"
+      "target": "utils_google_auth_clearauthsession",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -15543,9 +15453,9 @@
       "source_file": "src/screens/SettingsScreen.tsx",
       "source_location": "L9",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_screens_settingsscreen_tsx",
-      "target": "utils_google_drive_discovery"
+      "target": "utils_google_auth_discovery",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -15554,9 +15464,9 @@
       "source_file": "src/screens/SettingsScreen.tsx",
       "source_location": "L9",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_screens_settingsscreen_tsx",
-      "target": "utils_google_drive_exchangecodefortokens"
+      "target": "utils_google_auth_exchangecodefortokens",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -15565,9 +15475,9 @@
       "source_file": "src/screens/SettingsScreen.tsx",
       "source_location": "L9",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_screens_settingsscreen_tsx",
-      "target": "utils_google_drive_fetchallmetadatafromdrive"
+      "target": "utils_google_auth_fetchuserinfo",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -15576,9 +15486,9 @@
       "source_file": "src/screens/SettingsScreen.tsx",
       "source_location": "L9",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_screens_settingsscreen_tsx",
-      "target": "utils_google_drive_fetchuserinfo"
+      "target": "utils_google_auth_getclientid",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -15587,9 +15497,9 @@
       "source_file": "src/screens/SettingsScreen.tsx",
       "source_location": "L9",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_screens_settingsscreen_tsx",
-      "target": "utils_google_drive_getclientid"
+      "target": "utils_google_auth_getgoogleuserinfo",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -15598,9 +15508,9 @@
       "source_file": "src/screens/SettingsScreen.tsx",
       "source_location": "L9",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_screens_settingsscreen_tsx",
-      "target": "utils_google_drive_getgoogleuserinfo"
+      "target": "utils_google_auth_getredirectscheme",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -15609,9 +15519,9 @@
       "source_file": "src/screens/SettingsScreen.tsx",
       "source_location": "L9",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_screens_settingsscreen_tsx",
-      "target": "utils_google_drive_getredirectscheme"
+      "target": "utils_google_auth_isusersignedin",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -15620,20 +15530,9 @@
       "source_file": "src/screens/SettingsScreen.tsx",
       "source_location": "L9",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_screens_settingsscreen_tsx",
-      "target": "utils_google_drive_isusersignedin"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/screens/SettingsScreen.tsx",
-      "source_location": "L9",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_screens_settingsscreen_tsx",
-      "target": "utils_google_drive_saveauthsession"
+      "target": "utils_google_auth_saveauthsession",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -15784,10 +15683,10 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/SettingsScreen.tsx",
-      "source_location": "L44",
+      "source_location": "L45",
       "weight": 1.0,
       "source": "screens_settingsscreen_settingsscreen",
-      "target": "utils_google_drive_getclientid"
+      "target": "utils_google_auth_getclientid"
     },
     {
       "relation": "calls",
@@ -15795,10 +15694,10 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/screens/SettingsScreen.tsx",
-      "source_location": "L47",
+      "source_location": "L51",
       "weight": 1.0,
       "source": "screens_settingsscreen_settingsscreen",
-      "target": "utils_google_drive_getredirectscheme"
+      "target": "utils_google_auth_getredirectscheme"
     },
     {
       "relation": "contains",
@@ -16238,276 +16137,176 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L75",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L72",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_clearauthsession"
+      "source": "src_utils_google_auth_ts",
+      "target": "utils_google_auth_clearauthsession",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L325",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L20",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_deletefilefromdrive"
+      "source": "src_utils_google_auth_ts",
+      "target": "utils_google_auth_discovery",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L23",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L151",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_discovery"
+      "source": "src_utils_google_auth_ts",
+      "target": "utils_google_auth_exchangecodefortokens",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L439",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L140",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_downloadjsoncontent"
+      "source": "src_utils_google_auth_ts",
+      "target": "utils_google_auth_fetchuserinfo",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L210",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L26",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_driveuploadresponse"
+      "source": "src_utils_google_auth_ts",
+      "target": "utils_google_auth_getclientid",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L382",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L79",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_ensurefileparent"
+      "source": "src_utils_google_auth_ts",
+      "target": "utils_google_auth_getgoogleuserinfo",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L155",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L36",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_exchangecodefortokens"
+      "source": "src_utils_google_auth_ts",
+      "target": "utils_google_auth_getredirectscheme",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L410",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L120",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_fetchallmetadatafromdrive"
+      "source": "src_utils_google_auth_ts",
+      "target": "utils_google_auth_getvalidaccesstoken",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L144",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L49",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_fetchuserinfo"
+      "source": "src_utils_google_auth_ts",
+      "target": "utils_google_auth_googleuserinfo",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L29",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L88",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_getclientid"
+      "source": "src_utils_google_auth_ts",
+      "target": "utils_google_auth_isusersignedin",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L82",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L97",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_getgoogleuserinfo"
+      "source": "src_utils_google_auth_ts",
+      "target": "utils_google_auth_refreshaccesstoken",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L341",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L55",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_getorcreatesubfolder"
+      "source": "src_utils_google_auth_ts",
+      "target": "utils_google_auth_saveauthsession",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L175",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L13",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_getorcreatesyncfolder"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L39",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_getredirectscheme"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L123",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_getvalidaccesstoken"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L52",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_googleuserinfo"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L91",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_isusersignedin"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L100",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_refreshaccesstoken"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L58",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_saveauthsession"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L16",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_secure_keys"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L183",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_subfolderidcache"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L271",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_uploadbinarytodrive"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L219",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_google_drive_ts",
-      "target": "utils_google_drive_uploadjsontodrive"
+      "source": "src_utils_google_auth_ts",
+      "target": "utils_google_auth_secure_keys",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L4",
+      "source_location": "L5",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_utils_sync_engine_ts",
-      "target": "src_utils_google_drive_ts"
+      "target": "src_utils_google_auth_ts",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L162",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L160",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "utils_google_drive_exchangecodefortokens",
-      "target": "utils_google_drive_getclientid"
+      "source": "utils_google_auth_exchangecodefortokens",
+      "target": "utils_google_auth_getclientid",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L41",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L38",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "utils_google_drive_getredirectscheme",
-      "target": "utils_google_drive_getclientid"
+      "source": "utils_google_auth_getredirectscheme",
+      "target": "utils_google_auth_getclientid",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L103",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L101",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "utils_google_drive_refreshaccesstoken",
-      "target": "utils_google_drive_getclientid"
+      "source": "utils_google_auth_refreshaccesstoken",
+      "target": "utils_google_auth_getclientid",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports",
@@ -16516,9 +16315,9 @@
       "source_file": "src/utils/sync-engine.ts",
       "source_location": "L5",
       "weight": 1.0,
-      "confidence_score": 1.0,
       "source": "src_utils_sync_engine_ts",
-      "target": "utils_google_drive_getgoogleuserinfo"
+      "target": "utils_google_auth_getgoogleuserinfo",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16529,7 +16328,7 @@
       "source_location": "L252",
       "weight": 1.0,
       "source": "utils_sync_engine_enqueueunsyncedlocalitems",
-      "target": "utils_google_drive_getgoogleuserinfo"
+      "target": "utils_google_auth_getgoogleuserinfo"
     },
     {
       "relation": "calls",
@@ -16537,10 +16336,10 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L25",
+      "source_location": "L17",
       "weight": 1.0,
       "source": "utils_sync_engine_initializerealtimesync",
-      "target": "utils_google_drive_getgoogleuserinfo"
+      "target": "utils_google_auth_getgoogleuserinfo"
     },
     {
       "relation": "calls",
@@ -16548,21 +16347,10 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L104",
-      "weight": 1.0,
-      "source": "utils_sync_engine_notifyremotedevicesofchange",
-      "target": "utils_google_drive_getgoogleuserinfo"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L322",
+      "source_location": "L323",
       "weight": 1.0,
       "source": "utils_sync_engine_processsyncqueue",
-      "target": "utils_google_drive_getgoogleuserinfo"
+      "target": "utils_google_auth_getgoogleuserinfo"
     },
     {
       "relation": "calls",
@@ -16570,263 +16358,21 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L475",
+      "source_location": "L476",
       "weight": 1.0,
       "source": "utils_sync_engine_pullchangesfromdrive",
-      "target": "utils_google_drive_getgoogleuserinfo"
+      "target": "utils_google_auth_getgoogleuserinfo"
     },
     {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
-      "source_file": "src/utils/google-drive.ts",
-      "source_location": "L134",
+      "source_file": "src/utils/google-auth.ts",
+      "source_location": "L130",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "utils_google_drive_getvalidaccesstoken",
-      "target": "utils_google_drive_refreshaccesstoken"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_sync_engine_ts",
-      "target": "utils_google_drive_getvalidaccesstoken"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L251",
-      "weight": 1.0,
-      "source": "utils_sync_engine_enqueueunsyncedlocalitems",
-      "target": "utils_google_drive_getvalidaccesstoken"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L174",
-      "weight": 1.0,
-      "source": "utils_sync_engine_processsyncqueue",
-      "target": "utils_google_drive_getvalidaccesstoken"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L465",
-      "weight": 1.0,
-      "source": "utils_sync_engine_pullchangesfromdrive",
-      "target": "utils_google_drive_getvalidaccesstoken"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_sync_engine_ts",
-      "target": "utils_google_drive_getorcreatesyncfolder"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L188",
-      "weight": 1.0,
-      "source": "utils_sync_engine_processsyncqueue",
-      "target": "utils_google_drive_getorcreatesyncfolder"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L472",
-      "weight": 1.0,
-      "source": "utils_sync_engine_pullchangesfromdrive",
-      "target": "utils_google_drive_getorcreatesyncfolder"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_sync_engine_ts",
-      "target": "utils_google_drive_uploadjsontodrive"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L243",
-      "weight": 1.0,
-      "source": "utils_sync_engine_processsyncqueue",
-      "target": "utils_google_drive_uploadjsontodrive"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_sync_engine_ts",
-      "target": "utils_google_drive_uploadbinarytodrive"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L224",
-      "weight": 1.0,
-      "source": "utils_sync_engine_processsyncqueue",
-      "target": "utils_google_drive_uploadbinarytodrive"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_sync_engine_ts",
-      "target": "utils_google_drive_deletefilefromdrive"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L300",
-      "weight": 1.0,
-      "source": "utils_sync_engine_processsyncqueue",
-      "target": "utils_google_drive_deletefilefromdrive"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_sync_engine_ts",
-      "target": "utils_google_drive_getorcreatesubfolder"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L250",
-      "weight": 1.0,
-      "source": "utils_sync_engine_processsyncqueue",
-      "target": "utils_google_drive_getorcreatesubfolder"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L50",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "utils_sync_engine_resolveuserfolderdriveid",
-      "target": "utils_google_drive_getorcreatesubfolder"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_sync_engine_ts",
-      "target": "utils_google_drive_ensurefileparent"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L362",
-      "weight": 1.0,
-      "source": "utils_sync_engine_processsyncqueue",
-      "target": "utils_google_drive_ensurefileparent"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_sync_engine_ts",
-      "target": "utils_google_drive_fetchallmetadatafromdrive"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L473",
-      "weight": 1.0,
-      "source": "utils_sync_engine_pullchangesfromdrive",
-      "target": "utils_google_drive_fetchallmetadatafromdrive"
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L4",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "src_utils_sync_engine_ts",
-      "target": "utils_google_drive_downloadjsoncontent"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/utils/sync-engine.ts",
-      "source_location": "L599",
-      "weight": 1.0,
-      "source": "utils_sync_engine_deleteitemfilesfromdrive",
-      "target": "utils_google_drive_downloadjsoncontent"
+      "source": "utils_google_auth_getvalidaccesstoken",
+      "target": "utils_google_auth_refreshaccesstoken",
+      "confidence_score": 1.0
     },
     {
       "relation": "imports_from",
@@ -21392,5 +20938,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "5371ad628cc88500ae68f1c7748ca5fcca22efd9"
+  "built_at_commit": "d6035dd9b32fc5234a93be477a7ceedbc2b17ce2"
 }

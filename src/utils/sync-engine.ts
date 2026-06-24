@@ -531,11 +531,55 @@ export const pullChangesFromDrive = async (): Promise<void> => {
     // Add or merge remote items
     for (const remote of remoteItems || []) {
       const localIndex = updatedLocalItems.findIndex((x) => x.id === remote.id);
+      let localValue = remote.value;
+
+      if ((remote.type === 'photo' || remote.type === 'file') && remote.storage_path) {
+        try {
+          let filename = '';
+          if (remote.type === 'photo') {
+            filename = `photo_${remote.id}.jpg`;
+          } else {
+            const fileObj = JSON.parse(remote.value);
+            filename = fileObj.name || `file_${remote.id}`;
+          }
+
+          const localUri = FileSystem.documentDirectory + filename;
+          const fileInfo = await FileSystem.getInfoAsync(localUri);
+
+          // Download if local file does not exist
+          if (!fileInfo.exists) {
+            if (FileSystem.documentDirectory) {
+              const dirInfo = await FileSystem.getInfoAsync(FileSystem.documentDirectory);
+              if (!dirInfo.exists) {
+                await FileSystem.makeDirectoryAsync(FileSystem.documentDirectory, { intermediates: true });
+              }
+            }
+
+            console.log(`[Sync Engine] Downloading missing file binary for item: ${remote.id}`);
+            const { data: publicUrlData } = supabase.storage
+              .from('files')
+              .getPublicUrl(remote.storage_path);
+
+            await FileSystem.downloadAsync(publicUrlData.publicUrl, localUri);
+          }
+
+          if (remote.type === 'photo') {
+            localValue = localUri;
+          } else {
+            const fileObj = JSON.parse(remote.value);
+            fileObj.uri = localUri;
+            localValue = JSON.stringify(fileObj);
+          }
+        } catch (downloadErr) {
+          console.error(`Failed to download binary asset for item ${remote.id}:`, downloadErr);
+        }
+      }
+
       const mappedItem: DumpItem = {
         id: remote.id,
         type: remote.type as DumpType,
         label: remote.label,
-        value: remote.value,
+        value: localValue,
         folderId: remote.folder_id || undefined,
         syncState: 'synced',
         driveFileId: remote.storage_path || undefined,
@@ -551,56 +595,7 @@ export const pullChangesFromDrive = async (): Promise<void> => {
           ...mappedItem,
         };
       } else {
-        // New remote item - download storage file if it exists
-        let localValue = remote.value;
-
-        if ((remote.type === 'photo' || remote.type === 'file') && remote.storage_path) {
-          try {
-            let filename = '';
-            if (remote.type === 'photo') {
-              filename = `photo_${remote.id}.jpg`;
-            } else {
-              const fileObj = JSON.parse(remote.value);
-              filename = fileObj.name || `file_${remote.id}`;
-            }
-
-            const localUri = FileSystem.documentDirectory + filename;
-
-            if (FileSystem.documentDirectory) {
-              const dirInfo = await FileSystem.getInfoAsync(FileSystem.documentDirectory);
-              if (!dirInfo.exists) {
-                await FileSystem.makeDirectoryAsync(FileSystem.documentDirectory, { intermediates: true });
-              }
-            }
-
-            const fileInfo = await FileSystem.getInfoAsync(localUri);
-            if (fileInfo.exists) {
-              await FileSystem.deleteAsync(localUri, { idempotent: true });
-            }
-
-            // Get public URL from Supabase Storage
-            const { data: publicUrlData } = supabase.storage
-              .from('files')
-              .getPublicUrl(remote.storage_path);
-
-            await FileSystem.downloadAsync(publicUrlData.publicUrl, localUri);
-
-            if (remote.type === 'photo') {
-              localValue = localUri;
-            } else {
-              const fileObj = JSON.parse(remote.value);
-              fileObj.uri = localUri;
-              localValue = JSON.stringify(fileObj);
-            }
-          } catch (downloadErr) {
-            console.error(`Failed to download binary asset for item ${remote.id}:`, downloadErr);
-          }
-        }
-
-        updatedLocalItems.push({
-          ...mappedItem,
-          value: localValue,
-        });
+        updatedLocalItems.push(mappedItem);
       }
     }
 
