@@ -16,7 +16,7 @@ import {
   getGoogleUserInfo,
   exchangeCodeForTokens,
   getRedirectScheme,
-} from '../utils/google-drive';
+} from '../utils/google-auth';
 import { supabase } from '../utils/supabase';
 import { subscribeToSyncStatus, processSyncQueue, getSyncQueue, saveSyncQueue, enqueueUnsyncedLocalItems, pullChangesFromDrive, SyncStatus, clearSyncError, updateSyncStatus, initializeRealtimeSync, closeRealtimeSync } from '../utils/sync-engine';
 

@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import axios from 'axios';
 import type { DumpItem, DumpType } from './storage';
-import { getGoogleUserInfo } from './google-drive';
+import { getGoogleUserInfo } from './google-auth';
 import { supabase } from './supabase';
 import { ensureFileUri, formatSyncTimestamp } from './helpers';
 import * as MediaLibrary from 'expo-media-library';
