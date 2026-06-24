@@ -145,8 +145,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\app.json": {
-    "mtime": 1781615520.0488138,
-    "ast_hash": "64616388814a87105f66c53c567d771d",
+    "mtime": 1782303268.5341191,
+    "ast_hash": "373dc114197044525eaf7d41ecaf1983",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\App.tsx": {
@@ -165,8 +165,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\package.json": {
-    "mtime": 1781226337.19476,
-    "ast_hash": "5e1cbb713cb76126747ecff6b0b2e838",
+    "mtime": 1782303754.349622,
+    "ast_hash": "73cedd746f1d339a30c859e03edb1917",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\tsconfig.json": {
@@ -350,8 +350,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\sidestore.json": {
-    "mtime": 1781615520.0488138,
-    "ast_hash": "e760b6da23210a72a912719cdfeefb8a",
+    "mtime": 1782303268.549811,
+    "ast_hash": "d228ebed41642306c091206ab10c9abe",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\FilesScreen.tsx": {
@@ -460,8 +460,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\screens\\SettingsScreen.tsx": {
-    "mtime": 1781615476.35719,
-    "ast_hash": "94d421ff2c46b80a2e51a1218c1823f5",
+    "mtime": 1782303806.0521545,
+    "ast_hash": "aa504bb0e508df66be5e13012978bd2f",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\utils\\google-drive.ts": {
@@ -470,8 +470,8 @@
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\src\\utils\\sync-engine.ts": {
-    "mtime": 1781497413.1708755,
-    "ast_hash": "e19e7f9f83c61c88e17c9dd6a750ab7d",
+    "mtime": 1782303780.101642,
+    "ast_hash": "a20476e13b176fcc53701de615b84e29",
     "semantic_hash": ""
   },
   "E:\\Github\\BootHub\\skills-lock.json": {
@@ -572,6 +572,11 @@
   "E:\\Github\\BootHub\\src\\utils\\share-utils.ts": {
     "mtime": 1781497415.1839266,
     "ast_hash": "d2b2f44857aa9446fd19ce7e622c8de1",
+    "semantic_hash": ""
+  },
+  "E:\\Github\\BootHub\\src\\utils\\supabase.ts": {
+    "mtime": 1782303762.629153,
+    "ast_hash": "ef86dea3f12350bb2e42cf4069c479e3",
     "semantic_hash": ""
   }
 }

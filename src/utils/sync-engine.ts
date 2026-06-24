@@ -2,23 +2,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import axios from 'axios';
 import type { DumpItem, DumpType } from './storage';
-import {
-  getValidAccessToken,
-  getOrCreateSyncFolder,
-  uploadJsonToDrive,
-  uploadBinaryToDrive,
-  deleteFileFromDrive,
-  getOrCreateSubFolder,
-  ensureFileParent,
-  fetchAllMetadataFromDrive,
-  downloadJsonContent,
-  getGoogleUserInfo,
-} from './google-drive';
+import { getGoogleUserInfo } from './google-drive';
+import { supabase } from './supabase';
+import { ensureFileUri, formatSyncTimestamp } from './helpers';
+import * as MediaLibrary from 'expo-media-library';
+import * as FileSystem from 'expo-file-system/legacy';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
-let realtimeWs: WebSocket | null = null;
-let realtimeReconnectTimer: any = null;
+let realtimeChannel: RealtimeChannel | null = null;
 let realtimeActiveEmail: string | null = null;
-let isRealtimeClosed = false;
 
 export const initializeRealtimeSync = async (): Promise<void> => {
   try {
@@ -29,135 +21,53 @@ export const initializeRealtimeSync = async (): Promise<void> => {
     }
 
     const email = userInfo.email.trim().toLowerCase();
-    if (realtimeWs && realtimeActiveEmail === email) {
+    if (realtimeChannel && realtimeActiveEmail === email) {
       return;
     }
 
-    if (realtimeWs) {
+    if (realtimeChannel) {
       closeRealtimeSync();
     }
 
-    isRealtimeClosed = false;
     realtimeActiveEmail = email;
+    console.log('[Realtime Sync] Subscribing to Supabase changes for', email);
 
-    let hexEmail = '';
-    for (let i = 0; i < email.length; i++) {
-      hexEmail += email.charCodeAt(i).toString(16);
-    }
-    const topic = `boothub-sync-${hexEmail}`;
-    const wsUrl = `wss://ntfy.sh/${topic}/ws`;
-
-    const connect = () => {
-      if (isRealtimeClosed || realtimeActiveEmail !== email) return;
-      console.log('[Realtime Sync] Connecting to', wsUrl);
-      realtimeWs = new WebSocket(wsUrl);
-
-      realtimeWs.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.event === 'message' && data.message === 'sync') {
-            console.log('[Realtime Sync] Received sync signal from remote device!');
-            pullChangesFromDrive().catch((err) => {
-              console.error('[Realtime Sync] Pull failed:', err);
-            });
-          }
-        } catch (err) {
-          console.error('[Realtime Sync] Error parsing WebSocket message:', err);
+    realtimeChannel = supabase
+      .channel(`public:items:email=eq.${email}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'items',
+          filter: `email=eq.${email}`,
+        },
+        async (payload) => {
+          console.log('[Realtime Sync] Received realtime change:', payload.eventType);
+          pullChangesFromDrive().catch((err) => {
+            console.error('[Realtime Sync] Pull failed:', err);
+          });
         }
-      };
-
-      realtimeWs.onclose = () => {
-        console.log('[Realtime Sync] Connection closed.');
-        if (!isRealtimeClosed && realtimeActiveEmail === email) {
-          console.log('[Realtime Sync] Reconnecting in 5 seconds...');
-          realtimeReconnectTimer = setTimeout(connect, 5000);
-        }
-      };
-
-      realtimeWs.onerror = (err) => {
-        console.error('[Realtime Sync] WebSocket error:', err);
-      };
-    };
-
-    connect();
+      )
+      .subscribe((status) => {
+        console.log('[Realtime Sync] Subscription status:', status);
+      });
   } catch (err) {
     console.error('[Realtime Sync] Failed to initialize:', err);
   }
 };
 
 export const closeRealtimeSync = (): void => {
-  isRealtimeClosed = true;
+  if (realtimeChannel) {
+    realtimeChannel.unsubscribe();
+    realtimeChannel = null;
+  }
   realtimeActiveEmail = null;
-  if (realtimeReconnectTimer) {
-    clearTimeout(realtimeReconnectTimer);
-    realtimeReconnectTimer = null;
-  }
-  if (realtimeWs) {
-    realtimeWs.close();
-    realtimeWs = null;
-  }
   console.log('[Realtime Sync] Closed connection.');
 };
 
 export const notifyRemoteDevicesOfChange = async (): Promise<void> => {
-  try {
-    const userInfo = await getGoogleUserInfo();
-    if (!userInfo || !userInfo.email) return;
-
-    const cleaned = userInfo.email.trim().toLowerCase();
-    let hexEmail = '';
-    for (let i = 0; i < cleaned.length; i++) {
-      hexEmail += cleaned.charCodeAt(i).toString(16);
-    }
-    const topic = `boothub-sync-${hexEmail}`;
-
-    console.log('[Realtime Sync] Notifying remote devices...');
-    await axios.post(`https://ntfy.sh/${topic}`, 'sync', {
-      headers: { 'Content-Type': 'text/plain' },
-    });
-  } catch (err) {
-    console.warn('[Realtime Sync] Failed to send remote notification:', err);
-  }
-};
-import { ensureFileUri, formatSyncTimestamp } from './helpers';
-import * as MediaLibrary from 'expo-media-library';
-import * as FileSystem from 'expo-file-system/legacy';
-
-const CATEGORY_FOLDERS: Record<string, string> = {
-  photo: 'Photos',
-  file: 'Files',
-  link: 'Links',
-  text: 'Texts',
-  folder: 'Folders',
-};
-
-const resolveUserFolderDriveId = async (
-  accessToken: string,
-  localFolderId: string,
-  categoryFolderId: string,
-  localItems: DumpItem[]
-): Promise<string> => {
-  const localFolder = localItems.find((item) => item.id === localFolderId && item.type === 'folder');
-  if (!localFolder) {
-    return categoryFolderId;
-  }
-
-  let parentDriveId = categoryFolderId;
-  if (localFolder.folderId) {
-    parentDriveId = await resolveUserFolderDriveId(
-      accessToken,
-      localFolder.folderId,
-      categoryFolderId,
-      localItems
-    );
-  }
-
-  let folderName = 'New Folder';
-  try {
-    folderName = JSON.parse(localFolder.value).name || 'New Folder';
-  } catch {}
-
-  return await getOrCreateSubFolder(accessToken, parentDriveId, folderName);
+  // No-op since Supabase Postgres changes automatically notify all subscribers in real-time
 };
 
 export interface SyncTask {
@@ -166,8 +76,8 @@ export interface SyncTask {
   itemId: string; // The local item ID
   itemType: DumpType;
   fileUri?: string; // Local URI (only for photos/files)
-  driveMetaFileId?: string; // Stored here for DELETE tasks since local item is gone
-  driveFileId?: string; // Stored here for DELETE tasks to delete binary asset
+  driveMetaFileId?: string; // Kept for compatibility / interface matching
+  driveFileId?: string; // Kept for compatibility / interface matching
 }
 
 const QUEUE_STORAGE_KEY = '@boothub_sync_queue';
@@ -236,6 +146,20 @@ export const saveSyncQueue = async (queue: SyncTask[]): Promise<void> => {
   }
 };
 
+export type ProgressListener = (itemId: string, progress: number) => void;
+let progressListeners: ProgressListener[] = [];
+
+export const subscribeToUploadProgress = (listener: ProgressListener) => {
+  progressListeners.push(listener);
+  return () => {
+    progressListeners = progressListeners.filter((l) => l !== listener);
+  };
+};
+
+const notifyUploadProgress = (itemId: string, progress: number) => {
+  progressListeners.forEach((l) => l(itemId, progress));
+};
+
 export interface EnqueueTaskInput {
   action: 'UPLOAD' | 'DELETE' | 'UPDATE';
   itemId: string;
@@ -257,23 +181,6 @@ const runLockedQueueOperation = async <T>(operation: () => Promise<T>): Promise<
   return nextPromise;
 };
 
-export type ProgressListener = (itemId: string, progress: number) => void;
-let progressListeners: ProgressListener[] = [];
-
-export const subscribeToUploadProgress = (listener: ProgressListener) => {
-  progressListeners.push(listener);
-  return () => {
-    progressListeners = progressListeners.filter((l) => l !== listener);
-  };
-};
-
-const notifyUploadProgress = (itemId: string, progress: number) => {
-  progressListeners.forEach((l) => l(itemId, progress));
-};
-
-/**
- * Enqueue multiple sync tasks atomically. Avoids concurrency race conditions.
- */
 export const enqueueSyncTasks = async (tasks: EnqueueTaskInput[]): Promise<void> => {
   if (tasks.length === 0) return;
 
@@ -287,30 +194,22 @@ export const enqueueSyncTasks = async (tasks: EnqueueTaskInput[]): Promise<void>
       const uniqueId = `${Date.now()}_${counter++}_${Math.random().toString(36).substr(2, 5)}`;
 
       if (action === 'DELETE') {
-        // Cancel active in-flight request immediately if there is one
         const activeTask = activeSyncTasks.get(itemId);
         if (activeTask) {
           try {
             activeTask.abort();
-            console.log(`[Sync Engine] Aborted in-flight task for item: ${itemId}`);
-          } catch (err) {
-            console.warn(`[Sync Engine] Failed to abort in-flight task for item ${itemId}:`, err);
-          }
+          } catch {}
           activeSyncTasks.delete(itemId);
         }
 
         updatedQueue = updatedQueue.filter((t) => t.itemId !== itemId);
-        // We always enqueue the DELETE task to let the 2nd checker clean up Google Drive!
         const newTask: SyncTask = {
           id: uniqueId,
           action,
           itemId,
           itemType,
-          driveMetaFileId: extras?.driveMetaFileId,
-          driveFileId: extras?.driveFileId,
         };
         updatedQueue.push(newTask);
-
       } else if (action === 'UPDATE') {
         const hasPendingUpload = updatedQueue.some((t) => t.itemId === itemId && t.action === 'UPLOAD');
         if (hasPendingUpload) {
@@ -324,9 +223,7 @@ export const enqueueSyncTasks = async (tasks: EnqueueTaskInput[]): Promise<void>
           itemType,
         };
         updatedQueue.push(newTask);
-
       } else {
-        // UPLOAD
         const newTask: SyncTask = {
           id: uniqueId,
           action,
@@ -342,9 +239,6 @@ export const enqueueSyncTasks = async (tasks: EnqueueTaskInput[]): Promise<void>
   });
 };
 
-/**
- * Enqueue a single sync task.
- */
 export const enqueueSyncTask = async (
   action: 'UPLOAD' | 'DELETE' | 'UPDATE',
   itemId: string,
@@ -354,13 +248,9 @@ export const enqueueSyncTask = async (
   await enqueueSyncTasks([{ action, itemId, itemType, extras }]);
 };
 
-/**
- * Scans all local items and enqueues any that have not been uploaded to Google Drive yet.
- * This is used for migrating pre-existing offline items to Google Drive once a connection is established.
- */
 export const enqueueUnsyncedLocalItems = async (): Promise<void> => {
-  const accessToken = await getValidAccessToken();
-  if (!accessToken) return; // User not signed in, do nothing
+  const userInfo = await getGoogleUserInfo();
+  if (!userInfo || !userInfo.email) return;
 
   const { getItems, saveItems } = require('./storage') as typeof import('./storage');
 
@@ -368,17 +258,14 @@ export const enqueueUnsyncedLocalItems = async (): Promise<void> => {
     const items = await getItems();
     const queue = await getSyncQueue();
 
-    // Find local items that don't have a Google Drive metadata file ID associated
-    // and aren't already queued for UPLOAD
     const unsyncedItems = items.filter((item) => {
-      if (item.driveMetaFileId) return false;
-      const isAlreadyQueued = queue.some((t) => t.itemId === item.id && t.action === 'UPLOAD');
+      if (item.syncState === 'synced') return false;
+      const isAlreadyQueued = queue.some((t) => t.itemId === item.id && (t.action === 'UPLOAD' || t.action === 'UPDATE'));
       return !isAlreadyQueued;
     });
 
     if (unsyncedItems.length === 0) return;
 
-    // Mark all unsynced items as pending
     const updatedItems = items.map((item) => {
       const isUnsynced = unsyncedItems.some((u) => u.id === item.id);
       if (isUnsynced) {
@@ -388,7 +275,6 @@ export const enqueueUnsyncedLocalItems = async (): Promise<void> => {
     });
     await saveItems(updatedItems);
 
-    // Enqueue UPLOAD tasks for all unsynced items
     const tasksToEnqueue = unsyncedItems.map((item) => ({
       action: 'UPLOAD' as const,
       itemId: item.id,
@@ -396,7 +282,6 @@ export const enqueueUnsyncedLocalItems = async (): Promise<void> => {
       extras: { fileUri: item.type === 'photo' || item.type === 'file' ? item.value : undefined },
     }));
 
-    // Atomically append UPLOAD tasks directly to the queue to avoid lock deadlocks
     let updatedQueue = [...queue];
     let counter = 0;
     for (const taskInput of tasksToEnqueue) {
@@ -415,9 +300,6 @@ export const enqueueUnsyncedLocalItems = async (): Promise<void> => {
 
 let isProcessingQueue = false;
 
-/**
- * Resolves local iOS/Android asset URIs to absolute paths on the device.
- */
 const resolveLocalFile = async (uri: string): Promise<string> => {
   let fileUri = uri;
   if (fileUri.startsWith('ph://')) {
@@ -430,10 +312,6 @@ const resolveLocalFile = async (uri: string): Promise<string> => {
   return ensureFileUri(fileUri);
 };
 
-/**
- * Process the local sync queue sequentially.
- */
-// fallow-ignore-next-line complexity
 export const processSyncQueue = async (): Promise<void> => {
   if (isProcessingQueue) return;
   isProcessingQueue = true;
@@ -441,15 +319,14 @@ export const processSyncQueue = async (): Promise<void> => {
 
   try {
     const { getItems, saveItems } = require('./storage') as typeof import('./storage');
-    const accessToken = await getValidAccessToken();
-    if (!accessToken) {
+    const userInfo = await getGoogleUserInfo();
+    if (!userInfo || !userInfo.email) {
       updateSyncStatus({ isSyncing: false, error: 'Sign-in required to synchronize.' });
       isProcessingQueue = false;
       return;
     }
 
-    let processedAnyTasks = false;
-    const syncFolderId = await getOrCreateSyncFolder(accessToken);
+    const email = userInfo.email.trim().toLowerCase();
 
     while (true) {
       const queue = await getSyncQueue();
@@ -458,294 +335,129 @@ export const processSyncQueue = async (): Promise<void> => {
       }
 
       for (const task of [...queue]) {
-        processedAnyTasks = true;
-        let activeAbort = () => {};
-      activeSyncTasks.set(task.itemId, { abort: () => activeAbort() });
+        let isAborted = false;
+        activeSyncTasks.set(task.itemId, { abort: () => { isAborted = true; } });
 
-      try {
-        const localItems = await getItems();
-        const localItem = localItems.find((item) => item.id === task.itemId);
+        try {
+          const localItems = await getItems();
+          const localItem = localItems.find((item) => item.id === task.itemId);
 
-        // If item was deleted locally in the meantime, and this is not a delete task, skip
-        if (!localItem && task.action !== 'DELETE') {
-          await dequeueTask(task.id);
-          continue;
-        }
-
-        // Resolve parent folder ID inside Google Drive based on category and local folder structure
-        let parentFolderId = syncFolderId;
-        if (localItem) {
-          let categoryName = CATEGORY_FOLDERS[localItem.type] || 'Others';
-          if (localItem.type === 'folder') {
-            try {
-              const folderObj = JSON.parse(localItem.value);
-              if (folderObj && folderObj.tab) {
-                categoryName = CATEGORY_FOLDERS[folderObj.tab] || categoryName;
-              }
-            } catch {}
-          }
-          const categoryFolderId = await getOrCreateSubFolder(accessToken, syncFolderId, categoryName);
-          parentFolderId = categoryFolderId;
-
-          if (localItem.folderId) {
-            parentFolderId = await resolveUserFolderDriveId(
-              accessToken,
-              localItem.folderId,
-              categoryFolderId,
-              localItems
-            );
-          }
-        }
-
-        if (task.action === 'UPLOAD') {
-          if (!localItem) continue;
-
-          // If the item was already uploaded (e.g. by a duplicate task or concurrent run), skip it
-          if (localItem.driveMetaFileId) {
-            console.log(`[Sync Engine] Item ${localItem.id} already has driveMetaFileId (${localItem.driveMetaFileId}). Skipping duplicate UPLOAD task.`);
+          if (!localItem && task.action !== 'DELETE') {
             await dequeueTask(task.id);
             continue;
           }
 
-          let driveFileId = localItem.driveFileId;
-          
-          try {
-            // 1. If it's a binary photo/file, upload it first
-            if ((localItem.type === 'photo' || localItem.type === 'file') && !driveFileId) {
+          if (task.action === 'UPLOAD' || task.action === 'UPDATE') {
+            if (!localItem) continue;
+
+            let storagePath = localItem.driveFileId || ''; // reuse driveFileId as storagePath field mapping
+
+            if ((localItem.type === 'photo' || localItem.type === 'file') && !storagePath) {
               let localFileUri = '';
-              let fileName = '';
               let mimeType = 'application/octet-stream';
 
               if (localItem.type === 'photo') {
                 localFileUri = await resolveLocalFile(localItem.value);
-                fileName = `photo_${localItem.id}.${localFileUri.split('.').pop() || 'jpg'}`;
                 mimeType = localFileUri.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
               } else {
-                // File
                 const fileObj = JSON.parse(localItem.value);
                 localFileUri = ensureFileUri(fileObj.uri);
-                fileName = fileObj.name || `file_${localItem.id}`;
                 mimeType = fileObj.mimeType || 'application/octet-stream';
               }
 
-              const binaryAbortController = new AbortController();
-              activeAbort = () => {
-                binaryAbortController.abort();
-              };
+              if (isAborted) throw new Error('Aborted');
 
-              driveFileId = await uploadBinaryToDrive(
-                accessToken,
-                parentFolderId,
-                fileName,
-                localFileUri,
-                mimeType,
-                undefined,
-                (uploadTask) => {
-                  activeAbort = () => {
-                    binaryAbortController.abort();
-                    uploadTask.cancelAsync().catch(() => {});
-                  };
-                },
-                binaryAbortController.signal,
-                (progress) => {
-                  notifyUploadProgress(task.itemId, progress);
-                }
-              );
-            } else if (localItem.type === 'folder' && !driveFileId) {
-              // Create a real directory on Google Drive for this folder item
-              let folderName = 'New Folder';
-              try {
-                folderName = JSON.parse(localItem.value).name || 'New Folder';
-              } catch {}
-              const folderAbortController = new AbortController();
-              activeAbort = () => folderAbortController.abort();
-              driveFileId = await getOrCreateSubFolder(accessToken, parentFolderId, folderName);
+              // Read local file and upload to Supabase Storage
+              const response = await fetch(localFileUri);
+              const blob = await response.blob();
+
+              const path = `${email}/${localItem.id}`;
+              const { error: uploadErr } = await supabase.storage
+                .from('files')
+                .upload(path, blob, {
+                  contentType: mimeType,
+                  upsert: true,
+                });
+
+              if (uploadErr) {
+                throw new Error(`Storage upload failed: ${uploadErr.message}`);
+              }
+
+              storagePath = path;
             }
 
-            // 2. Upload metadata json
-            const metadataFileName = `item_${localItem.id}.json`;
-            
-            // Update item data structure with sync info
-            const updatedItem = {
-              ...localItem,
-              syncState: 'synced' as const,
-              driveFileId,
-            };
+            if (isAborted) throw new Error('Aborted');
 
-            const metadataAbortController = new AbortController();
-            activeAbort = () => metadataAbortController.abort();
+            // Upsert in Supabase public.items table
+            const { error: upsertErr } = await supabase
+              .from('items')
+              .upsert({
+                id: localItem.id,
+                email,
+                type: localItem.type,
+                label: localItem.label,
+                value: localItem.value,
+                folder_id: localItem.folderId || null,
+                storage_path: storagePath || null,
+                updated_at: new Date().toISOString(),
+              });
 
-            const driveMetaFileId = await uploadJsonToDrive(
-              accessToken,
-              parentFolderId,
-              metadataFileName,
-              JSON.stringify(updatedItem),
-              undefined,
-              metadataAbortController.signal
-            );
+            if (upsertErr) {
+              throw new Error(`Database upsert failed: ${upsertErr.message}`);
+            }
 
-            // Fetch the latest items from AsyncStorage to avoid restoring concurrently deleted items
+            // Mark as synced locally
             const latestItems = await getItems();
-            const itemStillExists = latestItems.some((item) => item.id === localItem.id);
-
-            if (!itemStillExists) {
-              console.log(`[Sync Engine] Clean up: item ${localItem.id} was deleted during upload. Deleting Drive files.`);
-              if (driveFileId) {
-                await deleteFileFromDrive(accessToken, driveFileId).catch(() => {});
+            const updatedLocalList = latestItems.map((item) => {
+              if (item.id === localItem.id) {
+                return {
+                  ...item,
+                  syncState: 'synced' as const,
+                  driveFileId: storagePath, // Map driveFileId to storagePath
+                };
               }
-              if (driveMetaFileId) {
-                await deleteFileFromDrive(accessToken, driveMetaFileId).catch(() => {});
-              }
-            } else {
-              const updatedLocalList = latestItems.map((item) => {
-                if (item.id === localItem.id) {
-                  return {
-                    ...item,
-                    syncState: 'synced' as const,
-                    driveFileId,
-                    driveMetaFileId,
-                  };
-                }
-                return item;
-              });
-              await saveItems(updatedLocalList);
+              return item;
+            });
+            await saveItems(updatedLocalList);
+
+          } else if (task.action === 'DELETE') {
+            // Delete from Supabase Database
+            const { error: deleteDbErr } = await supabase
+              .from('items')
+              .delete()
+              .eq('id', task.itemId)
+              .eq('email', email);
+
+            if (deleteDbErr) {
+              throw new Error(`Database delete failed: ${deleteDbErr.message}`);
             }
-          } catch (uploadErr: any) {
-            // Clean up binary file on Drive if upload task is aborted in-flight
-            const isCancel = axios.isCancel(uploadErr) || uploadErr.message?.includes('cancel') || uploadErr.message?.includes('abort');
-            if (isCancel && driveFileId && !localItem.driveFileId) {
-              console.log(`[Sync Engine] UPLOAD task was cancelled after binary upload. Cleaning up Drive file: ${driveFileId}`);
-              await deleteFileFromDrive(accessToken, driveFileId).catch((cleanupErr) => {
-                console.warn('Failed to clean up Drive file after cancellation:', cleanupErr);
-              });
-            }
-            throw uploadErr;
+
+            // Delete asset from Storage
+            const path = `${email}/${task.itemId}`;
+            await supabase.storage.from('files').remove([path]);
           }
 
-        } else if (task.action === 'UPDATE') {
-          if (!localItem) continue;
-
-          // If it was never uploaded to drive, treat as upload
-          if (!localItem.driveMetaFileId) {
-            task.action = 'UPLOAD';
-            await processSyncQueue(); // restart queue
-            return;
-          }
-
-          // Ensure directory details and parents are aligned if folder/file details changed
-          if (localItem.type === 'folder' && localItem.driveFileId) {
-            let folderName = 'New Folder';
-            try {
-              folderName = JSON.parse(localItem.value).name || 'New Folder';
-            } catch {}
-
-            // Update folder name on Drive
-            const folderUpdateAbortController = new AbortController();
-            activeAbort = () => folderUpdateAbortController.abort();
-
-            await axios.patch(
-              `https://www.googleapis.com/drive/v3/files/${localItem.driveFileId}`,
-              { name: folderName },
-              {
-                headers: {
-                  Authorization: `Bearer ${accessToken}`,
-                  'Content-Type': 'application/json',
-                },
-                signal: folderUpdateAbortController.signal,
-              }
-            );
-
-            await ensureFileParent(accessToken, localItem.driveFileId, parentFolderId);
-          }
-
-          if ((localItem.type === 'photo' || localItem.type === 'file') && localItem.driveFileId) {
-            await ensureFileParent(accessToken, localItem.driveFileId, parentFolderId);
-          }
-
-          // Ensure metadata file parent is updated
-          await ensureFileParent(accessToken, localItem.driveMetaFileId, parentFolderId);
-
-          const metadataFileName = `item_${localItem.id}.json`;
-          const updatedItem = {
-            ...localItem,
-            syncState: 'synced' as const,
-          };
-
-          const metadataUpdateAbortController = new AbortController();
-          activeAbort = () => metadataUpdateAbortController.abort();
-
-          await uploadJsonToDrive(
-            accessToken,
-            parentFolderId,
-            metadataFileName,
-            JSON.stringify(updatedItem),
-            localItem.driveMetaFileId,
-            metadataUpdateAbortController.signal
-          );
-
-          // Update local state to synced using the latest list from AsyncStorage to prevent overwriting deletions
-          const latestItems = await getItems();
-          const updatedLocalList = latestItems.map((item) => {
-            if (item.id === localItem.id) {
-              return { ...item, syncState: 'synced' as const };
-            }
-            return item;
-          });
-          await saveItems(updatedLocalList);
-        } else if (task.action === 'DELETE') {
-          // Delete metadata file
-          if (task.driveMetaFileId) {
-            await deleteFileFromDrive(accessToken, task.driveMetaFileId).catch(() => {});
-          }
-          // Delete binary asset if it exists
-          if (task.driveFileId) {
-            await deleteFileFromDrive(accessToken, task.driveFileId).catch(() => {});
-          }
-          // 2nd Checker: Search and clean up any remaining files on Drive matching the item ID
-          await deleteItemFilesFromDrive(accessToken, task.itemId);
-        }
-
-        // Successfully processed task, pop from queue
-        await dequeueTask(task.id);
-      } catch (err: any) {
-        const isCancel = axios.isCancel(err) || err.message?.includes('cancel') || err.message?.includes('abort');
-        if (isCancel) {
-          console.log(`[Sync Engine] Task ${task.id} for item ${task.itemId} was cancelled.`);
           await dequeueTask(task.id);
-          continue;
-        }
-
-        // Halt queue processing on network/connection failure
-        const isNetworkError = axios.isAxiosError(err) && (!err.response || err.response.status >= 500);
-        if (isNetworkError || err.message?.includes('Network Request Failed') || err.message?.includes('Network Error')) {
-          console.warn('Network error during Google Drive sync. Pausing queue.');
-          updateSyncStatus({ isSyncing: false, error: 'Connection offline. Sync will resume when online.' });
+        } catch (err: any) {
+          if (err.message === 'Aborted') {
+            console.log(`[Sync Engine] Task ${task.id} was aborted.`);
+            await dequeueTask(task.id);
+            continue;
+          }
+          console.error('[Sync Engine] Error syncing task:', err);
+          updateSyncStatus({ isSyncing: false, error: 'Sync error: ' + err.message });
           isProcessingQueue = false;
           return;
+        } finally {
+          activeSyncTasks.delete(task.itemId);
         }
-
-        console.error('Error syncing individual task:', err);
-        // For other unrecoverable errors (403, 404), remove task so it doesn't block the queue indefinitely
-        await dequeueTask(task.id);
-      } finally {
-        activeSyncTasks.delete(task.itemId);
       }
     }
-  }
 
-    const lastSyncedLabel = formatSyncTimestamp();
-
-    updateSyncStatus({ isSyncing: false, error: null, lastSynced: lastSyncedLabel });
-
-    if (processedAnyTasks) {
-      notifyRemoteDevicesOfChange().catch(() => {});
-    }
+    updateSyncStatus({ isSyncing: false, error: null, lastSynced: formatSyncTimestamp() });
   } catch (err: any) {
-    console.error('Failed to run sync queue:', err);
-    const details = err.response?.data
-      ? (typeof err.response.data === 'string' ? err.response.data : JSON.stringify(err.response.data))
-      : (err.message || String(err));
-    updateSyncStatus({ isSyncing: false, error: 'Sync failed: ' + details });
+    console.error('[Sync Engine] Queue processor error:', err);
+    updateSyncStatus({ isSyncing: false, error: 'Sync processor failed: ' + err.message });
   } finally {
     isProcessingQueue = false;
   }
@@ -759,182 +471,99 @@ const dequeueTask = async (taskId: string) => {
   });
 };
 
-export const deleteItemFilesFromDrive = async (accessToken: string, itemId: string): Promise<void> => {
-  try {
-    const query = `name contains '${itemId}' and trashed = false`;
-    const searchRes = await axios.get(
-      `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name)`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      }
-    );
-    const files = searchRes.data.files || [];
-    
-    let driveFileIdToClean: string | undefined = undefined;
-
-    // Check if there's a metadata file and try to read it to find the linked binary file/folder ID
-    for (const file of files) {
-      if (file.name.startsWith('item_') && file.name.endsWith('.json')) {
-        try {
-          const content = await downloadJsonContent(accessToken, file.id);
-          if (content && content.driveFileId) {
-            driveFileIdToClean = content.driveFileId;
-          }
-        } catch (downloadErr) {
-          console.warn(`Failed to read metadata file ${file.id} for cleanup:`, downloadErr);
-        }
-      }
-    }
-
-    // Delete the linked binary asset or folder directory if one was found
-    if (driveFileIdToClean) {
-      console.log(`[Sync Engine] 2nd Checker: Found linked file/folder ${driveFileIdToClean} in metadata. Deleting.`);
-      await axios.delete(`https://www.googleapis.com/drive/v3/files/${driveFileIdToClean}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      }).catch((err) => console.warn(`Failed to delete linked file/folder ${driveFileIdToClean} in 2nd checker:`, err));
-    }
-
-    // Delete the matched files (metadata file, or binary asset file matching itemId)
-    for (const file of files) {
-      console.log(`[Sync Engine] 2nd Checker: Deleting file ${file.name} (${file.id}) from Drive.`);
-      await axios.delete(`https://www.googleapis.com/drive/v3/files/${file.id}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      }).catch((err) => console.warn(`Failed to delete file ${file.id} in 2nd checker:`, err));
-    }
-  } catch (err) {
-    console.error(`Failed to run 2nd checker deletion for item ${itemId}:`, err);
-  }
-};
-
-/**
- * Inbound synchronization: downloads new/updated items and folder structures from Google Drive.
- */
-// fallow-ignore-next-line complexity
 export const pullChangesFromDrive = async (): Promise<void> => {
-  const accessToken = await getValidAccessToken();
-  if (!accessToken) {
-    console.warn('Cannot pull changes from Drive: User not signed in.');
+  const userInfo = await getGoogleUserInfo();
+  if (!userInfo || !userInfo.email) {
+    console.warn('Cannot pull changes: User not signed in.');
     return;
   }
 
+  const email = userInfo.email.trim().toLowerCase();
+
   try {
-    const syncFolderId = await getOrCreateSyncFolder(accessToken);
-    const remoteFiles = await fetchAllMetadataFromDrive(accessToken);
+    // Fetch all items for this user from Supabase
+    const { data: remoteItems, error } = await supabase
+      .from('items')
+      .select('*')
+      .eq('email', email);
+
+    if (error) {
+      throw new Error(error.message);
+    }
 
     const { getItems, saveItems } = require('./storage') as typeof import('./storage');
     const localItems = await getItems();
-    const lastPullTimestampStr = await AsyncStorage.getItem('@boothub_last_pull_timestamp');
-    const lastPullTimestamp = lastPullTimestampStr ? parseInt(lastPullTimestampStr, 10) : 0;
-    const currentPullTime = Date.now();
 
-    // Fetch JSON content for all files in parallel
-    const remoteItems: DumpItem[] = await Promise.all(
-      remoteFiles.map(async (file) => {
-        try {
-          const localMatch = localItems.find((x) => x.driveMetaFileId === file.id);
-          const remoteModTime = file.modifiedTime ? Date.parse(file.modifiedTime) : 0;
+    const remoteItemIds = new Set((remoteItems || []).map((x) => x.id));
 
-          if (localMatch && remoteModTime && remoteModTime <= lastPullTimestamp - 10000) {
-            return {
-              ...localMatch,
-              driveMetaFileId: file.id,
-            };
-          }
-
-          const data = await downloadJsonContent(accessToken, file.id);
-          return {
-            ...data,
-            driveMetaFileId: file.id,
-          };
-        } catch (err) {
-          console.error(`Failed to download content for file ${file.id}:`, err);
-          return null;
-        }
-      })
-    ).then((results) => results.filter((x): x is DumpItem => x !== null));
-
-    await AsyncStorage.setItem('@boothub_last_pull_timestamp', String(currentPullTime));
-    const remoteItemIds = new Set(remoteItems.map((x) => x.id));
-
-    // Identify items deleted remotely
+    // Identify remote deletions
     const itemsDeletedRemotely = localItems.filter(
-      (item) => item.driveMetaFileId && !remoteItemIds.has(item.id)
+      (item) => item.syncState === 'synced' && !remoteItemIds.has(item.id)
     );
-
-    let resolveAction: 'follow_drive' | 'follow_phone' = 'follow_drive';
-    // Remote deletions (e.g. from desktop) automatically propagate locally to keep sync seamless.
 
     const updatedLocalItems: DumpItem[] = [];
 
-    // 1. Identify and delete items locally if they were deleted on Google Drive (or mark for re-upload)
+    // Apply remote deletions
     for (const localItem of localItems) {
       const isDeletedRemotely = itemsDeletedRemotely.some((x) => x.id === localItem.id);
-
       if (isDeletedRemotely) {
-        if (resolveAction === 'follow_drive') {
-          // Delete locally
-          if (localItem.type === 'file') {
-            try {
-              const fileObj = JSON.parse(localItem.value);
-              if (fileObj.uri && fileObj.uri.startsWith('file://')) {
-                await FileSystem.deleteAsync(fileObj.uri, { idempotent: true });
-              }
-            } catch {}
-          } else if (localItem.type === 'photo') {
-            try {
-              if (localItem.value.startsWith('file://')) {
-                await FileSystem.deleteAsync(localItem.value, { idempotent: true });
-              }
-            } catch {}
-          }
-          continue; // Skip appending, deleting it locally
-        } else {
-          // Restore to Cloud (Follow Phone) -> mark as pending and reset drive IDs
-          updatedLocalItems.push({
-            ...localItem,
-            syncState: 'pending' as const,
-            driveMetaFileId: undefined,
-            driveFileId: undefined,
-          });
-          continue;
+        if (localItem.type === 'file') {
+          try {
+            const fileObj = JSON.parse(localItem.value);
+            if (fileObj.uri && fileObj.uri.startsWith('file://')) {
+              await FileSystem.deleteAsync(fileObj.uri, { idempotent: true });
+            }
+          } catch {}
+        } else if (localItem.type === 'photo') {
+          try {
+            if (localItem.value.startsWith('file://')) {
+              await FileSystem.deleteAsync(localItem.value, { idempotent: true });
+            }
+          } catch {}
         }
+        continue;
       }
       updatedLocalItems.push(localItem);
     }
 
-    // 2. Add new items or merge/update existing items from Drive
-    for (const remoteItem of remoteItems) {
-      const localIndex = updatedLocalItems.findIndex((x) => x.id === remoteItem.id);
+    // Add or merge remote items
+    for (const remote of remoteItems || []) {
+      const localIndex = updatedLocalItems.findIndex((x) => x.id === remote.id);
+      const mappedItem: DumpItem = {
+        id: remote.id,
+        type: remote.type as DumpType,
+        label: remote.label,
+        value: remote.value,
+        folderId: remote.folder_id || undefined,
+        syncState: 'synced',
+        driveFileId: remote.storage_path || undefined,
+      };
 
       if (localIndex >= 0) {
         const localItem = updatedLocalItems[localIndex];
-        // If local item has pending changes, let the user's edits take priority
         if (localItem.syncState === 'pending') {
-          continue;
+          continue; // Keep local changes
         }
-
         updatedLocalItems[localIndex] = {
           ...localItem,
-          ...remoteItem,
-          syncState: 'synced' as const,
+          ...mappedItem,
         };
       } else {
-        // New remote item
-        let localValue = remoteItem.value;
+        // New remote item - download storage file if it exists
+        let localValue = remote.value;
 
-        if ((remoteItem.type === 'photo' || remoteItem.type === 'file') && remoteItem.driveFileId) {
+        if ((remote.type === 'photo' || remote.type === 'file') && remote.storage_path) {
           try {
             let filename = '';
-            if (remoteItem.type === 'photo') {
-              filename = `photo_${remoteItem.id}.jpg`;
+            if (remote.type === 'photo') {
+              filename = `photo_${remote.id}.jpg`;
             } else {
-              const fileObj = JSON.parse(remoteItem.value);
-              filename = fileObj.name || `file_${remoteItem.id}`;
+              const fileObj = JSON.parse(remote.value);
+              filename = fileObj.name || `file_${remote.id}`;
             }
 
             const localUri = FileSystem.documentDirectory + filename;
 
-            // Ensure documentDirectory exists before writing to it (necessary on clean iOS installs)
             if (FileSystem.documentDirectory) {
               const dirInfo = await FileSystem.getInfoAsync(FileSystem.documentDirectory);
               if (!dirInfo.exists) {
@@ -942,47 +571,40 @@ export const pullChangesFromDrive = async (): Promise<void> => {
               }
             }
 
-            // Remove existing file at target URI to avoid iOS lock or overwrite errors
             const fileInfo = await FileSystem.getInfoAsync(localUri);
             if (fileInfo.exists) {
               await FileSystem.deleteAsync(localUri, { idempotent: true });
             }
 
-            await FileSystem.downloadAsync(
-              `https://www.googleapis.com/drive/v3/files/${remoteItem.driveFileId}?alt=media`,
-              localUri,
-              {
-                headers: { Authorization: `Bearer ${accessToken}` },
-                sessionType: FileSystem.FileSystemSessionType.FOREGROUND,
-              }
-            );
+            // Get public URL from Supabase Storage
+            const { data: publicUrlData } = supabase.storage
+              .from('files')
+              .getPublicUrl(remote.storage_path);
 
-            if (remoteItem.type === 'photo') {
+            await FileSystem.downloadAsync(publicUrlData.publicUrl, localUri);
+
+            if (remote.type === 'photo') {
               localValue = localUri;
             } else {
-              const fileObj = JSON.parse(remoteItem.value);
+              const fileObj = JSON.parse(remote.value);
               fileObj.uri = localUri;
               localValue = JSON.stringify(fileObj);
             }
           } catch (downloadErr) {
-            console.error(`Failed to download binary asset for item ${remoteItem.id}:`, downloadErr);
+            console.error(`Failed to download binary asset for item ${remote.id}:`, downloadErr);
           }
         }
 
         updatedLocalItems.push({
-          ...remoteItem,
+          ...mappedItem,
           value: localValue,
-          syncState: 'synced' as const,
         });
       }
     }
 
     await saveItems(updatedLocalItems);
-
-    // No-op: resolveAction is always 'follow_drive' now, so no items are ever restored.
   } catch (err) {
-    console.error('Failed to pull changes from Google Drive:', err);
+    console.error('[Sync Engine] Pull changes failed:', err);
     throw err;
   }
 };
-

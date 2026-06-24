@@ -16,8 +16,8 @@ import {
   getGoogleUserInfo,
   exchangeCodeForTokens,
   getRedirectScheme,
-  fetchAllMetadataFromDrive,
 } from '../utils/google-drive';
+import { supabase } from '../utils/supabase';
 import { subscribeToSyncStatus, processSyncQueue, getSyncQueue, saveSyncQueue, enqueueUnsyncedLocalItems, pullChangesFromDrive, SyncStatus, clearSyncError, updateSyncStatus, initializeRealtimeSync, closeRealtimeSync } from '../utils/sync-engine';
 
 interface SettingsScreenProps {}
@@ -110,19 +110,22 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
           initializeRealtimeSync().catch(() => {});
           
           // Check for reconnection sync conflict:
-          // If we have offline DELETE tasks, and Google Drive actually has items, prompt the user.
+          // If we have offline DELETE tasks, and Supabase actually has items, prompt the user.
           const queue = await getSyncQueue();
           const hasPendingDeletions = queue.some((t) => t.action === 'DELETE');
           let handledConflict = false;
 
-          if (hasPendingDeletions) {
+          if (hasPendingDeletions && info && info.email) {
             try {
-              const remoteFiles = await fetchAllMetadataFromDrive(tokens.access_token);
-              if (remoteFiles && remoteFiles.length > 0) {
+              const { data: remoteItems } = await supabase
+                .from('items')
+                .select('id')
+                .eq('email', info.email.trim().toLowerCase());
+              if (remoteItems && remoteItems.length > 0) {
                 handledConflict = true;
                 Alert.alert(
                   'Sync Conflict Detected',
-                  `You deleted some items on this phone while disconnected, but they still exist on Google Drive. Would you like to restore them to this device or remove them from Google Drive?`,
+                  `You deleted some items on this phone while disconnected, but they still exist on the cloud. Would you like to restore them to this device or remove them from the cloud?`,
                   [
                     {
                       text: 'Restore to Device',
@@ -134,11 +137,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                           const filteredQueue = currentQueue.filter((t) => t.action !== 'DELETE');
                           await saveSyncQueue(filteredQueue);
                           
-                          // Download items from Google Drive back to the device
+                          // Download items back to the device
                           await pullChangesFromDrive();
                         } catch (pullErr) {
-                          console.error('Failed to restore files from Drive on conflict:', pullErr);
-                          Alert.alert('Sync Error', 'Failed to pull changes from Google Drive.');
+                          console.error('Failed to restore files from Supabase on conflict:', pullErr);
+                          Alert.alert('Sync Error', 'Failed to pull changes from Supabase.');
                         } finally {
                           // Process remaining queue tasks
                           processSyncQueue();
@@ -146,11 +149,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                       },
                     },
                     {
-                      text: 'Remove from Drive',
+                      text: 'Remove from Cloud',
                       style: 'destructive',
                       onPress: () => {
                         updateSyncStatus({ isSyncing: true, error: null });
-                        // Let the queue process deletions normally on Drive
+                        // Let the queue process deletions normally
                         processSyncQueue();
                       },
                     },
@@ -159,7 +162,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                 );
               }
             } catch (queryErr) {
-              console.warn('Failed to query Drive for conflict check:', queryErr);
+              console.warn('Failed to query Supabase for conflict check:', queryErr);
             }
           }
 
@@ -192,7 +195,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
 
   const handleSignOut = () => {
     Alert.alert(
-      'Disconnect Google Drive',
+      'Disconnect Cloud Sync',
       'This will stop auto-syncing. Local items will remain on your device.',
       [
         { text: 'Cancel', style: 'cancel' },
@@ -207,7 +210,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
               setUserInfo(null);
               closeRealtimeSync();
             } catch (err) {
-              console.error('Error signing out from Google Account:', err);
+              console.error('Error signing out:', err);
             } finally {
               setIsAuthLoading(false);
             }
