@@ -11,12 +11,16 @@ export function useSync(): void {
   useEffect(() => {
     const runSync = async () => {
       try {
+        // Enqueue unsynced/legacy local items FIRST to mark them as pending
+        // and prevent them from being overwritten by pullChangesFromDrive.
+        await enqueueUnsyncedLocalItems().catch((err) =>
+          console.error('[App] Enqueue failed:', err)
+        );
         await pullChangesFromDrive().catch((err) =>
           console.error('[App] Pull failed:', err)
         );
-        await enqueueUnsyncedLocalItems();
       } catch (err) {
-        console.error('[App] Failed to enqueue unsynced local items:', err);
+        console.error('[App] Failed to execute initial sync steps:', err);
       }
       await processSyncQueue().catch((err) =>
         console.error('[App] Sync failed:', err)

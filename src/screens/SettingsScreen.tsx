@@ -222,6 +222,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
   const handleManualSync = async () => {
     updateSyncStatus({ isSyncing: true, error: null });
     try {
+      await enqueueUnsyncedLocalItems().catch((err) => {
+        console.error('Failed to enqueue unsynced local items during manual sync:', err);
+      });
       await pullChangesFromDrive();
       await processSyncQueue();
     } catch (err: any) {
