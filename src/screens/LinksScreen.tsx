@@ -49,8 +49,6 @@ const LinkItem: React.FC<LinkItemProps> = ({
         badge={
           item.syncState === 'error'
             ? 'Error'
-            : item.syncState === 'synced'
-            ? 'Synced'
             : undefined
         }
         noPadding={true}

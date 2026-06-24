@@ -36,8 +36,6 @@ const TextItem: React.FC<TextItemProps> = ({
         badge={
           item.syncState === 'error'
             ? 'Error'
-            : item.syncState === 'synced'
-            ? 'Synced'
             : undefined
         }
         accentBorder={isEditing || isSelected}

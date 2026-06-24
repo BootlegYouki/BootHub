@@ -153,8 +153,6 @@ const FileItem: React.FC<FileItemProps> = ({
         badge={
           item.syncState === 'error'
             ? 'Error'
-            : item.syncState === 'synced'
-            ? 'Synced'
             : undefined
         }
         accentBorder={isEditing || isSelected}
