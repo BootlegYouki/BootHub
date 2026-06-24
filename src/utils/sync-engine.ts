@@ -259,9 +259,10 @@ export const enqueueUnsyncedLocalItems = async (): Promise<void> => {
     const queue = await getSyncQueue();
 
     const unsyncedItems = items.filter((item) => {
-      if (item.syncState === 'synced') return false;
+      const isLegacyDriveItem = item.syncState === 'synced' && (!item.driveFileId || !item.driveFileId.includes('/'));
+      const needsSync = item.syncState !== 'synced' || isLegacyDriveItem;
       const isAlreadyQueued = queue.some((t) => t.itemId === item.id && (t.action === 'UPLOAD' || t.action === 'UPDATE'));
-      return !isAlreadyQueued;
+      return needsSync && !isAlreadyQueued;
     });
 
     if (unsyncedItems.length === 0) return;
@@ -496,10 +497,11 @@ export const pullChangesFromDrive = async (): Promise<void> => {
 
     const remoteItemIds = new Set((remoteItems || []).map((x) => x.id));
 
-    // Identify remote deletions
-    const itemsDeletedRemotely = localItems.filter(
-      (item) => item.syncState === 'synced' && !remoteItemIds.has(item.id)
-    );
+    // Identify remote deletions (only for items synced to Supabase)
+    const itemsDeletedRemotely = localItems.filter((item) => {
+      const isSupabaseSynced = item.syncState === 'synced' && item.driveFileId && item.driveFileId.includes('/');
+      return isSupabaseSynced && !remoteItemIds.has(item.id);
+    });
 
     const updatedLocalItems: DumpItem[] = [];
 
