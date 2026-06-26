@@ -18,7 +18,7 @@ import {
   getRedirectScheme,
 } from '../utils/google-auth';
 import { supabase } from '../utils/supabase';
-import { subscribeToSyncStatus, processSyncQueue, getSyncQueue, saveSyncQueue, enqueueUnsyncedLocalItems, pullChangesFromDrive, SyncStatus, clearSyncError, updateSyncStatus, initializeRealtimeSync, closeRealtimeSync } from '../utils/sync-engine';
+import { subscribeToSyncStatus, processSyncQueue, getSyncQueue, saveSyncQueue, enqueueUnsyncedLocalItems, pullChangesFromCloud, SyncStatus, clearSyncError, updateSyncStatus, initializeRealtimeSync, closeRealtimeSync } from '../utils/sync-engine';
 
 interface SettingsScreenProps {}
 
@@ -137,7 +137,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                           await saveSyncQueue(filteredQueue);
                           
                           // Download items back to the device
-                          await pullChangesFromDrive();
+                          await pullChangesFromCloud();
                         } catch (pullErr) {
                           console.error('Failed to restore files from Supabase on conflict:', pullErr);
                           Alert.alert('Sync Error', 'Failed to pull changes from Supabase.');
@@ -225,7 +225,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
       await enqueueUnsyncedLocalItems().catch((err) => {
         console.error('Failed to enqueue unsynced local items during manual sync:', err);
       });
-      await pullChangesFromDrive();
+      await pullChangesFromCloud();
       await processSyncQueue();
     } catch (err: any) {
       console.error('Manual sync execution failed:', err);
@@ -320,7 +320,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
           ) : (
             <View style={styles.disconnectedCard}>
               <TuiText size="sm" variant="muted" style={styles.infoText}>
-                Link Google Drive to back up your links, texts, photos, and files automatically.
+                Link your Google Account to back up your links, texts, photos, and files automatically to the cloud.
               </TuiText>
               <TuiButton
                 onPress={handleSignIn}
@@ -328,7 +328,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                 style={styles.linkBtn}
                 loading={isAuthLoading}
               >
-                Connect Google Drive
+                Connect Google Account
               </TuiButton>
             </View>
           )}

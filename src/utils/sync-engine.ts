@@ -4,62 +4,76 @@ import axios from 'axios';
 import type { DumpItem, DumpType } from './storage';
 import { getGoogleUserInfo } from './google-auth';
 import { supabase } from './supabase';
-import { ensureFileUri, formatSyncTimestamp } from './helpers';
+import { ensureFileUri, formatSyncTimestamp, base64ToBytes } from './helpers';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system/legacy';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 let realtimeChannel: RealtimeChannel | null = null;
 let realtimeActiveEmail: string | null = null;
+let realtimeInitPromise: Promise<void> | null = null;
 
 export const initializeRealtimeSync = async (): Promise<void> => {
-  try {
-    const userInfo = await getGoogleUserInfo();
-    if (!userInfo || !userInfo.email) {
-      closeRealtimeSync();
-      return;
-    }
+  if (realtimeInitPromise) {
+    return realtimeInitPromise;
+  }
 
-    const email = userInfo.email.trim().toLowerCase();
-    if (realtimeChannel && realtimeActiveEmail === email) {
-      return;
-    }
+  realtimeInitPromise = (async () => {
+    try {
+      const userInfo = await getGoogleUserInfo();
+      if (!userInfo || !userInfo.email) {
+        closeRealtimeSync();
+        return;
+      }
 
-    if (realtimeChannel) {
-      closeRealtimeSync();
-    }
+      const email = userInfo.email.trim().toLowerCase();
+      if (realtimeChannel && realtimeActiveEmail === email) {
+        return;
+      }
 
-    realtimeActiveEmail = email;
-    console.log('[Realtime Sync] Subscribing to Supabase changes for', email);
+      if (realtimeChannel) {
+        closeRealtimeSync();
+      }
 
-    realtimeChannel = supabase
-      .channel(`public:items:email=eq.${email}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'items',
-          filter: `email=eq.${email}`,
-        },
-        async (payload) => {
-          console.log('[Realtime Sync] Received realtime change:', payload.eventType);
-          pullChangesFromDrive().catch((err) => {
-            console.error('[Realtime Sync] Pull failed:', err);
-          });
-        }
-      )
-      .subscribe((status) => {
+      realtimeActiveEmail = email;
+      console.log('[Realtime Sync] Subscribing to Supabase changes for', email);
+
+      const channel = supabase.channel(`public:items:email=eq.${email}`);
+
+      realtimeChannel = channel
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'items',
+            filter: `email=eq.${email}`,
+          },
+          async (payload) => {
+            console.log('[Realtime Sync] Received realtime change:', payload.eventType);
+            pullChangesFromCloud().catch((err) => {
+              console.error('[Realtime Sync] Pull failed:', err);
+            });
+          }
+        );
+
+      channel.subscribe((status) => {
         console.log('[Realtime Sync] Subscription status:', status);
       });
-  } catch (err) {
-    console.error('[Realtime Sync] Failed to initialize:', err);
-  }
+    } catch (err) {
+      console.error('[Realtime Sync] Failed to initialize:', err);
+    } finally {
+      realtimeInitPromise = null;
+    }
+  })();
+
+  return realtimeInitPromise;
 };
 
 export const closeRealtimeSync = (): void => {
   if (realtimeChannel) {
     realtimeChannel.unsubscribe();
+    supabase.removeChannel(realtimeChannel);
     realtimeChannel = null;
   }
   realtimeActiveEmail = null;
@@ -76,8 +90,7 @@ export interface SyncTask {
   itemId: string; // The local item ID
   itemType: DumpType;
   fileUri?: string; // Local URI (only for photos/files)
-  driveMetaFileId?: string; // Kept for compatibility / interface matching
-  driveFileId?: string; // Kept for compatibility / interface matching
+  storagePath?: string;
 }
 
 const QUEUE_STORAGE_KEY = '@boothub_sync_queue';
@@ -259,8 +272,7 @@ export const enqueueUnsyncedLocalItems = async (): Promise<void> => {
     const queue = await getSyncQueue();
 
     const unsyncedItems = items.filter((item) => {
-      const isLegacyDriveItem = item.syncState === 'synced' && (!item.driveFileId || !item.driveFileId.includes('/'));
-      const needsSync = item.syncState !== 'synced' || isLegacyDriveItem;
+      const needsSync = item.syncState !== 'synced';
       const isAlreadyQueued = queue.some((t) => t.itemId === item.id && (t.action === 'UPLOAD' || t.action === 'UPDATE'));
       return needsSync && !isAlreadyQueued;
     });
@@ -351,7 +363,7 @@ export const processSyncQueue = async (): Promise<void> => {
           if (task.action === 'UPLOAD' || task.action === 'UPDATE') {
             if (!localItem) continue;
 
-            let storagePath = localItem.driveFileId || ''; // reuse driveFileId as storagePath field mapping
+            let storagePath = localItem.storagePath || localItem.driveFileId || '';
 
             if ((localItem.type === 'photo' || localItem.type === 'file') && !storagePath) {
               let localFileUri = '';
@@ -368,14 +380,16 @@ export const processSyncQueue = async (): Promise<void> => {
 
               if (isAborted) throw new Error('Aborted');
 
-              // Read local file and upload to Supabase Storage
-              const response = await fetch(localFileUri);
-              const blob = await response.blob();
+              // Read local file as base64 and convert to Uint8Array/ArrayBuffer for reliable upload
+              const base64Data = await FileSystem.readAsStringAsync(localFileUri, {
+                encoding: FileSystem.EncodingType.Base64,
+              });
+              const bytes = base64ToBytes(base64Data);
 
               const path = `${email}/${localItem.id}`;
               const { error: uploadErr } = await supabase.storage
                 .from('files')
-                .upload(path, blob, {
+                .upload(path, bytes, {
                   contentType: mimeType,
                   upsert: true,
                 });
@@ -414,7 +428,7 @@ export const processSyncQueue = async (): Promise<void> => {
                 return {
                   ...item,
                   syncState: 'synced' as const,
-                  driveFileId: storagePath, // Map driveFileId to storagePath
+                  storagePath,
                 };
               }
               return item;
@@ -472,7 +486,7 @@ const dequeueTask = async (taskId: string) => {
   });
 };
 
-export const pullChangesFromDrive = async (): Promise<void> => {
+export const pullChangesFromCloud = async (): Promise<void> => {
   const userInfo = await getGoogleUserInfo();
   if (!userInfo || !userInfo.email) {
     console.warn('Cannot pull changes: User not signed in.');
@@ -505,7 +519,7 @@ export const pullChangesFromDrive = async (): Promise<void> => {
         (item.type === 'text' ||
           item.type === 'link' ||
           item.type === 'folder' ||
-          (item.driveFileId && item.driveFileId.includes('/')));
+          ((item.storagePath || item.driveFileId) && (item.storagePath || item.driveFileId)!.includes('/')));
       return isSupabaseSynced && !remoteItemIds.has(item.id);
     });
 
@@ -542,14 +556,14 @@ export const pullChangesFromDrive = async (): Promise<void> => {
       const localIndex = updatedLocalItems.findIndex((x) => x.id === remote.id);
       let localValue = remote.value;
 
-      if ((remote.type === 'photo' || remote.type === 'file') && remote.storage_path) {
+      if ((remote.type === 'photo' || remote.type === 'file') && remote.storage_path && remote.storage_path.includes('/')) {
         try {
           let filename = '';
           if (remote.type === 'photo') {
             filename = `photo_${remote.id}.jpg`;
           } else {
             const fileObj = JSON.parse(remote.value);
-            filename = fileObj.name || `file_${remote.id}`;
+            filename = (fileObj.name || `file_${remote.id}`).replace(/\s+/g, '_');
           }
 
           const localUri = FileSystem.documentDirectory + filename;
@@ -569,7 +583,9 @@ export const pullChangesFromDrive = async (): Promise<void> => {
               .from('files')
               .getPublicUrl(remote.storage_path);
 
-            await FileSystem.downloadAsync(publicUrlData.publicUrl, localUri);
+            await FileSystem.downloadAsync(publicUrlData.publicUrl, localUri, {
+              sessionType: FileSystem.FileSystemSessionType.FOREGROUND,
+            });
           }
 
           if (remote.type === 'photo') {
@@ -591,7 +607,7 @@ export const pullChangesFromDrive = async (): Promise<void> => {
         value: localValue,
         folderId: remote.folder_id || undefined,
         syncState: 'synced',
-        driveFileId: remote.storage_path || undefined,
+        storagePath: remote.storage_path || undefined,
       };
 
       if (localIndex >= 0) {

@@ -67,6 +67,22 @@ const isDirectImageUrl = (url: string) => {
   );
 };
 
+const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeoutMs = 2000): Promise<Response> => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
+};
+
 export const preFetchLinkMetadata = async (url: string): Promise<PreviewData | null> => {
   // 1. Check in-memory cache
   if (previewCache.has(url)) {
@@ -100,11 +116,11 @@ export const preFetchLinkMetadata = async (url: string): Promise<PreviewData | n
 
   // 4. Scrape webpage
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1'
       }
-    });
+    }, 2000);
     const html = await response.text();
 
     const metaTags = extractMetaTags(html);
@@ -228,11 +244,11 @@ export const LinkPreview: React.FC<LinkPreviewProps> = ({ url, hideDivider = fal
 
       // 4. Scrape Webpage for Open Graph Tags (Tier 3: Network Scraper)
       try {
-        const response = await fetch(url, {
+        const response = await fetchWithTimeout(url, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1'
           }
-        });
+        }, 2000);
         const html = await response.text();
 
         const metaTags = extractMetaTags(html);

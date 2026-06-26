@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getItems, subscribeToStorage, DumpItem } from '../utils/storage';
-import { pullChangesFromDrive, processSyncQueue, enqueueUnsyncedLocalItems } from '../utils/sync-engine';
+import { pullChangesFromCloud, processSyncQueue, enqueueUnsyncedLocalItems } from '../utils/sync-engine';
 
 export interface UseAppDataReturn {
   items: DumpItem[];
@@ -44,7 +44,7 @@ export function useAppData(): UseAppDataReturn {
     setRefreshing(true);
     try {
       await enqueueUnsyncedLocalItems().catch(() => {});
-      await pullChangesFromDrive();
+      await pullChangesFromCloud();
       await processSyncQueue();
       const data = await getItems();
       setItems(data);

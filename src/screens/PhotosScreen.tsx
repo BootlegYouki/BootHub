@@ -248,11 +248,6 @@ export const PhotosScreen: React.FC<PhotosScreenProps> = ({
 
     return (
       <View style={{ width: '100%' }}>
-        <FolderHeader
-          name={breadcrumb}
-          onBack={handleBack}
-        />
-
         {activeFolderChildren.length === 0 ? (
           <EmptyFolderPlaceholder />
         ) : (

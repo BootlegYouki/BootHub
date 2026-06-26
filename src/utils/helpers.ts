@@ -188,7 +188,7 @@ export const formatBytes = (bytes: number, decimals = 2): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 };
 
-const base64ToBytes = (base64: string): Uint8Array => {
+export const base64ToBytes = (base64: string): Uint8Array => {
   const cleaned = base64.replace(/\s/g, '');
   if (typeof atob !== 'undefined') {
     try {

@@ -25,8 +25,8 @@ export interface DumpItem {
   value: string; // The URL, raw text, or local/remote image URI, or JSON for files/folders
   folderId?: string;
   syncState?: 'synced' | 'pending' | 'error';
-  driveFileId?: string;
-  driveMetaFileId?: string;
+  driveFileId?: string; // deprecated, kept for compatibility/migration if needed, but renamed/mapped
+  storagePath?: string;
 }
 
 const STORAGE_KEY = '@boothub_dump_items';
@@ -163,7 +163,7 @@ export const deleteItem = async (id: string): Promise<DumpItem[]> => {
       updated = currentItems.filter((item) => !idsToDelete.has(item.id));
       await saveItems(updated);
 
-      // Enqueue deletion tasks atomically for Google Drive sync
+      // Enqueue deletion tasks atomically for cloud sync
       if (onEnqueueTasks) {
         await onEnqueueTasks(
           [targetItem, ...childrenToDelete].map((item) => ({
@@ -171,8 +171,7 @@ export const deleteItem = async (id: string): Promise<DumpItem[]> => {
             itemId: item.id,
             itemType: item.type,
             extras: {
-              driveMetaFileId: item.driveMetaFileId,
-              driveFileId: item.driveFileId,
+              storagePath: item.storagePath || item.driveFileId,
             },
           }))
         );
@@ -189,8 +188,7 @@ export const deleteItem = async (id: string): Promise<DumpItem[]> => {
       // Enqueue delete task for file/link/text
       if (onEnqueueTask) {
         await onEnqueueTask('DELETE', id, targetItem.type, {
-          driveMetaFileId: targetItem.driveMetaFileId,
-          driveFileId: targetItem.driveFileId,
+          storagePath: targetItem.storagePath || targetItem.driveFileId,
         });
       }
 

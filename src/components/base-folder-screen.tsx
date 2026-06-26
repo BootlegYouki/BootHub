@@ -60,8 +60,6 @@ export const BaseFolderScreen: React.FC<BaseFolderScreenProps> = ({
   if (activeFolder) {
     return (
       <>
-        <FolderHeader name={breadcrumb} onBack={handleBack} />
-
         {activeFolderChildren.length === 0 ? (
           <EmptyFolderPlaceholder />
         ) : (

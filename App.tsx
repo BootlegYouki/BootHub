@@ -77,6 +77,8 @@ import { TabButton } from './src/components/tab-button';
 import { ContextMenuOverlay } from './src/components/context-menu-overlay';
 import { FullscreenPhotoViewer } from './src/components/fullscreen-photo-viewer';
 import { processSharedItem, ParsedShare } from './src/utils/share-receiver';
+import { FolderHeader } from './src/components/folder-header';
+import { useFolderNavigation } from './src/utils/folder-navigation';
 import { ShareImportSheet } from './src/components/share-import-sheet';
 import { TuiDrawer } from './src/components/tui-drawer';
 import { FolderPickerSheet } from './src/components/folder-picker-sheet';
@@ -228,6 +230,11 @@ function MainApp() {
     editingItemId,
     editText,
   });
+
+  const linkNav = useFolderNavigation(sortedLinkItems, expandedFolders, setExpandedFolders);
+  const textNav = useFolderNavigation(sortedTextItems, expandedFolders, setExpandedFolders);
+  const photoNav = useFolderNavigation(sortedPhotoItems, expandedFolders, setExpandedFolders);
+  const fileNav = useFolderNavigation(sortedFileItems, expandedFolders, setExpandedFolders);
 
   const { headerMenuExpanded, toggleHeaderMenu, folderPlusButtonStyle, subButtonStyle } = useHeaderMenu({
     isSelectionMode,
@@ -937,37 +944,65 @@ function MainApp() {
                 directionalLockEnabled
               >
                 {/* Page 0: Links */}
-                <ScrollView style={{ width: windowWidth }} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled"
-                  refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} progressBackgroundColor={isDark ? '#27272A' : '#F4F4F5'} />}
-                >
-                  <LinksScreen sortedItems={sortedLinkItems} isSelectionMode={isSelectionMode && activeTab === 'link'} selectedIds={selectedIds} toggleSelect={toggleSelect}
-                    onLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })} editingItemId={editingItemId} searchQuery={searchQuery} expandedFolders={expandedFolders} setExpandedFolders={setExpandedFolders} />
-                </ScrollView>
+                <View style={{ width: windowWidth, flex: 1 }}>
+                  {linkNav.activeFolder && (
+                    <View style={{ paddingHorizontal: 16, paddingTop: 4, zIndex: 10, elevation: 10, backgroundColor: colors.background }}>
+                      <FolderHeader name={linkNav.breadcrumb} onBack={linkNav.handleBack} />
+                    </View>
+                  )}
+                  <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled"
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} progressBackgroundColor={isDark ? '#27272A' : '#F4F4F5'} />}
+                  >
+                    <LinksScreen sortedItems={sortedLinkItems} isSelectionMode={isSelectionMode && activeTab === 'link'} selectedIds={selectedIds} toggleSelect={toggleSelect}
+                      onLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })} editingItemId={editingItemId} searchQuery={searchQuery} expandedFolders={expandedFolders} setExpandedFolders={setExpandedFolders} />
+                  </ScrollView>
+                </View>
 
                 {/* Page 1: Texts */}
-                <ScrollView style={{ width: windowWidth }} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled"
-                  refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} progressBackgroundColor={isDark ? '#27272A' : '#F4F4F5'} />}
-                >
-                  <TextsScreen sortedItems={sortedTextItems} isSelectionMode={isSelectionMode && activeTab === 'text'} selectedIds={selectedIds} toggleSelect={toggleSelect}
-                    onLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })} editingItemId={editingItemId} searchQuery={searchQuery} expandedFolders={expandedFolders} setExpandedFolders={setExpandedFolders} />
-                </ScrollView>
+                <View style={{ width: windowWidth, flex: 1 }}>
+                  {textNav.activeFolder && (
+                    <View style={{ paddingHorizontal: 16, paddingTop: 4, zIndex: 10, elevation: 10, backgroundColor: colors.background }}>
+                      <FolderHeader name={textNav.breadcrumb} onBack={textNav.handleBack} />
+                    </View>
+                  )}
+                  <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled"
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} progressBackgroundColor={isDark ? '#27272A' : '#F4F4F5'} />}
+                  >
+                    <TextsScreen sortedItems={sortedTextItems} isSelectionMode={isSelectionMode && activeTab === 'text'} selectedIds={selectedIds} toggleSelect={toggleSelect}
+                      onLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })} editingItemId={editingItemId} searchQuery={searchQuery} expandedFolders={expandedFolders} setExpandedFolders={setExpandedFolders} />
+                  </ScrollView>
+                </View>
 
                 {/* Page 2: Photos */}
-                <ScrollView style={{ width: windowWidth }} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled"
-                  refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} progressBackgroundColor={isDark ? '#27272A' : '#F4F4F5'} />}
-                >
-                  <PhotosScreen sortedItems={sortedPhotoItems} isSelectionMode={isSelectionMode && activeTab === 'photo'} selectedIds={selectedIds} toggleSelect={toggleSelect}
-                    onPhotoPress={handlePhotoPress} onPhotoLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })} activePhotoId={activeFullscreenPhoto?.id}
-                    registerMeasureFn={(fn) => { measurePhotoRef.current = fn; }} expandedFolders={expandedFolders} setExpandedFolders={setExpandedFolders} />
-                </ScrollView>
+                <View style={{ width: windowWidth, flex: 1 }}>
+                  {photoNav.activeFolder && (
+                    <View style={{ paddingHorizontal: 16, paddingTop: 4, zIndex: 10, elevation: 10, backgroundColor: colors.background }}>
+                      <FolderHeader name={photoNav.breadcrumb} onBack={photoNav.handleBack} />
+                    </View>
+                  )}
+                  <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled"
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} progressBackgroundColor={isDark ? '#27272A' : '#F4F4F5'} />}
+                  >
+                    <PhotosScreen sortedItems={sortedPhotoItems} isSelectionMode={isSelectionMode && activeTab === 'photo'} selectedIds={selectedIds} toggleSelect={toggleSelect}
+                      onPhotoPress={handlePhotoPress} onPhotoLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })} activePhotoId={activeFullscreenPhoto?.id}
+                      registerMeasureFn={(fn) => { measurePhotoRef.current = fn; }} expandedFolders={expandedFolders} setExpandedFolders={setExpandedFolders} />
+                  </ScrollView>
+                </View>
 
                 {/* Page 3: Files */}
-                <ScrollView style={{ width: windowWidth }} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled"
-                  refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} progressBackgroundColor={isDark ? '#27272A' : '#F4F4F5'} />}
-                >
-                  <FilesScreen sortedItems={sortedFileItems} isSelectionMode={isSelectionMode && activeTab === 'file'} selectedIds={selectedIds} toggleSelect={toggleSelect}
-                    onLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })} editingItemId={editingItemId} searchQuery={searchQuery} expandedFolders={expandedFolders} setExpandedFolders={setExpandedFolders} />
-                </ScrollView>
+                <View style={{ width: windowWidth, flex: 1 }}>
+                  {fileNav.activeFolder && (
+                    <View style={{ paddingHorizontal: 16, paddingTop: 4, zIndex: 10, elevation: 10, backgroundColor: colors.background }}>
+                      <FolderHeader name={fileNav.breadcrumb} onBack={fileNav.handleBack} />
+                    </View>
+                  )}
+                  <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled"
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} progressBackgroundColor={isDark ? '#27272A' : '#F4F4F5'} />}
+                  >
+                    <FilesScreen sortedItems={sortedFileItems} isSelectionMode={isSelectionMode && activeTab === 'file'} selectedIds={selectedIds} toggleSelect={toggleSelect}
+                      onLongPress={(item, bounds) => setContextMenuPhoto({ item, bounds })} editingItemId={editingItemId} searchQuery={searchQuery} expandedFolders={expandedFolders} setExpandedFolders={setExpandedFolders} />
+                  </ScrollView>
+                </View>
               </ScrollView>
             </>
           )}

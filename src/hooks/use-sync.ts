@@ -4,7 +4,7 @@ import {
   processSyncQueue,
   enqueueUnsyncedLocalItems,
   initializeRealtimeSync,
-  pullChangesFromDrive,
+  pullChangesFromCloud,
 } from '../utils/sync-engine';
 
 export function useSync(): void {
@@ -12,11 +12,11 @@ export function useSync(): void {
     const runSync = async () => {
       try {
         // Enqueue unsynced/legacy local items FIRST to mark them as pending
-        // and prevent them from being overwritten by pullChangesFromDrive.
+        // and prevent them from being overwritten by pullChangesFromCloud.
         await enqueueUnsyncedLocalItems().catch((err) =>
           console.error('[App] Enqueue failed:', err)
         );
-        await pullChangesFromDrive().catch((err) =>
+        await pullChangesFromCloud().catch((err) =>
           console.error('[App] Pull failed:', err)
         );
       } catch (err) {
