@@ -24,6 +24,18 @@ export function getFolderName(item: DumpItem): string {
   }
 }
 
+import { previewCache } from '../components/link-preview';
+
+function getPreviewTextMobile(url: string): string {
+  try {
+    const cached = previewCache.get(url);
+    if (cached) {
+      return `${cached.title || ''} ${cached.description || ''}`;
+    }
+  } catch (e) {}
+  return '';
+}
+
 function matchItem(item: DumpItem, q: string, tabItems: DumpItem[]): boolean {
   if (item.type === 'folder') {
     const name = getFolderName(item).toLowerCase();
@@ -45,10 +57,16 @@ function matchItem(item: DumpItem, q: string, tabItems: DumpItem[]): boolean {
     );
   }
 
-  return (
-    item.value.toLowerCase().includes(q) ||
-    !!(item.label && item.label.toLowerCase().includes(q))
-  );
+  const labelMatch = item.label ? item.label.toLowerCase().includes(q) : false;
+  const valueMatch = item.value ? item.value.toLowerCase().includes(q) : false;
+  let previewMatch = false;
+
+  if (item.type === 'link' && item.value) {
+    const previewText = getPreviewTextMobile(item.value).toLowerCase();
+    if (previewText.includes(q)) previewMatch = true;
+  }
+
+  return labelMatch || valueMatch || previewMatch;
 }
 
 function sortTabItems(itemsList: DumpItem[], sortAscending: boolean): DumpItem[] {

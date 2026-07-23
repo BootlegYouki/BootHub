@@ -115,16 +115,14 @@ export const BaseFolderScreen: React.FC<BaseFolderScreenProps> = ({
               id={item.id}
               name={folderName}
               count={children.length}
-              isExpanded={isExpanded}
-              onToggleExpand={() => setExpandedFolders((prev) => ({ ...prev, [item.id]: !prev[item.id] }))}
+              isExpanded={false}
+              onToggleExpand={() => handleOpenSubFolder(item.id)}
               onLongPress={(bounds) => onLongPress?.(item, bounds)}
               isSelectionMode={isSelectionMode}
               isSelected={isSelectionMode && selectedIds.has(item.id)}
               onPress={() => toggleSelect(item.id)}
               syncState={item.syncState}
-            >
-              {children.map((child) => renderItem(child))}
-            </FolderItem>
+            />
           );
         }
 

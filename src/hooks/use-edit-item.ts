@@ -16,9 +16,13 @@ export interface UseEditItemReturn {
   setEditingItemId: (id: string | null) => void;
   editText: string;
   setEditText: (text: string) => void;
+  editLabelText: string;
+  setEditLabelText: (text: string) => void;
+  editStep: 'value' | 'label';
+  setEditStep: (step: 'value' | 'label') => void;
   editInputRef: React.RefObject<any>;
   handleEditItem: (item: DumpItem) => void;
-  handleSaveEdit: (id: string, value: string) => Promise<void>;
+  handleSaveEdit: (id: string, value: string, label?: string) => Promise<void>;
   handleCancelEdit: () => void;
   handleCreateFolder: () => void;
 }
@@ -32,9 +36,11 @@ export function useEditItem({
 }: UseEditItemOptions): UseEditItemReturn {
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
+  const [editLabelText, setEditLabelText] = useState('');
+  const [editStep, setEditStep] = useState<'value' | 'label'>('value');
   const editInputRef = useRef<any>(null);
 
-  // Auto-focus the edit input when editing starts
+  // Auto-focus the edit input when editing starts or step changes
   useEffect(() => {
     if (editingItemId !== null) {
       const timer = setTimeout(() => {
@@ -44,10 +50,12 @@ export function useEditItem({
     } else {
       Keyboard.dismiss();
     }
-  }, [editingItemId]);
+  }, [editingItemId, editStep]);
 
   const handleEditItem = (item: DumpItem) => {
     setEditingItemId(item.id);
+    setEditStep('value');
+    setEditLabelText(item.label || '');
     if (item.type === 'file') {
       try {
         const fileObj = JSON.parse(item.value);
@@ -67,9 +75,10 @@ export function useEditItem({
     }
   };
 
-  const handleSaveEdit = async (id: string, value: string) => {
+  const handleSaveEdit = async (id: string, value: string, label?: string) => {
     Keyboard.dismiss();
     let finalValue = value.trim();
+    let finalLabel = label !== undefined ? label.trim() : editLabelText.trim();
 
     if (id === 'temp-new-folder') {
       if (!finalValue) finalValue = 'New Folder';
@@ -95,6 +104,7 @@ export function useEditItem({
         console.error('Failed to create folder:', e);
       } finally {
         setEditingItemId(null);
+        setEditStep('value');
       }
       return;
     }
@@ -116,27 +126,30 @@ export function useEditItem({
         finalValue = `${finalValue}_${counter}`;
       }
     } else {
-      if (!finalValue) return;
+      if (!finalValue && !finalLabel) return;
     }
 
     try {
-      const updated = await updateItem(id, finalValue);
+      const updated = await updateItem(id, finalValue || item.value, finalLabel || item.label);
       setItems(updated);
     } catch (e) {
       console.error('Failed to save edit:', e);
     } finally {
       setEditingItemId(null);
+      setEditStep('value');
     }
   };
 
   const handleCancelEdit = () => {
     Keyboard.dismiss();
     setEditingItemId(null);
+    setEditStep('value');
   };
 
   const handleCreateFolder = () => {
     setEditingItemId('temp-new-folder');
     setEditText('');
+    setEditStep('value');
   };
 
   return {
@@ -144,6 +157,10 @@ export function useEditItem({
     setEditingItemId,
     editText,
     setEditText,
+    editLabelText,
+    setEditLabelText,
+    editStep,
+    setEditStep,
     editInputRef,
     handleEditItem,
     handleSaveEdit,

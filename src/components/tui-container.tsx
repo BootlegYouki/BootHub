@@ -20,6 +20,7 @@ interface TuiContainerProps {
   noPadding?: boolean;
   onPress?: () => void;
   onLongPress?: () => void;
+  progress?: number;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -36,6 +37,7 @@ export const TuiContainer: React.FC<TuiContainerProps> = ({
   noPadding = false,
   onPress,
   onLongPress,
+  progress,
 }) => {
   const { colors, isDark } = useTheme();
   const [legendWidth, setLegendWidth] = React.useState(0);
@@ -175,6 +177,13 @@ export const TuiContainer: React.FC<TuiContainerProps> = ({
 
       {/* Main Content */}
       <View style={[styles.content, contentStyle]}>{children}</View>
+
+      {/* Sync Progress Bar */}
+      {progress !== undefined && (
+        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, backgroundColor: colors.primary + '30', zIndex: 10, overflow: 'hidden' }}>
+          <View style={{ height: '100%', width: `${Math.min(Math.max(progress * 100, 0), 100)}%`, backgroundColor: colors.primary }} />
+        </View>
+      )}
     </AnimatedPressable>
   );
 };

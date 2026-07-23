@@ -22,7 +22,7 @@ export const useFolderNavigation = (
       const nextFolder: DumpItem | undefined = sortedItems.find(
         (item) =>
           item.type === 'folder' &&
-          item.folderId === parentId &&
+          (item.folderId || undefined) === (parentId || undefined) &&
           !!expandedFolders[item.id]
       );
       if (!nextFolder) {

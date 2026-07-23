@@ -267,12 +267,12 @@ export const deleteItem = async (id: string): Promise<DumpItem[]> => {
   return await getItems();
 };
 
-export const updateItem = async (id: string, value: string): Promise<DumpItem[]> => {
+export const updateItem = async (id: string, value: string, label?: string): Promise<DumpItem[]> => {
   const item = db.getFirstSync<DumpItem>('SELECT * FROM items WHERE id = ?', [id]);
   if (!item) return await getItems();
   
   let finalValue = value;
-  let finalLabel = item.label;
+  let finalLabel = label !== undefined ? label : item.label;
   
   if (item.type === 'file') {
     try {

@@ -52,9 +52,13 @@ interface BottomBarProps {
   // Edit mode
   editText: string;
   setEditText: (text: string) => void;
+  editLabelText: string;
+  setEditLabelText: (text: string) => void;
+  editStep: 'value' | 'label';
+  setEditStep: (step: 'value' | 'label') => void;
   editInputRef: React.RefObject<any>;
   onCancelEdit: () => void;
-  onSaveEdit: (id: string, value: string) => void;
+  onSaveEdit: (id: string, value: string, label?: string) => void;
   activeTab: DumpType;
   items: DumpItem[];
 
@@ -93,6 +97,10 @@ export function BottomBar({
   onBulkDelete,
   editText,
   setEditText,
+  editLabelText,
+  setEditLabelText,
+  editStep,
+  setEditStep,
   editInputRef,
   onCancelEdit,
   onSaveEdit,
@@ -143,6 +151,10 @@ export function BottomBar({
           colors={colors}
           editText={editText}
           setEditText={setEditText}
+          editLabelText={editLabelText}
+          setEditLabelText={setEditLabelText}
+          editStep={editStep}
+          setEditStep={setEditStep}
           editInputRef={editInputRef}
           editingItemId={editingItemId}
           onCancelEdit={onCancelEdit}
@@ -330,10 +342,14 @@ interface EditModeBarProps {
   colors: ThemeColors;
   editText: string;
   setEditText: (text: string) => void;
+  editLabelText: string;
+  setEditLabelText: (text: string) => void;
+  editStep: 'value' | 'label';
+  setEditStep: (step: 'value' | 'label') => void;
   editInputRef: React.RefObject<any>;
   editingItemId: string;
   onCancelEdit: () => void;
-  onSaveEdit: (id: string, value: string) => void;
+  onSaveEdit: (id: string, value: string, label?: string) => void;
   activeTab: DumpType;
   items: DumpItem[];
   locked: boolean;
@@ -347,6 +363,10 @@ function EditModeBar({
   colors,
   editText,
   setEditText,
+  editLabelText,
+  setEditLabelText,
+  editStep,
+  setEditStep,
   editInputRef,
   editingItemId,
   onCancelEdit,
@@ -363,9 +383,25 @@ function EditModeBar({
     editingItemId === 'temp-new-folder' ||
     items.find((x) => x.id === editingItemId)?.type === 'folder';
 
+  const isValueStep = editStep === 'value' && !isFolder;
+
   const placeholder = isFolder
     ? 'Name your folder...'
-    : activeTab === 'link' ? 'Edit link...' : activeTab === 'file' ? 'Rename file...' : 'Edit text...';
+    : isValueStep
+    ? (activeTab === 'link' ? 'Edit link...' : activeTab === 'file' ? 'Rename file...' : 'Edit text...')
+    : 'Edit label / date...';
+
+  const currentValue = isValueStep ? editText : editLabelText;
+
+  const handleNextCheck = () => {
+    if (isFolder || editingItemId === 'temp-new-folder') {
+      onSaveEdit(editingItemId, editText);
+    } else if (editStep === 'value') {
+      setEditStep('label');
+    } else {
+      onSaveEdit(editingItemId, editText, editLabelText);
+    }
+  };
 
   return (
     <View style={styles.bottomBarRow}>
@@ -386,11 +422,15 @@ function EditModeBar({
       <TextInput
         ref={editInputRef}
         style={[styles.input, { borderColor: colors.primary, color: colors.foreground, backgroundColor: colors.card }]}
-        value={editText}
+        value={currentValue}
         editable={!locked}
         onChangeText={(text) => {
           if (isLocked()) return;
-          setEditText(text);
+          if (isValueStep) {
+            setEditText(text);
+          } else {
+            setEditLabelText(text);
+          }
         }}
         placeholder={placeholder}
         placeholderTextColor={colors.mutedForeground}
@@ -410,7 +450,7 @@ function EditModeBar({
       />
 
       <Pressable
-        onPress={() => onSaveEdit(editingItemId, editText)}
+        onPress={handleNextCheck}
         hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
         style={({ pressed }) => [
           styles.iconBtn,

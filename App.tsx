@@ -215,6 +215,10 @@ function MainApp() {
     setEditingItemId,
     editText,
     setEditText,
+    editLabelText,
+    setEditLabelText,
+    editStep,
+    setEditStep,
     editInputRef,
     handleEditItem,
     handleSaveEdit,
@@ -1063,6 +1067,10 @@ function MainApp() {
               onBulkDelete={handleBulkDelete}
               editText={editText}
               setEditText={setEditText}
+              editLabelText={editLabelText}
+              setEditLabelText={setEditLabelText}
+              editStep={editStep}
+              setEditStep={setEditStep}
               editInputRef={editInputRef}
               onCancelEdit={handleCancelEdit}
               onSaveEdit={handleSaveEdit}
@@ -1153,7 +1161,7 @@ function MainApp() {
             onClose={() => setContextMenuPhoto(null)}
             onCopy={() => handleCopyItem(contextMenuPhoto.item)}
             onShare={() => handleShareItem(contextMenuPhoto.item)}
-            onEdit={contextMenuPhoto.item.type !== 'photo' ? () => handleEditItem(contextMenuPhoto.item) : undefined}
+            onEdit={contextMenuPhoto.item.type !== 'photo' ? () => { setContextMenuPhoto(null); handleEditItem(contextMenuPhoto.item); } : undefined}
             onDelete={() => handleDeleteItem(contextMenuPhoto.item)}
             onMoveToFolder={() => handleMoveToFolder(contextMenuPhoto.item)}
             onRemoveFromFolder={() => handleSetItemFolder(contextMenuPhoto.item.id, undefined)}
