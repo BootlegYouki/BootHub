@@ -232,7 +232,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                     textAlign: 'center',
                     padding: 12,
                     fontFamily: 'JetBrainsMono_700Bold',
-                    letterSpacing: 10,
                   }}
                 />
               </View>

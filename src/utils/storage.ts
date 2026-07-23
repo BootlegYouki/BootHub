@@ -1,3 +1,4 @@
+import 'react-native-get-random-values';
 import * as SQLite from 'expo-sqlite';
 import * as FileSystem from 'expo-file-system/legacy';
 import { v4 as uuidv4 } from 'uuid';

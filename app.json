@@ -16,7 +16,11 @@
       "bundleIdentifier": "com.bootlegyouki.boothub",
       "infoPlist": {
         "UIFileSharingEnabled": true,
-        "LSSupportsOpeningDocumentsInPlace": true
+        "LSSupportsOpeningDocumentsInPlace": true,
+        "NSLocalNetworkUsageDescription": "BootHub uses the local network to discover and sync securely with your desktop.",
+        "NSBonjourServices": [
+          "_boothub._tcp."
+        ]
       },
       "icon": {
         "light": "./assets/icon.png",
