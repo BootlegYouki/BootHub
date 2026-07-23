@@ -7,6 +7,51 @@ import { FileSystemSessionType } from 'expo-file-system/legacy';
 
 const zeroconf = new Zeroconf();
 let knownPeers = new Map<string, string>(); // name -> ip:port
+let ws: WebSocket | null = null;
+let wsReconnectTimeout: NodeJS.Timeout | null = null;
+
+function connectWebSocket(peerAddress: string) {
+  if (ws) {
+    ws.close();
+  }
+  if (wsReconnectTimeout) {
+    clearTimeout(wsReconnectTimeout);
+  }
+  
+  const wsUrl = `ws://${peerAddress}/ws`;
+  console.log(`[Sync Engine] Connecting WebSocket to ${wsUrl}`);
+  ws = new WebSocket(wsUrl);
+  
+  ws.onopen = () => {
+    console.log('[Sync Engine] WebSocket connected');
+  };
+  
+  ws.onmessage = (event) => {
+    if (event.data === 'SYNC_NEEDED') {
+      console.log('[Sync Engine] Received SYNC_NEEDED via WebSocket');
+      processSyncQueue().catch(console.error);
+    } else if (event.data === 'FORCE_DISCONNECT') {
+      console.log('[Sync Engine] Received FORCE_DISCONNECT from Desktop');
+      getDb().runSync("DELETE FROM config WHERE key = 'is_paired'", []);
+      updateSyncStatus({ error: 'Disconnected by desktop.' });
+      closeRealtimeSync();
+    }
+  };
+  
+  ws.onclose = () => {
+    console.log('[Sync Engine] WebSocket closed, attempting to reconnect...');
+    ws = null;
+    wsReconnectTimeout = setTimeout(() => {
+      if (knownPeers.size > 0) {
+        connectWebSocket(Array.from(knownPeers.values())[0]);
+      }
+    }, 5000);
+  };
+  
+  ws.onerror = (e) => {
+    console.error('[Sync Engine] WebSocket error:', e);
+  };
+}
 
 export const getKnownPeers = () => knownPeers;
 
@@ -52,6 +97,7 @@ export const initializeRealtimeSync = async (): Promise<void> => {
       if (ip && port) {
         knownPeers.set(service.name, `${ip}:${port}`);
         processSyncQueue().catch(console.error);
+        connectWebSocket(`${ip}:${port}`);
       }
     }
   });
@@ -63,6 +109,13 @@ export const initializeRealtimeSync = async (): Promise<void> => {
 export const closeRealtimeSync = (): void => {
   zeroconf.stop();
   knownPeers.clear();
+  if (ws) {
+    ws.close();
+    ws = null;
+  }
+  if (wsReconnectTimeout) {
+    clearTimeout(wsReconnectTimeout);
+  }
 };
 
 // Deprecated / stubbed out for P2P rewrite
@@ -88,17 +141,17 @@ export const processSyncQueue = async (): Promise<void> => {
   
   try {
     const db = getDb();
-    const localMaxClockRow = db.getFirstSync<{clock: number}>('SELECT MAX(clock) as clock FROM events');
-    const localClock = localMaxClockRow?.clock || 0;
-    
-    // Sync with the first available peer
     const peerAddress = Array.from(knownPeers.values())[0];
     const peerUrl = `http://${peerAddress}`;
     
-    console.log(`[Sync Engine] Exchanging events with ${peerUrl}...`);
+    // 1. Request remote events since last pull
+    const pullKey = `sync_pull_${peerAddress}`;
+    const pullRow = db.getFirstSync<{value: string}>('SELECT value FROM config WHERE key = ?', [pullKey]);
+    const lastPullClock = pullRow ? parseInt(pullRow.value, 10) : 0;
     
-    // 1. Request remote events since localClock
-    const response = await axios.get(`${peerUrl}/sync?since=${localClock}`, { timeout: 5000 });
+    console.log(`[Sync Engine] Exchanging events with ${peerUrl}... (since ${lastPullClock})`);
+    
+    const response = await axios.get(`${peerUrl}/sync?since=${lastPullClock}`, { timeout: 5000 });
     const remoteEvents: SyncEvent[] = response.data.events || [];
     const remoteMaxClock: number = response.data.max_clock || 0;
     
@@ -181,8 +234,16 @@ export const processSyncQueue = async (): Promise<void> => {
       notifyStorageListeners();
     }
     
+    if (remoteMaxClock > lastPullClock) {
+      db.runSync('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)', [pullKey, remoteMaxClock.toString()]);
+    }
+    
     // 3. Send our local events to remote
-    const localEventsToPush = db.getAllSync<SyncEvent>('SELECT * FROM events WHERE clock > ? ORDER BY clock ASC', [remoteMaxClock]);
+    const pushKey = `sync_push_${peerAddress}`;
+    const pushRow = db.getFirstSync<{value: string}>('SELECT value FROM config WHERE key = ?', [pushKey]);
+    const lastPushClock = pushRow ? parseInt(pushRow.value, 10) : 0;
+    
+    const localEventsToPush = db.getAllSync<SyncEvent>('SELECT * FROM events WHERE clock > ? ORDER BY clock ASC', [lastPushClock]);
     if (localEventsToPush.length > 0) {
       // First upload any files before sending the events
       for (const ev of localEventsToPush) {
@@ -207,6 +268,9 @@ export const processSyncQueue = async (): Promise<void> => {
         }
       }
       await axios.post(`${peerUrl}/sync`, { events: localEventsToPush }, { timeout: 5000 });
+      
+      const maxPushedClock = localEventsToPush[localEventsToPush.length - 1].clock;
+      db.runSync('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)', [pushKey, maxPushedClock.toString()]);
     }
     
     // 4. Garbage Collection for Orphaned Files

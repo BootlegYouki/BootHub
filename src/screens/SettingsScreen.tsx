@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator, Alert, Image, TextInput } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator, Alert, Image, TextInput, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/theme-provider';
 import { TuiContainer } from '../components/tui-container';
@@ -9,8 +9,6 @@ import { subscribeToSyncStatus, SyncStatus, clearSyncError, initializeRealtimeSy
 import { getSetting, saveSetting } from '../utils/storage';
 import axios from 'axios';
 
-
-
 interface SettingsScreenProps {}
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
@@ -19,9 +17,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
 
   const [isPaired, setIsPaired] = React.useState(false);
   const [pairedDeviceId, setPairedDeviceId] = React.useState<string | null>(null);
-  const [isPairingMode, setIsPairingMode] = React.useState(false);
   const [pairingCodeInput, setPairingCodeInput] = React.useState('');
   const [isPairing, setIsPairing] = React.useState(false);
+  const inputRef = React.useRef<TextInput>(null);
 
   // Sync engine states
   const [syncStatus, setSyncStatus] = React.useState<SyncStatus>({
@@ -51,11 +49,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
     return unsubscribe;
   }, []);
 
-  const handleStartPairing = () => {
-    setIsPairingMode(true);
-    setPairingCodeInput('');
-  };
-
   const submitPairingCode = async () => {
     if (pairingCodeInput.length !== 6) {
       Alert.alert('Invalid Code', 'Please enter a 6-digit code.');
@@ -63,50 +56,57 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
     }
     setIsPairing(true);
     try {
-      // Broadcast to local network or connect directly if IP is known.
-      // For now, assume Desktop is found via mDNS, but we need its IP.
-      // A full mDNS scan should happen, but here we can just alert until network discovery is fully hooked up.
-      // To simulate, we could hit http://boothub_desktop.local:14201/pair
-      
       let myDeviceId = await getSetting('device_id');
       if (!myDeviceId) {
-        myDeviceId = `mobile_${Date.now()}`; // simple fallback
+        myDeviceId = `mobile_${Date.now()}`;
         await saveSetting('device_id', myDeviceId);
       }
 
-      // Try dynamically discovered IP first, fallback to mDNS hostname
-      try {
-        const peers = getKnownPeers();
-        let targetUrl = 'http://boothub_desktop.local:14201/pair';
-        
-        // Find the desktop peer if it was discovered via mDNS
-        for (const [name, ipPort] of peers.entries()) {
-          if (name.includes('boothub')) {
-            targetUrl = `http://${ipPort}/pair`;
+      // Ensure mDNS discovery is running
+      let peers = getKnownPeers();
+      if (peers.size === 0) {
+        initializeRealtimeSync().catch(() => {});
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+        peers = getKnownPeers();
+      }
+
+      const targetUrls: string[] = [];
+      for (const [name, ipPort] of peers.entries()) {
+        if (name.includes('boothub')) {
+          targetUrls.push(`http://${ipPort}/pair`);
+        }
+      }
+      targetUrls.push('http://boothub_desktop.local:14201/pair');
+      targetUrls.push('http://10.0.2.2:14201/pair'); // Android emulator fallback
+
+      let pairedSuccess = false;
+
+      for (const url of targetUrls) {
+        try {
+          const res = await axios.post(url, {
+            code: pairingCodeInput,
+            device_id: myDeviceId,
+          }, { timeout: 2500 });
+
+          if (res.data && res.data.success) {
+            setIsPaired(true);
+            setPairedDeviceId(res.data.device_id);
+            await saveSetting('is_paired', 'true');
+            await saveSetting('paired_device_id', res.data.device_id);
+            Alert.alert('Paired!', 'Successfully paired with Desktop.');
+            pairedSuccess = true;
             break;
           }
+        } catch (e) {
+          // Continue trying next candidate URL
         }
+      }
 
-        const res = await axios.post(targetUrl, {
-          code: pairingCodeInput,
-          device_id: myDeviceId
-        }, { timeout: 3000 });
-        
-        if (res.data.success) {
-          setIsPaired(true);
-          setPairedDeviceId(res.data.device_id);
-          await saveSetting('is_paired', 'true');
-          await saveSetting('paired_device_id', res.data.device_id);
-          setIsPairingMode(false);
-          Alert.alert('Paired!', 'Successfully paired with Desktop.');
-          return;
-        } else {
-          Alert.alert('Failed', 'Incorrect code.');
-          return;
-        }
-      } catch (err) {
-        console.warn('mDNS hostname failed, try entering IP manually later. Error:', err);
-        Alert.alert('Network Error', 'Could not reach Desktop at boothub_desktop.local:14201.');
+      if (!pairedSuccess) {
+        Alert.alert(
+          'Pairing Failed',
+          'Could not pair with Desktop. Please make sure:\n\n1. BootHub Desktop is running on your computer.\n2. You clicked "Pair Device" on Desktop to show a fresh 6-digit code.\n3. Both devices are connected to the same Wi-Fi network.'
+        );
       }
     } catch (err: any) {
       Alert.alert('Pairing Error', err.message);
@@ -126,6 +126,26 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
           style: 'destructive',
           onPress: async () => {
             try {
+              // Notify desktop backend of disconnection
+              const peers = getKnownPeers();
+              const targetUrls: string[] = [];
+              for (const [name, ipPort] of peers.entries()) {
+                if (name.includes('boothub')) {
+                  targetUrls.push(`http://${ipPort}/unpair`);
+                }
+              }
+              targetUrls.push('http://boothub_desktop.local:14201/unpair');
+              targetUrls.push('http://10.0.2.2:14201/unpair');
+
+              const myDeviceId = await getSetting('device_id');
+
+              for (const url of targetUrls) {
+                try {
+                  await axios.post(url, { device_id: myDeviceId }, { timeout: 1500 });
+                  break;
+                } catch (e) {}
+              }
+
               await saveSetting('is_paired', 'false');
               setIsPaired(false);
               setPairedDeviceId(null);
@@ -185,8 +205,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
           </View>
         </TuiContainer>
 
-        {/* Google Drive Synchronization Settings */}
-        <TuiContainer label="P2P Sync" style={styles.containerMargin}>
+        {/* Synchronization Settings */}
+        <TuiContainer label="Sync" style={styles.containerMargin}>
           {isPaired ? (
             <View style={styles.syncCard}>
               <View style={styles.userRow}>
@@ -224,28 +244,44 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                 </View>
               </View>
             </View>
-          ) : isPairingMode ? (
+          ) : (
             <View style={styles.disconnectedCard}>
               <TuiText size="sm" variant="muted" style={styles.infoText}>
                 Enter the 6-digit code shown on BootHub Desktop:
               </TuiText>
-              <View style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, marginBottom: 16, borderRadius: 8 }}>
-                <TextInput
-                  value={pairingCodeInput}
-                  onChangeText={setPairingCodeInput}
-                  placeholder="123456"
-                  placeholderTextColor={colors.mutedForeground}
-                  keyboardType="numeric"
-                  maxLength={6}
-                  style={{
-                    color: colors.foreground,
-                    fontSize: 24,
-                    textAlign: 'center',
-                    padding: 12,
-                    fontFamily: 'JetBrainsMono_700Bold',
-                  }}
-                />
-              </View>
+
+              <Pressable onPress={() => inputRef.current?.focus()} style={styles.otpRow}>
+                {[0, 1, 2, 3, 4, 5].map((index) => {
+                  const digit = pairingCodeInput[index] || '';
+                  const isFocused = pairingCodeInput.length === index || (pairingCodeInput.length === 6 && index === 5);
+                  return (
+                    <View
+                      key={index}
+                      style={[
+                        styles.otpBox,
+                        {
+                          borderColor: isFocused ? colors.primary : colors.border,
+                          backgroundColor: colors.card,
+                        },
+                      ]}
+                    >
+                      <TuiText size="lg" weight="bold" style={{ color: colors.foreground }}>
+                        {digit}
+                      </TuiText>
+                    </View>
+                  );
+                })}
+              </Pressable>
+
+              <TextInput
+                ref={inputRef}
+                value={pairingCodeInput}
+                onChangeText={(text) => setPairingCodeInput(text.replace(/[^0-9]/g, '').slice(0, 6))}
+                keyboardType="numeric"
+                maxLength={6}
+                style={styles.hiddenInput}
+              />
+
               <TuiButton
                 onPress={submitPairingCode}
                 variant="accent"
@@ -253,19 +289,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                 loading={isPairing}
               >
                 Pair Now
-              </TuiButton>
-            </View>
-          ) : (
-            <View style={styles.disconnectedCard}>
-              <TuiText size="sm" variant="muted" style={styles.infoText}>
-                Pair with BootHub Desktop on your local network to sync automatically.
-              </TuiText>
-              <TuiButton
-                onPress={handleStartPairing}
-                variant="outline"
-                style={styles.linkBtn}
-              >
-                Pair with Desktop
               </TuiButton>
             </View>
           )}
@@ -358,5 +381,25 @@ const styles = StyleSheet.create({
     height: 44,
     justifyContent: 'center',
     paddingVertical: 0,
+  },
+  otpRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 20,
+  },
+  otpBox: {
+    width: 44,
+    height: 52,
+    borderWidth: 1.5,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hiddenInput: {
+    position: 'absolute',
+    opacity: 0,
+    width: 1,
+    height: 1,
   },
 });

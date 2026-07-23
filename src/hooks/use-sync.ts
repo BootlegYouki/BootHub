@@ -38,7 +38,7 @@ export function useSync(): void {
         runSync();
       }
     });
-
+    
     return () => {
       subscription.remove();
     };
