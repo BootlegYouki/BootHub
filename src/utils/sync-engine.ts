@@ -2,9 +2,13 @@ import Zeroconf from 'react-native-zeroconf';
 import axios from 'axios';
 import { getDb, SyncEvent } from './storage';
 import { Alert } from 'react-native';
+import * as FileSystem from 'expo-file-system/legacy';
+import { FileSystemSessionType } from 'expo-file-system/legacy';
 
 const zeroconf = new Zeroconf();
 let knownPeers = new Map<string, string>(); // name -> ip:port
+
+export const getKnownPeers = () => knownPeers;
 
 export interface SyncStatus {
   isSyncing: boolean;
@@ -53,7 +57,7 @@ export const initializeRealtimeSync = async (): Promise<void> => {
   });
   zeroconf.on('error', (err: any) => console.log('[Sync Engine] Zeroconf error:', err));
   
-  zeroconf.scan('boothub', 'tcp', 'local.');
+  zeroconf.scan('boothub', 'tcp', '');
 };
 
 export const closeRealtimeSync = (): void => {
@@ -96,7 +100,7 @@ export const processSyncQueue = async (): Promise<void> => {
     // 1. Request remote events since localClock
     const response = await axios.get(`${peerUrl}/sync?since=${localClock}`, { timeout: 5000 });
     const remoteEvents: SyncEvent[] = response.data.events || [];
-    const remoteMaxClock: number = response.data.maxClock || 0;
+    const remoteMaxClock: number = response.data.max_clock || 0;
     
     // 2. Insert remote events locally
     if (remoteEvents.length > 0) {
@@ -112,6 +116,62 @@ export const processSyncQueue = async (): Promise<void> => {
         }
       });
       
+      // Recover missing files for ALL remote file events (in case a previous download failed)
+      const { getLocalDeviceId } = require('./storage');
+      const allRemoteItemEvents = db.getAllSync<SyncEvent>(
+        "SELECT * FROM events WHERE action = 'ITEM_CREATED' AND device_id != ?",
+        [getLocalDeviceId()]
+      );
+      for (const ev of allRemoteItemEvents) {
+        if (ev.action === 'ITEM_CREATED') {
+          try {
+            const parsed = JSON.parse(ev.payload);
+            if (parsed.type === 'photo' || parsed.type === 'file') {
+              const base = FileSystem.documentDirectory || FileSystem.cacheDirectory;
+              const safeBase = base?.endsWith('/') ? base : base + '/';
+              let ext = '';
+              if (parsed.type === 'file') {
+                  try {
+                      const fileObj = JSON.parse(parsed.value);
+                      const m = fileObj.name?.match(/(\.[a-zA-Z0-9]+)$/);
+                      ext = m ? m[1] : '';
+                  } catch (e) {}
+              } else {
+                  const match = parsed.value.match(/(\.[a-zA-Z0-9]+)$/);
+                  ext = match ? match[1] : '';
+              }
+              const dest = `${safeBase}${ev.entity_id}${ext}`;
+              try {
+                await FileSystem.makeDirectoryAsync(safeBase, { intermediates: true });
+              } catch (err) {
+                console.error('[Sync Engine] makeDirectoryAsync failed:', err);
+              }
+              const fileInfo = await FileSystem.getInfoAsync(dest);
+              if (!fileInfo.exists || fileInfo.size === 0) {
+                if (fileInfo.exists) {
+                  await FileSystem.deleteAsync(dest, { idempotent: true });
+                }
+                console.log(`[Sync Engine] Downloading missing file for ${ev.entity_id}...`);
+                const url = `${peerUrl}/files/${ev.entity_id}?t=${Date.now()}`;
+                console.log(`[Sync Engine] Download URL: ${url}`);
+                console.log(`[Sync Engine] Dest path: ${dest}`);
+                await FileSystem.downloadAsync(url, dest, {
+                  sessionType: FileSystemSessionType.FOREGROUND
+                });
+              }
+            }
+          } catch (e) {
+            console.error('[Sync Engine] Failed to parse or download file for event', ev.id, e);
+          }
+        }
+      }
+      
+      try {
+        const { Image } = require('expo-image');
+        await Image.clearMemoryCache();
+        await Image.clearDiskCache();
+      } catch (e) {}
+      
       // Rebuild views for affected entities
       const entitiesToUpdate = [...new Set(remoteEvents.map(e => e.entity_id))];
       const { rebuildMaterializedView, notifyStorageListeners } = require('./storage');
@@ -124,8 +184,33 @@ export const processSyncQueue = async (): Promise<void> => {
     // 3. Send our local events to remote
     const localEventsToPush = db.getAllSync<SyncEvent>('SELECT * FROM events WHERE clock > ? ORDER BY clock ASC', [remoteMaxClock]);
     if (localEventsToPush.length > 0) {
+      // First upload any files before sending the events
+      for (const ev of localEventsToPush) {
+        if (ev.action === 'ITEM_CREATED') {
+          try {
+            const parsed = JSON.parse(ev.payload);
+            if (parsed.type === 'photo' || parsed.type === 'file') {
+              const localUri = parsed.value;
+              if (localUri.startsWith('file://') || localUri.startsWith('ph://')) {
+                console.log(`[Sync Engine] Uploading local file for ${ev.entity_id}...`);
+                const { resolveToLocalFileUri } = require('./helpers');
+                const uploadUri = await resolveToLocalFileUri(localUri);
+                await FileSystem.uploadAsync(`${peerUrl}/files/${ev.entity_id}`, uploadUri, {
+                  httpMethod: 'POST',
+                  uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+                });
+              }
+            }
+          } catch (e) {
+            console.error('[Sync Engine] Failed to upload file for event', ev.id, e);
+          }
+        }
+      }
       await axios.post(`${peerUrl}/sync`, { events: localEventsToPush }, { timeout: 5000 });
     }
+    
+    // 4. Garbage Collection for Orphaned Files
+    await cleanUpOrphanedFiles();
     
     updateSyncStatus({ isSyncing: false, error: null, lastSynced: new Date().toLocaleString() });
     
@@ -136,3 +221,68 @@ export const processSyncQueue = async (): Promise<void> => {
     isProcessingQueue = false;
   }
 };
+
+async function cleanUpOrphanedFiles() {
+  try {
+    const { getDb } = require('./storage');
+    const { ensureFileUri } = require('./helpers');
+    const FileSystem = require('expo-file-system/legacy');
+    
+    const db = getDb();
+    const activeItems = db.getAllSync("SELECT id, type, value FROM items WHERE type IN ('photo', 'file')");
+    const validNames = new Set<string>();
+    
+    validNames.add('SQLite');
+    validNames.add('RCTAsyncLocalStorage_V1');
+    validNames.add('ExponentDatabase');
+    
+    for (const item of activeItems as any[]) {
+      try {
+        if (item.type === 'photo') {
+          const uri = ensureFileUri(item.value, item.id);
+          if (uri && uri.startsWith('file://')) {
+            const parts = uri.split('/');
+            validNames.add(parts[parts.length - 1]);
+          }
+        } else if (item.type === 'file') {
+          const fObj = JSON.parse(item.value);
+          const uri = ensureFileUri(fObj.uri, item.id);
+          if (uri && uri.startsWith('file://')) {
+            const parts = uri.split('/');
+            validNames.add(parts[parts.length - 1]);
+          }
+          if (fObj.artwork) {
+            const artUri = ensureFileUri(fObj.artwork, item.id);
+            if (artUri && artUri.startsWith('file://')) {
+              const parts = artUri.split('/');
+              validNames.add(parts[parts.length - 1]);
+            }
+          }
+        }
+      } catch (e) {}
+    }
+    
+    const base = FileSystem.documentDirectory;
+    if (!base) return;
+    const safeBase = base.endsWith('/') ? base : base + '/';
+    const files = await FileSystem.readDirectoryAsync(safeBase);
+    
+    const now = Date.now();
+    for (const file of files) {
+      if (file.startsWith('.') || validNames.has(file)) continue;
+      
+      const fileInfo = await FileSystem.getInfoAsync(safeBase + file);
+      if (fileInfo.exists && !fileInfo.isDirectory) {
+        // Buffer of 60 seconds to prevent deleting files currently being uploaded/downloaded
+        const modTime = (fileInfo.modificationTime || 0) * 1000;
+        if (now - modTime > 60000 || !fileInfo.modificationTime) {
+          console.log(`[Sync Engine] Garbage Collector: Deleting orphaned file ${file}`);
+          await FileSystem.deleteAsync(safeBase + file, { idempotent: true }).catch(() => {});
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[Sync Engine] Garbage Collector Error:', err);
+  }
+}
+

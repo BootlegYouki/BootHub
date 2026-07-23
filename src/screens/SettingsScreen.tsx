@@ -5,7 +5,7 @@ import { useTheme } from '../theme/theme-provider';
 import { TuiContainer } from '../components/tui-container';
 import { TuiText } from '../components/tui-text';
 import { TuiButton } from '../components/tui-button';
-import { subscribeToSyncStatus, SyncStatus, clearSyncError, initializeRealtimeSync, closeRealtimeSync, processSyncQueue, updateSyncStatus } from '../utils/sync-engine';
+import { subscribeToSyncStatus, SyncStatus, clearSyncError, initializeRealtimeSync, closeRealtimeSync, processSyncQueue, updateSyncStatus, getKnownPeers } from '../utils/sync-engine';
 import { getSetting, saveSetting } from '../utils/storage';
 import axios from 'axios';
 
@@ -74,9 +74,20 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
         await saveSetting('device_id', myDeviceId);
       }
 
-      // Try mDNS hostname first
+      // Try dynamically discovered IP first, fallback to mDNS hostname
       try {
-        const res = await axios.post('http://boothub_desktop.local:14201/pair', {
+        const peers = getKnownPeers();
+        let targetUrl = 'http://boothub_desktop.local:14201/pair';
+        
+        // Find the desktop peer if it was discovered via mDNS
+        for (const [name, ipPort] of peers.entries()) {
+          if (name.includes('boothub')) {
+            targetUrl = `http://${ipPort}/pair`;
+            break;
+          }
+        }
+
+        const res = await axios.post(targetUrl, {
           code: pairingCodeInput,
           device_id: myDeviceId
         }, { timeout: 3000 });

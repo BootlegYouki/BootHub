@@ -477,7 +477,7 @@ export const FullscreenPhotoViewer: React.FC<FullscreenPhotoViewerProps> = ({
                 style={{ width: '100%', height: '100%' }}
               >
                 <Image
-                  source={{ uri: ensureFileUri(item.value) }}
+                  source={{ uri: ensureFileUri(item.value, item.id) }}
                   style={{ width: '100%', height: '100%' }}
                   contentFit="contain"
                   transition={0}
@@ -492,7 +492,7 @@ export const FullscreenPhotoViewer: React.FC<FullscreenPhotoViewerProps> = ({
       {/* Transition Zoom Image */}
       <Animated.View style={animatedTransitionStyle} pointerEvents="none">
         <Image
-          source={{ uri: ensureFileUri(activeFullscreenPhoto.value) }}
+          source={{ uri: ensureFileUri(activeFullscreenPhoto.value, activeFullscreenPhoto.id) }}
           style={{ width: '100%', height: '100%' }}
           contentFit="cover"
           transition={0}

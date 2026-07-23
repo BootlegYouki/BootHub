@@ -170,7 +170,7 @@ const FileItem: React.FC<FileItemProps> = ({
           <View style={[styles.iconBox, { borderColor: colors.primary, overflow: 'hidden' }]}>
             {artworkUri ? (
               <Image
-                source={{ uri: ensureFileUri(artworkUri) }}
+                source={{ uri: ensureFileUri(artworkUri, item.id) }}
                 style={{ width: '100%', height: '100%' }}
                 contentFit="cover"
                 transition={100}

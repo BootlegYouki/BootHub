@@ -330,7 +330,7 @@ export const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
       >
         {item.type === 'photo' ? (
           <Image
-            source={{ uri: ensureFileUri(item.value) }}
+            source={{ uri: ensureFileUri(item.value, item.id) }}
             style={{
               width: '100%',
               height: '100%',
@@ -401,7 +401,7 @@ export const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
                         }}>
                           {artworkUri ? (
                             <Image
-                              source={{ uri: ensureFileUri(artworkUri) }}
+                              source={{ uri: ensureFileUri(artworkUri, item.id) }}
                               style={{ width: '100%', height: '100%' }}
                               contentFit="cover"
                               transition={100}
@@ -427,7 +427,7 @@ export const ContextMenuOverlay: React.FC<ContextMenuOverlayProps> = ({
                           <View style={{ height: 1.5, backgroundColor: colors.primary + '30' }} />
                           <View style={{ width: '100%', height: squareSize - 1.5, backgroundColor: '#00000010' }}>
                             <Image
-                              source={{ uri: ensureFileUri(artworkUri) }}
+                              source={{ uri: ensureFileUri(artworkUri, item.id) }}
                               style={{ width: '100%', height: '100%' }}
                               contentFit="cover"
                               transition={200}

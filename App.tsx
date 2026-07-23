@@ -356,7 +356,7 @@ function MainApp() {
           }
         } else {
           RNImage.getSize(
-            ensureFileUri(uri),
+            ensureFileUri(uri, photo.id),
             (width: number, height: number) => {
               setImageSizes((prev) => {
                 if (prev[photo.id]) return prev;

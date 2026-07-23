@@ -211,7 +211,7 @@ export const FolderPickerSheet: React.FC<FolderPickerSheetProps> = ({
                 >
                   <View style={[styles.thumbnailBox, { borderColor: colors.primary + (isDark ? '30' : '20') }]}>
                     <Image
-                      source={{ uri: ensureFileUri(item.value) }}
+                      source={{ uri: ensureFileUri(item.value, item.id) }}
                       style={{ width: '100%', height: '100%' }}
                       contentFit="cover"
                     />

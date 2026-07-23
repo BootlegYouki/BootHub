@@ -148,7 +148,7 @@ const PhotoItem: React.FC<PhotoItemProps> = ({
     >
       <View style={styles.imageWrapper} pointerEvents="none">
         <Image
-          source={{ uri: ensureFileUri(item.value) }}
+          source={{ uri: ensureFileUri(item.value, item.id) }}
           style={styles.photoImage}
           contentFit="cover"
           transition={0}

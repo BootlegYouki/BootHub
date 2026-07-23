@@ -118,6 +118,8 @@ export const getWebsiteName = (url: string): string => {
   }
 };
 
+
+
 export const handleOpenUrl = async (url: string) => {
   const websiteName = getWebsiteName(url);
 
@@ -143,18 +145,33 @@ export const handleOpenUrl = async (url: string) => {
   );
 };
 
-export const ensureFileUri = (uri: string) => {
+export const ensureFileUri = (uri: string, entityId?: string) => {
   if (!uri) return '';
   if (uri.startsWith('http://') || uri.startsWith('https://') || uri.startsWith('data:')) {
     return uri;
   }
-  if (Platform.OS === 'ios') {
-    if (uri.startsWith('ph://') || uri.startsWith('assets-library://')) {
-      return uri;
+  if (uri.startsWith('file://') || uri.startsWith('ph://') || uri.startsWith('assets-library://')) {
+    return uri;
+  }
+  if (entityId) {
+    // If it doesn't start with file://, it's a remote file name (e.g. from Desktop).
+    // The sync engine downloads these to the document directory named as the entity ID.
+    const base = FileSystem.documentDirectory || FileSystem.cacheDirectory;
+    const safeBase = base?.endsWith('/') ? base : base + '/';
+    let ext = '';
+    try {
+      const parsed = JSON.parse(uri);
+      if (parsed.name) {
+        const m = parsed.name.match(/(\.[a-zA-Z0-9]+)$/);
+        ext = m ? m[1] : '';
+      }
+    } catch {
+      const match = uri.match(/(\.[a-zA-Z0-9]+)$/);
+      ext = match ? match[1] : '';
     }
-    if (!uri.startsWith('file://')) {
-      return uri.startsWith('/') ? `file://${uri}` : `file:///${uri}`;
-    }
+    const fullPath = safeBase + entityId + ext;
+    // ensure file:// prefix on iOS for Expo Image
+    return fullPath.startsWith('file://') ? fullPath : `file://${fullPath}`;
   }
   return uri;
 };
@@ -524,7 +541,13 @@ export const resolveToLocalFileUri = async (uri: string): Promise<string> => {
     const assetId = fileUri.slice(5);
     const assetInfo = await MediaLibrary.getAssetInfoAsync(assetId);
     if (assetInfo && assetInfo.localUri) {
-      fileUri = assetInfo.localUri;
+      const ext = assetInfo.localUri.split('.').pop() || 'jpg';
+      const tempPath = `${FileSystem.cacheDirectory || FileSystem.documentDirectory}upload_${assetId.replace(/[^a-zA-Z0-9]/g, '')}.${ext}`;
+      const info = await FileSystem.getInfoAsync(tempPath);
+      if (!info.exists) {
+        await FileSystem.copyAsync({ from: assetInfo.localUri, to: tempPath });
+      }
+      fileUri = tempPath;
     } else {
       throw new Error('Could not resolve local path for photo library asset.');
     }
@@ -534,7 +557,7 @@ export const resolveToLocalFileUri = async (uri: string): Promise<string> => {
     const filename = fileUri.split('/').pop()?.split('?')[0] || 'temp_image.jpg';
     const tempFileUri = `${FileSystem.cacheDirectory}${Date.now()}_${filename}`;
     const downloadResult = await FileSystem.downloadAsync(fileUri, tempFileUri, {
-      sessionType: FileSystem.FileSystemSessionType.FOREGROUND,
+      sessionType: FileSystem.FileSystemSessionType.BACKGROUND,
     });
     fileUri = downloadResult.uri;
   }
