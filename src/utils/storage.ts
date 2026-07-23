@@ -188,9 +188,10 @@ export const appendEvent = (entityId: string, action: SyncEvent['action'], paylo
   notifyStorageListeners();
   
   // Trigger P2P Sync implicitly
-  if (onProcessQueue) {
-    onProcessQueue().catch(console.error);
-  }
+  try {
+    const { processSyncQueue } = require('./sync-engine');
+    processSyncQueue().catch(console.error);
+  } catch (e) {}
 };
 
 export const saveItems = async (items: DumpItem[]): Promise<void> => {}; // deprecated

@@ -1,16 +1,16 @@
 # Graph Report - BootHub  (2026-07-24)
 
 ## Corpus Check
-- 75 files · ~113,620 words
+- 75 files · ~113,783 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 794 nodes · 1400 edges · 70 communities (64 shown, 6 thin omitted)
-- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 2 edges (avg confidence: 0.8)
+- 796 nodes · 1411 edges · 71 communities (65 shown, 6 thin omitted)
+- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 3 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `4d82c0a2`
+- Built from commit: `3989641d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -72,6 +72,7 @@
 - [[_COMMUNITY_Community 60|Community 60]]
 - [[_COMMUNITY_Community 61|Community 61]]
 - [[_COMMUNITY_Community 62|Community 62]]
+- [[_COMMUNITY_Community 63|Community 63]]
 - [[_COMMUNITY_Community 64|Community 64]]
 - [[_COMMUNITY_Community 65|Community 65]]
 - [[_COMMUNITY_Community 66|Community 66]]
@@ -85,8 +86,8 @@
 2. `DumpItem` - 40 edges
 3. `Fallow: Critical Gotchas` - 32 edges
 4. `TuiText()` - 31 edges
-5. `Fallow CLI Reference` - 30 edges
-6. `processSyncQueue()` - 28 edges
+5. `processSyncQueue()` - 31 edges
+6. `Fallow CLI Reference` - 30 edges
 7. `ensureFileUri()` - 22 edges
 8. `Common Workflows` - 22 edges
 9. `Fallow: codebase intelligence for JavaScript and TypeScript` - 17 edges
@@ -99,16 +100,16 @@
   App.tsx → src/theme/theme-provider.tsx
 - `MainApp()` --calls--> `useAnimationLock()`  [EXTRACTED]
   App.tsx → src/context/animation-lock.tsx
-- `MainApp()` --calls--> `useBottomBarAnimation()`  [EXTRACTED]
-  App.tsx → src/hooks/use-bottom-bar-animation.ts
-- `MainApp()` --calls--> `useDeepLink()`  [EXTRACTED]
-  App.tsx → src/hooks/use-deep-link.ts
+- `MainApp()` --calls--> `useEditItem()`  [EXTRACTED]
+  App.tsx → src/hooks/use-edit-item.ts
+- `MainApp()` --calls--> `useTheme()`  [EXTRACTED]
+  App.tsx → src/theme/theme-provider.tsx
 
-## Communities (70 total, 6 thin omitted)
+## Communities (71 total, 6 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.09
-Nodes (13): appStyles, ContextMenuOverlayProps, DumpItem, DumpType, mockItems, styles, TabButton(), TabButtonProps (+5 more)
+Cohesion: 0.08
+Nodes (14): appStyles, ContextMenuOverlayProps, DumpItem, DumpType, mockItems, styles, TabButton(), TabButtonProps (+6 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.05
@@ -116,27 +117,27 @@ Nodes (43): backgroundColor, backgroundImage, foregroundImage, monochromeImage, 
 
 ### Community 2 - "Community 2"
 Cohesion: 0.07
-Nodes (73): UseAppDataReturn, SettingsScreen(), SettingsScreenProps, styles, clearAuthSession(), discovery, exchangeCodeForTokens(), fetchUserInfo() (+65 more)
+Nodes (73): SettingsScreen(), SettingsScreenProps, styles, clearAuthSession(), discovery, exchangeCodeForTokens(), fetchUserInfo(), getClientId() (+65 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.05
 Nodes (38): dependencies, axios, expo, expo-auth-session, expo-clipboard, expo-crypto, expo-dev-client, expo-document-picker (+30 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.07
-Nodes (27): author, devDependencies, eslint, @eslint/js, eslint-plugin-react-hooks, eslint-plugin-react-refresh, globals, prettier (+19 more)
+Cohesion: 0.17
+Nodes (12): devDependencies, eslint, @eslint/js, eslint-plugin-react-hooks, eslint-plugin-react-refresh, globals, prettier, @types/node (+4 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.08
 Nodes (22): 1. Rename the Project, 2. Install Dependencies, 3. Launch Development Server, 📦 Automated iOS Release Pipeline, 🛠 Available Scripts, 🎨 Brutalist Design System (TUI), Core Components (`src/components/`), 🚀 Getting Started (+14 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.14
-Nodes (13): FolderPickerSheet(), FolderPickerSheetProps, { height: screenHeight }, styles, styles, TuiInput(), TuiInputProps, ACCENT_COLORS (+5 more)
+Cohesion: 0.15
+Nodes (11): MainApp(), useAppData(), useBottomBarAnimation(), UseBottomBarAnimationOptions, UseBottomBarAnimationReturn, useDeepLink(), useHeaderMenu(), UseHeaderMenuOptions (+3 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.22
-Nodes (8): FolderItem(), FolderItemProps, styles, AnimatedPressable, PhotoItem(), PhotoItemProps, PhotosScreenProps, styles
+Cohesion: 0.50
+Nodes (4): All-in-one with `--ci`, GitHub Code Scanning Integration, Step 1: Generate SARIF output, Step 2: Upload via GitHub Action
 
 ### Community 9 - "Community 9"
 Cohesion: 0.47
@@ -156,11 +157,11 @@ Nodes (33): Baseline Comparison Tracks Issue Identity, `--changed-since` Shows O
 
 ### Community 21 - "Community 21"
 Cohesion: 0.17
-Nodes (22): BaseFolderScreenProps, FolderItemProps, FolderScreenProps, EmptyFolderPlaceholder(), styles, FolderHeader(), FolderHeaderProps, styles (+14 more)
+Nodes (23): BaseFolderScreen(), FolderItemProps, FolderScreenProps, EmptyFolderPlaceholder(), styles, FolderHeader(), FolderHeaderProps, styles (+15 more)
 
 ### Community 22 - "Community 22"
-Cohesion: 0.22
-Nodes (8): MainApp(), useAppData(), useEditItem(), useHeaderMenu(), UseHeaderMenuOptions, UseHeaderMenuReturn, useSync(), useTabFilter()
+Cohesion: 0.16
+Nodes (11): PhotoPickerSheet(), PhotoPickerSheetProps, styles, { width: screenWidth }, { width: screenWidth, height: screenHeight }, AnimatedPressable, styles, TuiContainer() (+3 more)
 
 ### Community 23 - "Community 23"
 Cohesion: 0.18
@@ -179,8 +180,8 @@ Cohesion: 0.12
 Nodes (17): CI Pipeline Setup, GitHub Actions: Basic, GitHub Actions: Duplication Gate, GitHub Actions: Inline PR Annotations (No Advanced Security), GitHub Actions: PR-Scoped Check, GitHub Actions: PR-Scoped Duplication Check, GitHub Actions: Security Delta Gate, GitHub Actions: Severity-Aware PR Quality Gate (Audit) (+9 more)
 
 ### Community 27 - "Community 27"
-Cohesion: 0.10
-Nodes (18): styles, TuiButton(), TuiButtonProps, styles, TuiCheckbox(), TuiCheckboxProps, SPRING_CONFIG_OPEN, styles (+10 more)
+Cohesion: 0.12
+Nodes (15): SPRING_CONFIG_OPEN, styles, TuiDrawer(), TuiDrawerProps, styles, TuiHeader(), TuiHeaderProps, styles (+7 more)
 
 ### Community 28 - "Community 28"
 Cohesion: 0.33
@@ -191,8 +192,8 @@ Cohesion: 0.20
 Nodes (9): duplicates, ignore, minOccurrences, health, ignore, ignoreDependencies, ignorePatterns, rules (+1 more)
 
 ### Community 30 - "Community 30"
-Cohesion: 0.17
-Nodes (16): BaseFolderScreen(), ChartItem, MeterSegment, styles, TuiBarChart(), TuiBarChartProps, TuiProgressMeter(), TuiProgressMeterProps (+8 more)
+Cohesion: 0.13
+Nodes (17): styles, TuiButton(), TuiButtonProps, ChartItem, MeterSegment, styles, TuiBarChart(), TuiBarChartProps (+9 more)
 
 ### Community 31 - "Community 31"
 Cohesion: 0.40
@@ -207,8 +208,8 @@ Cohesion: 0.25
 Nodes (7): computedHash, skillPath, source, sourceType, skills, fallow, version
 
 ### Community 35 - "Community 35"
-Cohesion: 0.11
-Nodes (17): BottomBar(), BottomBarProps, EditModeBarProps, NormalInputBarProps, SelectionModeBarProps, styles, UseEditItemOptions, UseEditItemReturn (+9 more)
+Cohesion: 0.22
+Nodes (11): ContextMenuOverlay(), styles, LinkPreview(), ShareImportSheet(), styles, { width: screenWidth }, { width: screenWidth, height: screenHeight }, FileItem() (+3 more)
 
 ### Community 36 - "Community 36"
 Cohesion: 0.25
@@ -219,8 +220,8 @@ Cohesion: 0.25
 Nodes (8): Examples, Exit Codes, Flags, `health`: Function Complexity & File Health Analysis, Health Trend, JSON Output Structure, Vital Signs, Vital Signs Snapshots
 
 ### Community 38 - "Community 38"
-Cohesion: 0.16
-Nodes (11): PhotoPickerSheet(), PhotoPickerSheetProps, styles, { width: screenWidth }, { width: screenWidth, height: screenHeight }, AnimatedPressable, styles, TuiContainer() (+3 more)
+Cohesion: 0.20
+Nodes (10): scripts, android, dev, format, ios, lint, rename, start (+2 more)
 
 ### Community 39 - "Community 39"
 Cohesion: 0.29
@@ -239,12 +240,12 @@ Cohesion: 0.29
 Nodes (7): Safe Auto-Fix Workflow, Step 1: Dry-run first, Step 2: Review each proposed change, Step 3: Confirm with user before applying, Step 4: Apply, Step 5: Verify, Step 6: Run project tests
 
 ### Community 43 - "Community 43"
-Cohesion: 0.50
-Nodes (3): useBottomBarAnimation(), UseBottomBarAnimationOptions, UseBottomBarAnimationReturn
+Cohesion: 0.20
+Nodes (8): styles, TuiCheckbox(), TuiCheckboxProps, ACCENT_COLORS, AccentTheme, ThemeContext, ThemeContextType, ThemeMode
 
 ### Community 45 - "Community 45"
-Cohesion: 0.50
-Nodes (4): All-in-one with `--ci`, GitHub Code Scanning Integration, Step 1: Generate SARIF output, Step 2: Upload via GitHub Action
+Cohesion: 0.38
+Nodes (6): ContextMenuOverlayProps, calculateFullscreenImageBounds(), FullscreenPhotoViewer(), FullscreenPhotoViewerProps, styles, PhotoLayout
 
 ### Community 46 - "Community 46"
 Cohesion: 0.33
@@ -259,8 +260,8 @@ Cohesion: 0.33
 Nodes (6): Duplication baseline, Incremental Adoption with Baselines, Step 1: Save current state as baseline, Step 2: Commit the baseline, Step 3: CI only fails on NEW issues, Step 4: Gradually fix and update baseline
 
 ### Community 49 - "Community 49"
-Cohesion: 0.36
-Nodes (6): ShareImportSheetProps, useDeepLink(), UseDeepLinkOptions, ParsedShare, parseShareUrl(), processSharedItem()
+Cohesion: 0.43
+Nodes (5): ShareImportSheetProps, UseDeepLinkOptions, ParsedShare, parseShareUrl(), processSharedItem()
 
 ### Community 50 - "Community 50"
 Cohesion: 0.40
@@ -279,8 +280,8 @@ Cohesion: 0.40
 Nodes (5): Detection mode mapping, Migration from jscpd, Step 1: Preview migration, Step 2: Apply migration, Step 3: Compare results
 
 ### Community 54 - "Community 54"
-Cohesion: 0.08
-Nodes (40): ContextMenuOverlay(), ContextMenuOverlay(), ContextMenuOverlayProps, styles, calculateFullscreenImageBounds(), FullscreenPhotoViewer(), FullscreenPhotoViewerProps, styles (+32 more)
+Cohesion: 0.24
+Nodes (13): ContextMenuOverlay(), handleCopyItem(), base64ToBytes(), bytesToBase64(), ensureFileUri(), extractAudioArtwork(), getActualType(), getWebsiteName() (+5 more)
 
 ### Community 55 - "Community 55"
 Cohesion: 0.50
@@ -311,8 +312,12 @@ Cohesion: 0.50
 Nodes (4): Examples, Flags, `flags`: Feature Flag Detection, JSON Output Structure
 
 ### Community 62 - "Community 62"
-Cohesion: 0.67
-Nodes (3): PR Dead Code Check, Step 1: Analyze changed files, Step 2: If issues found, show specifics
+Cohesion: 0.06
+Nodes (43): BottomBar(), BottomBarProps, EditModeBarProps, NormalInputBarProps, SelectionModeBarProps, styles, BaseFolderScreenProps, FolderPickerSheet() (+35 more)
+
+### Community 63 - "Community 63"
+Cohesion: 0.33
+Nodes (5): author, main, name, private, version
 
 ### Community 64 - "Community 64"
 Cohesion: 0.67
@@ -331,12 +336,12 @@ Cohesion: 0.40
 Nodes (5): Migration from knip, Step 1: Preview migration, Step 2: Apply migration, Step 3: Compare results, Step 4: Remove knip config
 
 ### Community 69 - "Community 69"
-Cohesion: 0.22
-Nodes (8): Combined Dead Code + Duplication, Fallow: Common Workflow Patterns & Recipes, Full audit (default), Production audit, Production vs Full Audit, Step 1: Run combined analysis, Step 2: Prioritize cleanup, Table of Contents
+Cohesion: 0.67
+Nodes (3): PR Dead Code Check, Step 1: Analyze changed files, Step 2: If issues found, show specifics
 
 ### Community 72 - "Community 72"
-Cohesion: 0.50
-Nodes (4): Custom Plugin Setup, Option 1: Inline framework config, Option 2: External plugin file, Option 3: Plugin directory
+Cohesion: 0.15
+Nodes (12): Combined Dead Code + Duplication, Custom Plugin Setup, Fallow: Common Workflow Patterns & Recipes, Full audit (default), Option 1: Inline framework config, Option 2: External plugin file, Option 3: Plugin directory, Production audit (+4 more)
 
 ## Knowledge Gaps
 - **447 isolated node(s):** `$schema`, `ignorePatterns`, `ignoreDependencies`, `minOccurrences`, `ignore` (+442 more)
@@ -346,17 +351,17 @@ Nodes (4): Custom Plugin Setup, Option 1: Inline framework config, Option 2: Ext
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `useTheme()` connect `Community 30` to `Community 0`, `Community 2`, `Community 38`, `Community 7`, `Community 8`, `Community 23`, `Community 21`, `Community 54`, `Community 22`, `Community 27`, `Community 28`?**
+- **Why does `useTheme()` connect `Community 30` to `Community 0`, `Community 2`, `Community 35`, `Community 7`, `Community 43`, `Community 45`, `Community 23`, `Community 21`, `Community 54`, `Community 22`, `Community 27`, `Community 28`, `Community 62`?**
   _High betweenness centrality (0.018) - this node is a cross-community bridge._
 - **Why does `Fallow CLI Reference` connect `Community 24` to `Community 64`, `Community 33`, `Community 66`, `Community 65`, `Community 36`, `Community 37`, `Community 39`, `Community 40`, `Community 46`, `Community 55`, `Community 56`, `Community 57`, `Community 58`, `Community 59`, `Community 60`, `Community 61`?**
   _High betweenness centrality (0.015) - this node is a cross-community bridge._
-- **Why does `DumpItem` connect `Community 21` to `Community 0`, `Community 2`, `Community 35`, `Community 7`, `Community 8`, `Community 49`, `Community 54`?**
+- **Why does `DumpItem` connect `Community 62` to `Community 0`, `Community 2`, `Community 35`, `Community 45`, `Community 49`, `Community 21`, `Community 54`?**
   _High betweenness centrality (0.012) - this node is a cross-community bridge._
 - **What connects `$schema`, `ignorePatterns`, `ignoreDependencies` to the rest of the system?**
   _447 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.08615384615384615 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08262108262108261 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.045454545454545456 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.06645569620253164 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.0689873417721519 - nodes in this community are weakly interconnected._

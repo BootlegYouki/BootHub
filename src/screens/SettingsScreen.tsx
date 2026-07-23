@@ -5,7 +5,7 @@ import { useTheme } from '../theme/theme-provider';
 import { TuiContainer } from '../components/tui-container';
 import { TuiText } from '../components/tui-text';
 import { TuiButton } from '../components/tui-button';
-import { subscribeToSyncStatus, SyncStatus, clearSyncError, initializeRealtimeSync, closeRealtimeSync, processSyncQueue, updateSyncStatus, getKnownPeers } from '../utils/sync-engine';
+import { subscribeToSyncStatus, SyncStatus, clearSyncError, initializeRealtimeSync, closeRealtimeSync, processSyncQueue, updateSyncStatus, getKnownPeers, connectKnownPeersWS } from '../utils/sync-engine';
 import { getSetting, saveSetting } from '../utils/storage';
 import axios from 'axios';
 
@@ -28,26 +28,28 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
     lastSynced: null,
   });
 
+  const loadSettings = React.useCallback(async () => {
+    try {
+      const paired = await getSetting('is_paired');
+      setIsPaired(paired === 'true');
+      const deviceId = await getSetting('paired_device_id');
+      setPairedDeviceId(deviceId || null);
+    } catch (err) {
+      console.error('Failed to load pairing status:', err);
+    }
+  }, []);
+
   // Initialize and subscribe to sync updates
   React.useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const paired = await getSetting('is_paired');
-        setIsPaired(paired === 'true');
-        const deviceId = await getSetting('paired_device_id');
-        if (deviceId) setPairedDeviceId(deviceId);
-      } catch (err) {
-        console.error('Failed to load pairing status:', err);
-      }
-    };
     loadSettings();
 
     const unsubscribe = subscribeToSyncStatus((status) => {
       setSyncStatus(status);
+      loadSettings();
     });
 
     return unsubscribe;
-  }, []);
+  }, [loadSettings]);
 
   const submitPairingCode = async () => {
     if (pairingCodeInput.length !== 6) {
@@ -93,6 +95,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
             setPairedDeviceId(res.data.device_id);
             await saveSetting('is_paired', 'true');
             await saveSetting('paired_device_id', res.data.device_id);
+            updateSyncStatus({ isPaired: true });
+            connectKnownPeersWS();
+            processSyncQueue().catch(console.error);
             Alert.alert('Paired!', 'Successfully paired with Desktop.');
             pairedSuccess = true;
             break;
@@ -149,6 +154,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
               await saveSetting('is_paired', 'false');
               setIsPaired(false);
               setPairedDeviceId(null);
+              updateSyncStatus({ isPaired: false });
               closeRealtimeSync();
             } catch (err) {
               console.error('Error disconnecting:', err);
@@ -171,6 +177,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
       });
     }
   };
+
+  const effectiveIsPaired = syncStatus.isPaired !== undefined ? syncStatus.isPaired : isPaired;
 
   return (
     <View style={[styles.root, { backgroundColor: colors.background }]}>
@@ -207,7 +215,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
 
         {/* Synchronization Settings */}
         <TuiContainer label="Sync" style={styles.containerMargin}>
-          {isPaired ? (
+          {effectiveIsPaired ? (
             <View style={styles.syncCard}>
               <View style={styles.userRow}>
                 <View style={[styles.avatarPlaceholder, { borderColor: colors.primary }]}>

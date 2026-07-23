@@ -1,6 +1,6 @@
 import Zeroconf from 'react-native-zeroconf';
 import axios from 'axios';
-import { getDb, SyncEvent } from './storage';
+import { getDb, SyncEvent, saveSetting } from './storage';
 import { Alert } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import { FileSystemSessionType } from 'expo-file-system/legacy';
@@ -11,6 +11,11 @@ let ws: WebSocket | null = null;
 let wsReconnectTimeout: NodeJS.Timeout | null = null;
 
 function connectWebSocket(peerAddress: string) {
+  const isPairedRow = getDb().getFirstSync<{ value: string }>("SELECT value FROM config WHERE key = 'is_paired'");
+  if (isPairedRow?.value !== 'true') {
+    console.log('[Sync Engine] Device is not paired. Skipping WebSocket connection.');
+    return;
+  }
   if (ws) {
     ws.close();
   }
@@ -32,8 +37,9 @@ function connectWebSocket(peerAddress: string) {
       processSyncQueue().catch(console.error);
     } else if (event.data === 'FORCE_DISCONNECT') {
       console.log('[Sync Engine] Received FORCE_DISCONNECT from Desktop');
-      getDb().runSync("DELETE FROM config WHERE key = 'is_paired'", []);
-      updateSyncStatus({ error: 'Disconnected by desktop.' });
+      saveSetting('is_paired', 'false').catch(console.error);
+      saveSetting('paired_device_id', '').catch(console.error);
+      updateSyncStatus({ isSyncing: false, error: 'Disconnected by desktop.', isPaired: false });
       closeRealtimeSync();
     }
   };
@@ -55,10 +61,19 @@ function connectWebSocket(peerAddress: string) {
 
 export const getKnownPeers = () => knownPeers;
 
+export const connectKnownPeersWS = () => {
+  const isPairedRow = getDb().getFirstSync<{ value: string }>("SELECT value FROM config WHERE key = 'is_paired'");
+  if (isPairedRow?.value === 'true' && knownPeers.size > 0) {
+    const peerAddress = Array.from(knownPeers.values())[0];
+    connectWebSocket(peerAddress);
+  }
+};
+
 export interface SyncStatus {
   isSyncing: boolean;
   error: string | null;
   lastSynced: string | null;
+  isPaired?: boolean;
 }
 
 let syncStatusListeners: ((status: SyncStatus) => void)[] = [];
@@ -131,6 +146,11 @@ let isProcessingQueue = false;
 
 export const processSyncQueue = async (): Promise<void> => {
   if (isProcessingQueue) return;
+  const isPairedRow = getDb().getFirstSync<{ value: string }>("SELECT value FROM config WHERE key = 'is_paired'");
+  if (isPairedRow?.value !== 'true') {
+    console.log('[Sync Engine] Device is not paired. Skipping sync.');
+    return;
+  }
   if (knownPeers.size === 0) {
     console.log('[Sync Engine] No peers found to sync with.');
     return;
@@ -279,8 +299,16 @@ export const processSyncQueue = async (): Promise<void> => {
     updateSyncStatus({ isSyncing: false, error: null, lastSynced: new Date().toLocaleString() });
     
   } catch (err: any) {
-    console.error('[Sync Engine] Sync failed:', err);
-    updateSyncStatus({ isSyncing: false, error: 'P2P Sync failed: ' + err.message });
+    if (axios.isAxiosError(err) && err.response?.status === 403) {
+      console.log('[Sync Engine] Desktop unpaired us (403). Updating local state.');
+      saveSetting('is_paired', 'false').catch(console.error);
+      saveSetting('paired_device_id', '').catch(console.error);
+      closeRealtimeSync();
+      updateSyncStatus({ isSyncing: false, error: null, isPaired: false });
+    } else {
+      console.error('[Sync Engine] Sync failed:', err);
+      updateSyncStatus({ isSyncing: false, error: 'P2P Sync failed: ' + err.message });
+    }
   } finally {
     isProcessingQueue = false;
   }
