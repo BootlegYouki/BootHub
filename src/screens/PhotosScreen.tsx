@@ -15,7 +15,7 @@ import { FolderItem } from '../components/folder-item';
 import { useFolderNavigation, getFolderDetails } from '../utils/folder-navigation';
 import { FolderHeader } from '../components/folder-header';
 import { EmptyFolderPlaceholder } from '../components/empty-folder';
-import { subscribeToUploadProgress } from '../utils/sync-engine';
+
 
 export interface PhotoLayout {
   x: number;
@@ -57,14 +57,7 @@ const PhotoItem: React.FC<PhotoItemProps> = ({
   useEffect(() => {
     if (item.syncState !== 'pending') {
       setUploadProgress(0);
-      return;
     }
-    const unsubscribe = subscribeToUploadProgress((id, progress) => {
-      if (id === item.id) {
-        setUploadProgress(progress);
-      }
-    });
-    return unsubscribe;
   }, [item.id, item.syncState]);
 
   const scale = useSharedValue(1);

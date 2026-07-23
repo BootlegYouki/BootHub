@@ -1,37 +1,95 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SQLite from 'expo-sqlite';
 import * as FileSystem from 'expo-file-system/legacy';
+import { v4 as uuidv4 } from 'uuid';
 import { formatSyncTimestamp } from './helpers';
 
 export type DumpType = 'link' | 'text' | 'photo' | 'file' | 'folder';
 
-let onEnqueueTask: ((action: 'UPLOAD' | 'DELETE' | 'UPDATE', itemId: string, itemType: DumpType, extras?: any) => Promise<void>) | null = null;
-let onEnqueueTasks: ((tasks: any[]) => Promise<void>) | null = null;
-let onProcessQueue: (() => Promise<void>) | null = null;
-
-export const registerSyncTrigger = (
-  enqueue: typeof onEnqueueTask,
-  enqueueMultiple: typeof onEnqueueTasks,
-  process: typeof onProcessQueue
-) => {
-  onEnqueueTask = enqueue;
-  onEnqueueTasks = enqueueMultiple;
-  onProcessQueue = process;
-};
-
 export interface DumpItem {
   id: string;
   type: DumpType;
-  label: string; // Timestamp label, e.g. "06-04-2026 @ 10m ago"
-  value: string; // The URL, raw text, or local/remote image URI, or JSON for files/folders
+  label: string;
+  value: string;
   folderId?: string;
   syncState?: 'synced' | 'pending' | 'error';
-  driveFileId?: string; // deprecated, kept for compatibility/migration if needed, but renamed/mapped
   storagePath?: string;
 }
 
-const STORAGE_KEY = '@boothub_dump_items';
+export interface SyncEvent {
+  id: string;
+  entity_id: string;
+  clock: number;
+  device_id: string;
+  action: 'ITEM_CREATED' | 'ITEM_UPDATED' | 'ITEM_DELETED';
+  payload: string;
+  created_at: string;
+}
 
-const defaultSeedItems: DumpItem[] = [];
+const db = SQLite.openDatabaseSync('boothub_events.db');
+
+db.execSync(`
+  CREATE TABLE IF NOT EXISTS events (
+    id TEXT PRIMARY KEY,
+    entity_id TEXT NOT NULL,
+    clock INTEGER NOT NULL,
+    device_id TEXT NOT NULL,
+    action TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_events_entity ON events(entity_id);
+  CREATE INDEX IF NOT EXISTS idx_events_clock ON events(clock);
+  
+  CREATE TABLE IF NOT EXISTS items (
+    id TEXT PRIMARY KEY,
+    type TEXT NOT NULL,
+    label TEXT NOT NULL,
+    value TEXT NOT NULL,
+    folderId TEXT,
+    syncState TEXT
+  );
+  
+  CREATE TABLE IF NOT EXISTS config (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
+`);
+
+let localDeviceId = '';
+try {
+  const row = db.getFirstSync<{value: string}>('SELECT value FROM config WHERE key = ?', ['device_id']);
+  if (row) {
+    localDeviceId = row.value;
+  } else {
+    localDeviceId = uuidv4();
+    db.runSync('INSERT INTO config (key, value) VALUES (?, ?)', ['device_id', localDeviceId]);
+  }
+} catch (e) {
+  console.error('Failed to init device_id:', e);
+}
+
+export const getLocalDeviceId = () => localDeviceId;
+
+export const getSetting = async (key: string): Promise<string | null> => {
+  try {
+    const row = db.getFirstSync<{value: string}>('SELECT value FROM config WHERE key = ?', [key]);
+    return row ? row.value : null;
+  } catch (e) {
+    return null;
+  }
+};
+
+export const saveSetting = async (key: string, value: string): Promise<void> => {
+  try {
+    db.runSync('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)', [key, value]);
+  } catch (e) {
+    console.error(`Failed to save setting ${key}:`, e);
+  }
+};
+const getNextClock = (): number => {
+  const row = db.getFirstSync<{clock: number}>('SELECT MAX(clock) as clock FROM events');
+  return (row?.clock || 0) + 1;
+};
 
 let storageListeners: (() => void)[] = [];
 
@@ -42,288 +100,223 @@ export const subscribeToStorage = (listener: () => void) => {
   };
 };
 
-const notifyStorageListeners = () => {
+export const notifyStorageListeners = () => {
   storageListeners.forEach((l) => l());
+};
+
+// Sync Triggers
+let onProcessQueue: (() => Promise<void>) | null = null;
+export const registerSyncTrigger = (
+  enqueue: any,
+  enqueueMultiple: any,
+  process: () => Promise<void>
+) => {
+  onProcessQueue = process;
 };
 
 export const getItems = async (): Promise<DumpItem[]> => {
   try {
-    const rawData = await AsyncStorage.getItem(STORAGE_KEY);
-    if (rawData) {
-      const parsed = JSON.parse(rawData) as DumpItem[];
-      return parsed;
-    }
-    // Seed default items if storage is empty (which is empty array now)
-    await saveItems(defaultSeedItems);
-    return defaultSeedItems;
+    const rows = db.getAllSync<DumpItem>('SELECT * FROM items ORDER BY rowid DESC');
+    return rows;
   } catch (e) {
-    console.error('Failed to load storage items:', e);
-    return defaultSeedItems;
-  }
-};
-
-export const saveItems = async (items: DumpItem[]): Promise<void> => {
-  try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    notifyStorageListeners();
-  } catch (e) {
-    console.error('Failed to save items to storage:', e);
-  }
-};
-
-export const addItem = async (type: DumpType, value: string, folderId?: string): Promise<DumpItem[]> => {
-  try {
-    const currentItems = await getItems();
-    
-    // Create simple timestamp label
-    const label = formatSyncTimestamp();
- 
-    let itemLabel = label;
-    if (type === 'folder') {
-      try {
-        itemLabel = JSON.parse(value).name || label;
-      } catch {}
-    }
-
-    const newItem: DumpItem = {
-      id: Date.now().toString(),
-      type,
-      label: itemLabel,
-      value,
-      ...(folderId ? { folderId } : {}),
-      syncState: 'pending',
-    };
-
-    const updated = [newItem, ...currentItems];
-    await saveItems(updated);
-
-    // Enqueue UPLOAD sync task
-    if (onEnqueueTask) {
-      onEnqueueTask('UPLOAD', newItem.id, type, { fileUri: type === 'photo' || type === 'file' ? value : undefined })
-        .then(() => onProcessQueue?.())
-        .catch((e) => console.error('Failed to schedule item upload:', e));
-    }
-
-    return updated;
-  } catch (e) {
-    console.error('Failed to add item:', e);
+    console.error('Failed to get items:', e);
     return [];
   }
+};
+
+export const getDb = () => db;
+
+export const rebuildMaterializedView = (entityId: string) => {
+  // Simple LWW strategy based on clock for this entity
+  const events = db.getAllSync<SyncEvent>(
+    'SELECT * FROM events WHERE entity_id = ? ORDER BY clock ASC, device_id ASC', 
+    [entityId]
+  );
+  
+  if (events.length === 0) return;
+  
+  let currentItem: Partial<DumpItem> | null = null;
+  
+  for (const ev of events) {
+    if (ev.action === 'ITEM_CREATED' || ev.action === 'ITEM_UPDATED') {
+      try {
+        const payload = JSON.parse(ev.payload);
+        if (!currentItem) currentItem = { id: entityId };
+        Object.assign(currentItem, payload);
+      } catch (e) {}
+    } else if (ev.action === 'ITEM_DELETED') {
+      currentItem = null;
+    }
+  }
+  
+  if (currentItem) {
+    db.runSync(
+      'INSERT OR REPLACE INTO items (id, type, label, value, folderId, syncState) VALUES (?, ?, ?, ?, ?, ?)',
+      [
+        currentItem.id as string, 
+        currentItem.type as string, 
+        currentItem.label as string, 
+        currentItem.value as string, 
+        currentItem.folderId || null, 
+        'pending'
+      ]
+    );
+  } else {
+    db.runSync('DELETE FROM items WHERE id = ?', [entityId]);
+  }
+};
+
+export const appendEvent = (entityId: string, action: SyncEvent['action'], payloadObj: any) => {
+  const clock = getNextClock();
+  const id = uuidv4();
+  const payload = JSON.parse(JSON.stringify(payloadObj));
+  
+  db.runSync(
+    'INSERT INTO events (id, entity_id, clock, device_id, action, payload, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [
+      id,
+      entityId,
+      clock,
+      localDeviceId,
+      action,
+      JSON.stringify(payload),
+      new Date().toISOString()
+    ]
+  );
+  rebuildMaterializedView(entityId);
+  notifyStorageListeners();
+  
+  // Trigger P2P Sync implicitly
+  if (onProcessQueue) {
+    onProcessQueue().catch(console.error);
+  }
+};
+
+export const saveItems = async (items: DumpItem[]): Promise<void> => {}; // deprecated
+
+export const addItem = async (type: DumpType, value: string, folderId?: string): Promise<DumpItem[]> => {
+  const label = formatSyncTimestamp();
+  let itemLabel = label;
+  if (type === 'folder') {
+    try {
+      itemLabel = JSON.parse(value).name || label;
+    } catch {}
+  }
+  
+  const id = Date.now().toString();
+  const payload = {
+    type,
+    label: itemLabel,
+    value,
+    ...(folderId ? { folderId } : {})
+  };
+  
+  appendEvent(id, 'ITEM_CREATED', payload);
+  return await getItems();
 };
 
 export const deleteItem = async (id: string): Promise<DumpItem[]> => {
-  try {
-    const currentItems = await getItems();
-    const targetItem = currentItems.find((item) => item.id === id);
-    if (!targetItem) return currentItems;
-
-    let updated: DumpItem[] = [];
-
-    // Local helper to delete file from disk
-    const deleteFileFromDisk = async (value: string) => {
+  const target = db.getFirstSync<DumpItem>('SELECT type, value FROM items WHERE id = ?', [id]);
+  if (!target) return await getItems();
+  
+  const deleteFileFromDisk = async (value: string) => {
+    try {
+      const fileObj = JSON.parse(value);
+      if (fileObj.uri && fileObj.uri.startsWith('file://')) {
+        await FileSystem.deleteAsync(fileObj.uri, { idempotent: true });
+      }
+    } catch (err) {
       try {
-        const fileObj = JSON.parse(value);
-        if (fileObj.uri && fileObj.uri.startsWith('file://')) {
-          await FileSystem.deleteAsync(fileObj.uri, { idempotent: true });
+        if (value.startsWith('file://')) {
+          await FileSystem.deleteAsync(value, { idempotent: true });
         }
-      } catch (err) {
-        // Fallback for raw URIs
-        try {
-          if (value.startsWith('file://')) {
-            await FileSystem.deleteAsync(value, { idempotent: true });
-          }
-        } catch {}
-      }
-    };
-
-    if (targetItem.type === 'folder') {
-      // Recursive child ID retrieval
-      const getRecursiveChildren = (items: DumpItem[], folderId: string): DumpItem[] => {
-        let children: DumpItem[] = [];
-        const directChildren = items.filter((item) => item.folderId === folderId);
-        for (const child of directChildren) {
-          children.push(child);
-          if (child.type === 'folder') {
-            children = [...children, ...getRecursiveChildren(items, child.id)];
-          }
-        }
-        return children;
-      };
-
-      const childrenToDelete = getRecursiveChildren(currentItems, id);
-      const idsToDelete = new Set([id, ...childrenToDelete.map((x) => x.id)]);
-
-      // Delete all files among the deleted children from disk
-      for (const child of childrenToDelete) {
-        if (child.type === 'file') {
-          await deleteFileFromDisk(child.value);
-        }
-      }
-
-      updated = currentItems.filter((item) => !idsToDelete.has(item.id));
-      await saveItems(updated);
-
-      // Enqueue deletion tasks atomically for cloud sync
-      if (onEnqueueTasks) {
-        await onEnqueueTasks(
-          [targetItem, ...childrenToDelete].map((item) => ({
-            action: 'DELETE',
-            itemId: item.id,
-            itemType: item.type,
-            extras: {
-              storagePath: item.storagePath || item.driveFileId,
-            },
-          }))
-        );
-      }
-      onProcessQueue?.().catch((e) => console.error('Failed to run sync after folder deletion:', e));
-    } else {
-      // Normal item deletion
-      if (targetItem.type === 'file') {
-        await deleteFileFromDisk(targetItem.value);
-      }
-      updated = currentItems.filter((item) => item.id !== id);
-      await saveItems(updated);
-
-      // Enqueue delete task for file/link/text
-      if (onEnqueueTask) {
-        await onEnqueueTask('DELETE', id, targetItem.type, {
-          storagePath: targetItem.storagePath || targetItem.driveFileId,
-        });
-      }
-
-      onProcessQueue?.().catch((e) => console.error('Failed to run sync after item deletion:', e));
+      } catch {}
     }
+  };
 
-    return updated;
-  } catch (e) {
-    console.error('Failed to delete item:', e);
-    return [];
+  if (target.type === 'folder') {
+    const allItems = await getItems();
+    const getRecursiveChildren = (itemsList: DumpItem[], folderId: string): DumpItem[] => {
+      let children: DumpItem[] = [];
+      const direct = itemsList.filter(x => x.folderId === folderId);
+      for (const child of direct) {
+        children.push(child);
+        if (child.type === 'folder') {
+          children = [...children, ...getRecursiveChildren(itemsList, child.id)];
+        }
+      }
+      return children;
+    };
+    
+    const childrenToDelete = getRecursiveChildren(allItems, id);
+    for (const child of childrenToDelete) {
+      if (child.type === 'file' || child.type === 'photo') {
+        await deleteFileFromDisk(child.value);
+      }
+      appendEvent(child.id, 'ITEM_DELETED', {});
+    }
+    appendEvent(id, 'ITEM_DELETED', {});
+  } else {
+    if (target.type === 'file' || target.type === 'photo') {
+      await deleteFileFromDisk(target.value);
+    }
+    appendEvent(id, 'ITEM_DELETED', {});
   }
+
+  return await getItems();
 };
 
 export const updateItem = async (id: string, value: string): Promise<DumpItem[]> => {
-  try {
-    const currentItems = await getItems();
-    const targetItem = currentItems.find((item) => item.id === id);
-    if (!targetItem) return currentItems;
-
-    const updated = currentItems.map((item) => {
-      if (item.id === id) {
-        let finalValue = value;
-        if (item.type === 'file') {
-          try {
-            const fileObj = JSON.parse(item.value);
-            fileObj.name = value;
-            finalValue = JSON.stringify(fileObj);
-          } catch {
-            finalValue = value;
-          }
-        }
-        if (item.type === 'folder') {
-          try {
-            const folderObj = JSON.parse(item.value);
-            folderObj.name = value;
-            finalValue = JSON.stringify(folderObj);
-          } catch {
-            finalValue = value;
-          }
-        }
-        let finalLabel = item.label;
-        if (item.type === 'folder') {
-          finalLabel = value;
-        }
-        return {
-          ...item,
-          label: finalLabel,
-          value: finalValue,
-          syncState: 'pending' as const,
-        };
-      }
-      return item;
-    });
-    await saveItems(updated);
-
-    // Enqueue update task
-    if (onEnqueueTask) {
-      onEnqueueTask('UPDATE', id, targetItem.type)
-        .then(() => onProcessQueue?.())
-        .catch((e) => console.error('Failed to schedule item update:', e));
+  const item = db.getFirstSync<DumpItem>('SELECT * FROM items WHERE id = ?', [id]);
+  if (!item) return await getItems();
+  
+  let finalValue = value;
+  let finalLabel = item.label;
+  
+  if (item.type === 'file') {
+    try {
+      const fileObj = JSON.parse(item.value);
+      fileObj.name = value;
+      finalValue = JSON.stringify(fileObj);
+    } catch {
+      finalValue = value;
     }
-
-    return updated;
-  } catch (e) {
-    console.error('Failed to update item:', e);
-    return [];
   }
+  
+  if (item.type === 'folder') {
+    try {
+      const folderObj = JSON.parse(item.value);
+      folderObj.name = value;
+      finalValue = JSON.stringify(folderObj);
+    } catch {
+      finalValue = value;
+    }
+    finalLabel = value;
+  }
+
+  appendEvent(id, 'ITEM_UPDATED', { value: finalValue, label: finalLabel });
+  return await getItems();
 };
 
 export const addMultiplePhotos = async (uris: string[], folderId?: string): Promise<DumpItem[]> => {
-  try {
-    const currentItems = await getItems();
-    
-    const label = formatSyncTimestamp();
-
-    const newItems: DumpItem[] = uris.map((uri, index) => ({
-      id: `${Date.now()}_${index}`,
+  const label = formatSyncTimestamp();
+  
+  for (let i = 0; i < uris.length; i++) {
+    const id = `${Date.now()}_${i}`;
+    const payload = {
       type: 'photo',
       label,
-      value: uri,
-      ...(folderId ? { folderId } : {}),
-      syncState: 'pending',
-    }));
-
-    const updated = [...newItems, ...currentItems];
-    await saveItems(updated);
-
-    // Enqueue upload tasks atomically for each photo
-    if (onEnqueueTasks) {
-      await onEnqueueTasks(
-        newItems.map((item) => ({
-          action: 'UPLOAD',
-          itemId: item.id,
-          itemType: 'photo',
-          extras: { fileUri: item.value },
-        }))
-      );
-    }
-    onProcessQueue?.().catch((e) => console.error('Failed to schedule batch photo uploads:', e));
-
-    return updated;
-  } catch (e) {
-    console.error('Failed to add multiple photos:', e);
-    return [];
+      value: uris[i],
+      ...(folderId ? { folderId } : {})
+    };
+    appendEvent(id, 'ITEM_CREATED', payload);
   }
+  
+  return await getItems();
 };
 
 export const setItemFolder = async (id: string, folderId: string | undefined): Promise<DumpItem[]> => {
-  try {
-    const currentItems = await getItems();
-    const targetItem = currentItems.find((item) => item.id === id);
-    if (!targetItem) return currentItems;
-
-    const updated = currentItems.map((item) => {
-      if (item.id === id) {
-        if (folderId === undefined) {
-          const { folderId: _, ...rest } = item;
-          return { ...rest, syncState: 'pending' as const } as DumpItem;
-        }
-        return { ...item, folderId, syncState: 'pending' as const };
-      }
-      return item;
-    });
-    await saveItems(updated);
-
-    // Enqueue update task
-    if (onEnqueueTask) {
-      onEnqueueTask('UPDATE', id, targetItem.type)
-        .then(() => onProcessQueue?.())
-        .catch((e) => console.error('Failed to schedule folder change update:', e));
-    }
-
-    return updated;
-  } catch (e) {
-    console.error('Failed to set item folder:', e);
-    return [];
-  }
+  const payload = folderId === undefined ? { folderId: null } : { folderId };
+  appendEvent(id, 'ITEM_UPDATED', payload);
+  return await getItems();
 };

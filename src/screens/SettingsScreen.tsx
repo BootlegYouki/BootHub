@@ -1,24 +1,15 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator, Alert, Image } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator, Alert, Image, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/theme-provider';
 import { TuiContainer } from '../components/tui-container';
 import { TuiText } from '../components/tui-text';
 import { TuiButton } from '../components/tui-button';
-import * as AuthSession from 'expo-auth-session';
-import {
-  discovery,
-  getClientId,
-  saveAuthSession,
-  clearAuthSession,
-  fetchUserInfo,
-  isUserSignedIn,
-  getGoogleUserInfo,
-  exchangeCodeForTokens,
-  getRedirectScheme,
-} from '../utils/google-auth';
-import { supabase } from '../utils/supabase';
-import { subscribeToSyncStatus, processSyncQueue, getSyncQueue, saveSyncQueue, enqueueUnsyncedLocalItems, pullChangesFromCloud, SyncStatus, clearSyncError, updateSyncStatus, initializeRealtimeSync, closeRealtimeSync } from '../utils/sync-engine';
+import { subscribeToSyncStatus, SyncStatus, clearSyncError, initializeRealtimeSync, closeRealtimeSync, processSyncQueue, updateSyncStatus } from '../utils/sync-engine';
+import { getSetting, saveSetting } from '../utils/storage';
+import axios from 'axios';
+
+
 
 interface SettingsScreenProps {}
 
@@ -26,10 +17,11 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
   const { colors, isDark, setThemeMode } = useTheme();
   const insets = useSafeAreaInsets();
 
-  // Auth states
-  const [isSignedIn, setIsSignedIn] = React.useState(false);
-  const [userInfo, setUserInfo] = React.useState<any>(null);
-  const [isAuthLoading, setIsAuthLoading] = React.useState(true);
+  const [isPaired, setIsPaired] = React.useState(false);
+  const [pairedDeviceId, setPairedDeviceId] = React.useState<string | null>(null);
+  const [isPairingMode, setIsPairingMode] = React.useState(false);
+  const [pairingCodeInput, setPairingCodeInput] = React.useState('');
+  const [isPairing, setIsPairing] = React.useState(false);
 
   // Sync engine states
   const [syncStatus, setSyncStatus] = React.useState<SyncStatus>({
@@ -37,164 +29,84 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
     error: null,
     lastSynced: null,
   });
-  const [pendingQueueCount, setPendingQueueCount] = React.useState(0);
-
-  // Expo Auth Request Setup
-  const [request, response, promptAsync] = AuthSession.useAuthRequest(
-    {
-      clientId: getClientId(),
-      scopes: [
-        'openid',
-        'https://www.googleapis.com/auth/userinfo.email',
-        'https://www.googleapis.com/auth/userinfo.profile'
-      ],
-      redirectUri: `${getRedirectScheme()}:/oauth2redirect`,
-      extraParams: {
-        access_type: 'offline',
-        prompt: 'consent',
-      },
-    },
-    discovery
-  );
 
   // Initialize and subscribe to sync updates
   React.useEffect(() => {
-    const loadSession = async () => {
+    const loadSettings = async () => {
       try {
-        const signed = await isUserSignedIn();
-        setIsSignedIn(signed);
-        if (signed) {
-          const info = await getGoogleUserInfo();
-          setUserInfo(info);
-        }
+        const paired = await getSetting('is_paired');
+        setIsPaired(paired === 'true');
+        const deviceId = await getSetting('paired_device_id');
+        if (deviceId) setPairedDeviceId(deviceId);
       } catch (err) {
-        console.error('Failed to resolve initial Google auth status:', err);
-      } finally {
-        setIsAuthLoading(false);
+        console.error('Failed to load pairing status:', err);
       }
     };
-    loadSession();
+    loadSettings();
 
     const unsubscribe = subscribeToSyncStatus((status) => {
       setSyncStatus(status);
-      getSyncQueue()
-        .then((q) => setPendingQueueCount(q.length))
-        .catch(() => {});
     });
 
     return unsubscribe;
   }, []);
 
-  // Handle Google OAuth authorization code redirect response
-  React.useEffect(() => {
-    if (response?.type === 'success') {
-      const exchangeCode = async () => {
-        setIsAuthLoading(true);
-        try {
-          const { code } = response.params;
-          const { codeVerifier } = request || {};
-          if (!code || !codeVerifier) {
-            throw new Error('Authorization response parameters are invalid.');
-          }
+  const handleStartPairing = () => {
+    setIsPairingMode(true);
+    setPairingCodeInput('');
+  };
 
-          const redirectUri = `${getRedirectScheme()}:/oauth2redirect`;
-          const tokens = await exchangeCodeForTokens(code, codeVerifier, redirectUri);
-          const info = await fetchUserInfo(tokens.access_token);
-          
-          await saveAuthSession(tokens.access_token, tokens.refresh_token, tokens.expires_in, info);
-          
-          setIsSignedIn(true);
-          setUserInfo(info);
-          clearSyncError();
-          initializeRealtimeSync().catch(() => {});
-          
-          // Check for reconnection sync conflict:
-          // If we have offline DELETE tasks, and Supabase actually has items, prompt the user.
-          const queue = await getSyncQueue();
-          const hasPendingDeletions = queue.some((t) => t.action === 'DELETE');
-          let handledConflict = false;
-
-          if (hasPendingDeletions && info && info.email) {
-            try {
-              const { data: remoteItems } = await supabase
-                .from('items')
-                .select('id')
-                .eq('email', info.email.trim().toLowerCase());
-              if (remoteItems && remoteItems.length > 0) {
-                handledConflict = true;
-                Alert.alert(
-                  'Sync Conflict Detected',
-                  `You deleted some items on this phone while disconnected, but they still exist on the cloud. Would you like to restore them to this device or remove them from the cloud?`,
-                  [
-                    {
-                      text: 'Restore to Device',
-                      onPress: async () => {
-                        updateSyncStatus({ isSyncing: true, error: null });
-                        try {
-                          // Clear DELETE tasks to cancel deletions
-                          const currentQueue = await getSyncQueue();
-                          const filteredQueue = currentQueue.filter((t) => t.action !== 'DELETE');
-                          await saveSyncQueue(filteredQueue);
-                          
-                          // Download items back to the device
-                          await pullChangesFromCloud();
-                        } catch (pullErr) {
-                          console.error('Failed to restore files from Supabase on conflict:', pullErr);
-                          Alert.alert('Sync Error', 'Failed to pull changes from Supabase.');
-                        } finally {
-                          // Process remaining queue tasks
-                          processSyncQueue();
-                        }
-                      },
-                    },
-                    {
-                      text: 'Remove from Cloud',
-                      style: 'destructive',
-                      onPress: () => {
-                        updateSyncStatus({ isSyncing: true, error: null });
-                        // Let the queue process deletions normally
-                        processSyncQueue();
-                      },
-                    },
-                  ],
-                  { cancelable: false }
-                );
-              }
-            } catch (queryErr) {
-              console.warn('Failed to query Supabase for conflict check:', queryErr);
-            }
-          }
-
-          if (!handledConflict) {
-            // Scan and enqueue any pre-existing local items for upload
-            await enqueueUnsyncedLocalItems().catch((err) => {
-              console.error('Failed to enqueue unsynced local items on sign-in:', err);
-            });
-            // Trigger initial sync run to mirror existing items
-            processSyncQueue();
-          }
-        } catch (err: any) {
-          console.error('Failed to complete Google OAuth exchange:', err);
-          const details = err.response?.data 
-            ? JSON.stringify(err.response.data) 
-            : (err.message || String(err));
-          Alert.alert('Authentication Error', details);
-        } finally {
-          setIsAuthLoading(false);
-        }
-      };
-      exchangeCode();
+  const submitPairingCode = async () => {
+    if (pairingCodeInput.length !== 6) {
+      Alert.alert('Invalid Code', 'Please enter a 6-digit code.');
+      return;
     }
-  }, [response]);
+    setIsPairing(true);
+    try {
+      // Broadcast to local network or connect directly if IP is known.
+      // For now, assume Desktop is found via mDNS, but we need its IP.
+      // A full mDNS scan should happen, but here we can just alert until network discovery is fully hooked up.
+      // To simulate, we could hit http://boothub_desktop.local:14201/pair
+      
+      let myDeviceId = await getSetting('device_id');
+      if (!myDeviceId) {
+        myDeviceId = `mobile_${Date.now()}`; // simple fallback
+        await saveSetting('device_id', myDeviceId);
+      }
 
-  const handleSignIn = () => {
-    setIsAuthLoading(true);
-    promptAsync().finally(() => setIsAuthLoading(false));
+      // Try mDNS hostname first
+      try {
+        const res = await axios.post('http://boothub_desktop.local:14201/pair', {
+          code: pairingCodeInput,
+          device_id: myDeviceId
+        }, { timeout: 3000 });
+        
+        if (res.data.success) {
+          setIsPaired(true);
+          setPairedDeviceId(res.data.device_id);
+          await saveSetting('is_paired', 'true');
+          await saveSetting('paired_device_id', res.data.device_id);
+          setIsPairingMode(false);
+          Alert.alert('Paired!', 'Successfully paired with Desktop.');
+          return;
+        } else {
+          Alert.alert('Failed', 'Incorrect code.');
+          return;
+        }
+      } catch (err) {
+        console.warn('mDNS hostname failed, try entering IP manually later. Error:', err);
+        Alert.alert('Network Error', 'Could not reach Desktop at boothub_desktop.local:14201.');
+      }
+    } catch (err: any) {
+      Alert.alert('Pairing Error', err.message);
+    } finally {
+      setIsPairing(false);
+    }
   };
 
   const handleSignOut = () => {
     Alert.alert(
-      'Disconnect Cloud Sync',
+      'Disconnect Device',
       'This will stop auto-syncing. Local items will remain on your device.',
       [
         { text: 'Cancel', style: 'cancel' },
@@ -202,16 +114,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
           text: 'Disconnect',
           style: 'destructive',
           onPress: async () => {
-            setIsAuthLoading(true);
             try {
-              await clearAuthSession();
-              setIsSignedIn(false);
-              setUserInfo(null);
+              await saveSetting('is_paired', 'false');
+              setIsPaired(false);
+              setPairedDeviceId(null);
               closeRealtimeSync();
             } catch (err) {
-              console.error('Error signing out:', err);
-            } finally {
-              setIsAuthLoading(false);
+              console.error('Error disconnecting:', err);
             }
           },
         },
@@ -222,10 +131,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
   const handleManualSync = async () => {
     updateSyncStatus({ isSyncing: true, error: null });
     try {
-      await enqueueUnsyncedLocalItems().catch((err) => {
-        console.error('Failed to enqueue unsynced local items during manual sync:', err);
-      });
-      await pullChangesFromCloud();
       await processSyncQueue();
     } catch (err: any) {
       console.error('Manual sync execution failed:', err);
@@ -270,29 +175,21 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
         </TuiContainer>
 
         {/* Google Drive Synchronization Settings */}
-        <TuiContainer label="Connect to Cloud" style={styles.containerMargin}>
-          {isSignedIn ? (
+        <TuiContainer label="P2P Sync" style={styles.containerMargin}>
+          {isPaired ? (
             <View style={styles.syncCard}>
-              {/* User Account Identity */}
               <View style={styles.userRow}>
-                {userInfo?.picture ? (
-                  <Image source={{ uri: userInfo.picture }} style={[styles.avatar, { borderColor: colors.primary, borderWidth: 1 }]} />
-                ) : (
-                  <View style={[styles.avatarPlaceholder, { borderColor: colors.primary }]}>
-                    <TuiText size="sm" weight="bold" style={{ color: colors.primary }}>
-                      {userInfo?.name?.substring(0, 1).toUpperCase() || 'U'}
-                    </TuiText>
-                  </View>
-                )}
+                <View style={[styles.avatarPlaceholder, { borderColor: colors.primary }]}>
+                  <TuiText size="sm" weight="bold" style={{ color: colors.primary }}>D</TuiText>
+                </View>
                 <View style={styles.userDetails}>
-                  <TuiText weight="bold">{userInfo?.name || 'Google User'}</TuiText>
+                  <TuiText weight="bold">Paired Desktop</TuiText>
                   <TuiText size="xs" variant="muted">
-                    {userInfo?.email || 'Connected'}
+                    {pairedDeviceId ? pairedDeviceId.slice(0, 8) : 'Connected'}
                   </TuiText>
                 </View>
               </View>
 
-              {/* Sync Action Buttons */}
               <View style={styles.actionRow}>
                 <View style={styles.actionCol}>
                   <TuiButton
@@ -309,7 +206,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                     onPress={handleSignOut}
                     variant="outline"
                     style={styles.syncBtn}
-                    loading={isAuthLoading}
                     disabled={syncStatus.isSyncing}
                   >
                     Disconnect
@@ -317,18 +213,49 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                 </View>
               </View>
             </View>
+          ) : isPairingMode ? (
+            <View style={styles.disconnectedCard}>
+              <TuiText size="sm" variant="muted" style={styles.infoText}>
+                Enter the 6-digit code shown on BootHub Desktop:
+              </TuiText>
+              <View style={{ backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, marginBottom: 16, borderRadius: 8 }}>
+                <TextInput
+                  value={pairingCodeInput}
+                  onChangeText={setPairingCodeInput}
+                  placeholder="123456"
+                  placeholderTextColor={colors.mutedForeground}
+                  keyboardType="numeric"
+                  maxLength={6}
+                  style={{
+                    color: colors.foreground,
+                    fontSize: 24,
+                    textAlign: 'center',
+                    padding: 12,
+                    fontFamily: 'JetBrainsMono_700Bold',
+                    letterSpacing: 10,
+                  }}
+                />
+              </View>
+              <TuiButton
+                onPress={submitPairingCode}
+                variant="accent"
+                style={styles.linkBtn}
+                loading={isPairing}
+              >
+                Pair Now
+              </TuiButton>
+            </View>
           ) : (
             <View style={styles.disconnectedCard}>
               <TuiText size="sm" variant="muted" style={styles.infoText}>
-                Link your Google Account to back up your links, texts, photos, and files automatically to the cloud.
+                Pair with BootHub Desktop on your local network to sync automatically.
               </TuiText>
               <TuiButton
-                onPress={handleSignIn}
+                onPress={handleStartPairing}
                 variant="outline"
                 style={styles.linkBtn}
-                loading={isAuthLoading}
               >
-                Connect Google Account
+                Pair with Desktop
               </TuiButton>
             </View>
           )}
