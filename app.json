@@ -2,7 +2,7 @@
   "expo": {
     "name": "BootHub",
     "slug": "boot-hub",
-    "version": "1.0.40",
+    "version": "1.0.41",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
