@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator, Alert, Image, TextInput, Pressable } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator, Alert, Image, TextInput, Pressable, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/theme-provider';
 import { TuiContainer } from '../components/tui-container';
@@ -83,22 +83,26 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
 
       let pairedSuccess = false;
 
+      const mobileName = Platform.OS === 'android' ? 'Android Device' : 'iPhone';
+
       for (const url of targetUrls) {
         try {
           const res = await axios.post(url, {
             code: pairingCodeInput,
             device_id: myDeviceId,
+            device_name: mobileName,
           }, { timeout: 2500 });
 
           if (res.data && res.data.success) {
+            const desktopName = res.data.device_name || 'Desktop PC';
             setIsPaired(true);
-            setPairedDeviceId(res.data.device_id);
+            setPairedDeviceId(desktopName);
             await saveSetting('is_paired', 'true');
-            await saveSetting('paired_device_id', res.data.device_id);
+            await saveSetting('paired_device_id', desktopName);
             updateSyncStatus({ isPaired: true });
             connectKnownPeersWS();
             processSyncQueue().catch(console.error);
-            Alert.alert('Paired!', 'Successfully paired with Desktop.');
+            Alert.alert('Paired!', `Successfully paired with ${desktopName}.`);
             pairedSuccess = true;
             break;
           }
@@ -222,10 +226,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
                   <TuiText size="sm" weight="bold" style={{ color: colors.primary }}>D</TuiText>
                 </View>
                 <View style={styles.userDetails}>
-                  <TuiText weight="bold">Paired Desktop</TuiText>
-                  <TuiText size="xs" variant="muted">
-                    {pairedDeviceId ? pairedDeviceId.slice(0, 8) : 'Connected'}
-                  </TuiText>
+                  <TuiText weight="bold">{pairedDeviceId || 'Paired Desktop'}</TuiText>
                 </View>
               </View>
 

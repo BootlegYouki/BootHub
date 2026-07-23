@@ -1,7 +1,7 @@
 # Graph Report - BootHub  (2026-07-24)
 
 ## Corpus Check
-- 75 files · ~113,783 words
+- 75 files · ~113,796 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `3989641d`
+- Built from commit: `675e1700`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -332,16 +332,16 @@ Cohesion: 0.67
 Nodes (3): Examples, Flags, `init`: Config Generation
 
 ### Community 67 - "Community 67"
+Cohesion: 0.50
+Nodes (4): Custom Plugin Setup, Option 1: Inline framework config, Option 2: External plugin file, Option 3: Plugin directory
+
+### Community 69 - "Community 69"
 Cohesion: 0.40
 Nodes (5): Migration from knip, Step 1: Preview migration, Step 2: Apply migration, Step 3: Compare results, Step 4: Remove knip config
 
-### Community 69 - "Community 69"
-Cohesion: 0.67
-Nodes (3): PR Dead Code Check, Step 1: Analyze changed files, Step 2: If issues found, show specifics
-
 ### Community 72 - "Community 72"
-Cohesion: 0.15
-Nodes (12): Combined Dead Code + Duplication, Custom Plugin Setup, Fallow: Common Workflow Patterns & Recipes, Full audit (default), Option 1: Inline framework config, Option 2: External plugin file, Option 3: Plugin directory, Production audit (+4 more)
+Cohesion: 0.17
+Nodes (11): Combined Dead Code + Duplication, Fallow: Common Workflow Patterns & Recipes, Full audit (default), PR Dead Code Check, Production audit, Production vs Full Audit, Step 1: Analyze changed files, Step 1: Run combined analysis (+3 more)
 
 ## Knowledge Gaps
 - **447 isolated node(s):** `$schema`, `ignorePatterns`, `ignoreDependencies`, `minOccurrences`, `ignore` (+442 more)

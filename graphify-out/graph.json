@@ -3139,7 +3139,7 @@
       "label": "styles",
       "file_type": "code",
       "source_file": "src/screens/SettingsScreen.tsx",
-      "source_location": "L309",
+      "source_location": "L310",
       "id": "screens_settingsscreen_styles",
       "community": 2,
       "norm_label": "styles"
@@ -5895,7 +5895,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L67",
       "id": "references_patterns_pr_dead_code_check",
-      "community": 69,
+      "community": 72,
       "norm_label": "pr dead code check"
     },
     {
@@ -5904,7 +5904,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L71",
       "id": "references_patterns_step_1_analyze_changed_files",
-      "community": 69,
+      "community": 72,
       "norm_label": "step 1: analyze changed files"
     },
     {
@@ -5913,7 +5913,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L79",
       "id": "references_patterns_step_2_if_issues_found_show_specifics",
-      "community": 69,
+      "community": 72,
       "norm_label": "step 2: if issues found, show specifics"
     },
     {
@@ -6219,7 +6219,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L425",
       "id": "references_patterns_migration_from_knip",
-      "community": 67,
+      "community": 69,
       "norm_label": "migration from knip"
     },
     {
@@ -6228,7 +6228,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L427",
       "id": "references_patterns_step_1_preview_migration",
-      "community": 67,
+      "community": 69,
       "norm_label": "step 1: preview migration"
     },
     {
@@ -6237,7 +6237,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L435",
       "id": "references_patterns_step_2_apply_migration",
-      "community": 67,
+      "community": 69,
       "norm_label": "step 2: apply migration"
     },
     {
@@ -6246,7 +6246,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L448",
       "id": "references_patterns_step_3_compare_results",
-      "community": 67,
+      "community": 69,
       "norm_label": "step 3: compare results"
     },
     {
@@ -6255,7 +6255,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L458",
       "id": "references_patterns_step_4_remove_knip_config",
-      "community": 67,
+      "community": 69,
       "norm_label": "step 4: remove knip config"
     },
     {
@@ -6480,7 +6480,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L641",
       "id": "references_patterns_custom_plugin_setup",
-      "community": 72,
+      "community": 67,
       "norm_label": "custom plugin setup"
     },
     {
@@ -6489,7 +6489,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L645",
       "id": "references_patterns_option_1_inline_framework_config",
-      "community": 72,
+      "community": 67,
       "norm_label": "option 1: inline framework config"
     },
     {
@@ -6498,7 +6498,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L660",
       "id": "references_patterns_option_2_external_plugin_file",
-      "community": 72,
+      "community": 67,
       "norm_label": "option 2: external plugin file"
     },
     {
@@ -6507,7 +6507,7 @@
       "source_file": ".agents/skills/fallow/references/patterns.md",
       "source_location": "L677",
       "id": "references_patterns_option_3_plugin_directory",
-      "community": 72,
+      "community": 67,
       "norm_label": "option 3: plugin directory"
     },
     {
@@ -16041,9 +16041,9 @@
       "source_file": "src/screens/SettingsScreen.tsx",
       "source_location": "L8",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_screens_settingsscreen_tsx",
-      "target": "utils_sync_engine_connectknownpeersws",
-      "confidence_score": 1.0
+      "target": "utils_sync_engine_connectknownpeersws"
     },
     {
       "relation": "imports",
@@ -18395,9 +18395,9 @@
       "source_file": "src/utils/sync-engine.ts",
       "source_location": "L64",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "src_utils_sync_engine_ts",
-      "target": "utils_sync_engine_connectknownpeersws",
-      "confidence_score": 1.0
+      "target": "utils_sync_engine_connectknownpeersws"
     },
     {
       "relation": "contains",
@@ -18736,9 +18736,9 @@
       "source_file": "src/utils/sync-engine.ts",
       "source_location": "L68",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "utils_sync_engine_connectknownpeersws",
-      "target": "utils_sync_engine_connectwebsocket",
-      "confidence_score": 1.0
+      "target": "utils_sync_engine_connectwebsocket"
     },
     {
       "relation": "calls",
@@ -21971,5 +21971,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "3989641d0338b20d1bc558d23f57e8980ef19768"
+  "built_at_commit": "675e1700ebfebefa51cc7b6cd0f8c272a6c363ea"
 }
