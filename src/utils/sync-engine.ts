@@ -189,15 +189,10 @@ export const processSyncQueue = async (): Promise<void> => {
         }
       });
       
-      // Recover missing files for ALL remote file events (in case a previous download failed)
-      const { getLocalDeviceId } = require('./storage');
-      const allRemoteItemEvents = db.getAllSync<SyncEvent>(
-        "SELECT * FROM events WHERE action = 'ITEM_CREATED' AND device_id != ?",
-        [getLocalDeviceId()]
-      );
-      for (const ev of allRemoteItemEvents) {
-        if (ev.action === 'ITEM_CREATED') {
-          try {
+      // Recover missing files only for events received in this sync batch
+      const newRemoteItemEvents = remoteEvents.filter(ev => ev.action === 'ITEM_CREATED');
+      for (const ev of newRemoteItemEvents) {
+        try {
             const parsed = JSON.parse(ev.payload);
             if (parsed.type === 'photo' || parsed.type === 'file') {
               const base = FileSystem.documentDirectory || FileSystem.cacheDirectory;
@@ -236,7 +231,6 @@ export const processSyncQueue = async (): Promise<void> => {
           } catch (e) {
             console.error('[Sync Engine] Failed to parse or download file for event', ev.id, e);
           }
-        }
       }
       
       try {
