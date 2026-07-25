@@ -7,9 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "scheme": [
-      "boothub",
-      "com.googleusercontent.apps.384181018496-0iagia0c6tcmllboc6rhtijqsnnaj8se",
-      "com.googleusercontent.apps.384181018496-16r5f89rhcl2i4ik1seigdfuao2io4bi"
+      "boothub"
     ],
     "ios": {
       "supportsTablet": true,
@@ -91,8 +89,6 @@
           ]
         }
       ],
-      "expo-secure-store",
-      "expo-web-browser",
       "expo-sqlite"
     ],
     "extra": {

@@ -42,14 +42,12 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
-import * as WebBrowser from 'expo-web-browser';
 import {
   processSyncQueue,
   enqueueSyncTask,
   enqueueSyncTasks,
 } from './src/utils/sync-engine';
 
-WebBrowser.maybeCompleteAuthSession();
 
 import { ThemeProvider, useTheme } from './src/theme/theme-provider';
 import { TuiHeader } from './src/components/tui-header';
@@ -636,7 +634,18 @@ function MainApp() {
       try {
         const persistentUris: string[] = [];
         for (const uri of uris) {
-          if (uri.startsWith('file://') && (uri.includes('/Caches/') || uri.includes('/cache/'))) {
+          if (uri.startsWith('ph://')) {
+            const assetId = uri.slice(5);
+            const assetInfo = await MediaLibrary.getAssetInfoAsync(assetId);
+            if (assetInfo && assetInfo.localUri) {
+              const ext = assetInfo.localUri.split('.').pop() || 'jpg';
+              const dest = `${FileSystem.documentDirectory}${Date.now()}_${assetId.replace(/[^a-zA-Z0-9]/g, '')}.${ext}`;
+              await FileSystem.copyAsync({ from: assetInfo.localUri, to: dest });
+              persistentUris.push(dest);
+            } else {
+              persistentUris.push(uri);
+            }
+          } else if (uri.startsWith('file://') && (uri.includes('/Caches/') || uri.includes('/cache/') || uri.includes('ImagePicker'))) {
             const fileName = uri.split('/').pop() || `photo_${Date.now()}.jpg`;
             const dest = `${FileSystem.documentDirectory}${Date.now()}_${fileName}`;
             await FileSystem.copyAsync({ from: uri, to: dest });

@@ -1,6 +1,6 @@
 import Zeroconf from 'react-native-zeroconf';
 import axios from 'axios';
-import { getDb, SyncEvent, saveSetting } from './storage';
+import { getDb, SyncEvent, saveSetting, getSetting } from './storage';
 import { Alert } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import { FileSystemSessionType } from 'expo-file-system/legacy';
@@ -10,12 +10,18 @@ let knownPeers = new Map<string, string>(); // name -> ip:port
 let ws: WebSocket | null = null;
 let wsReconnectTimeout: NodeJS.Timeout | null = null;
 
-function connectWebSocket(peerAddress: string) {
+async function connectWebSocket(peerAddress: string) {
   const isPairedRow = getDb().getFirstSync<{ value: string }>("SELECT value FROM config WHERE key = 'is_paired'");
   if (isPairedRow?.value !== 'true') {
     console.log('[Sync Engine] Device is not paired. Skipping WebSocket connection.');
     return;
   }
+  
+  let authToken = '';
+  try {
+    authToken = await getSetting('auth_token') || '';
+  } catch (e) {}
+
   if (ws) {
     ws.close();
   }
@@ -23,7 +29,7 @@ function connectWebSocket(peerAddress: string) {
     clearTimeout(wsReconnectTimeout);
   }
   
-  const wsUrl = `ws://${peerAddress}/ws`;
+  const wsUrl = `ws://${peerAddress}/ws?token=${encodeURIComponent(authToken)}`;
   console.log(`[Sync Engine] Connecting WebSocket to ${wsUrl}`);
   ws = new WebSocket(wsUrl);
   
@@ -169,9 +175,16 @@ export const processSyncQueue = async (): Promise<void> => {
     const pullRow = db.getFirstSync<{value: string}>('SELECT value FROM config WHERE key = ?', [pullKey]);
     const lastPullClock = pullRow ? parseInt(pullRow.value, 10) : 0;
     
+    let authToken = await getSetting('auth_token') || '';
+
     console.log(`[Sync Engine] Exchanging events with ${peerUrl}... (since ${lastPullClock})`);
     
-    const response = await axios.get(`${peerUrl}/sync?since=${lastPullClock}`, { timeout: 5000 });
+    const response = await axios.get(`${peerUrl}/sync?since=${lastPullClock}`, {
+      timeout: 5000,
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
     const remoteEvents: SyncEvent[] = response.data.events || [];
     const remoteMaxClock: number = response.data.max_clock || 0;
     
@@ -224,7 +237,10 @@ export const processSyncQueue = async (): Promise<void> => {
                 console.log(`[Sync Engine] Download URL: ${url}`);
                 console.log(`[Sync Engine] Dest path: ${dest}`);
                 await FileSystem.downloadAsync(url, dest, {
-                  sessionType: FileSystemSessionType.FOREGROUND
+                  sessionType: FileSystemSessionType.FOREGROUND,
+                  headers: {
+                    Authorization: `Bearer ${authToken}`
+                  }
                 });
               }
             }
@@ -273,6 +289,9 @@ export const processSyncQueue = async (): Promise<void> => {
                 await FileSystem.uploadAsync(`${peerUrl}/files/${ev.entity_id}`, uploadUri, {
                   httpMethod: 'POST',
                   uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+                  headers: {
+                    Authorization: `Bearer ${authToken}`
+                  }
                 });
               }
             }
@@ -281,7 +300,12 @@ export const processSyncQueue = async (): Promise<void> => {
           }
         }
       }
-      await axios.post(`${peerUrl}/sync`, { events: localEventsToPush }, { timeout: 5000 });
+      await axios.post(`${peerUrl}/sync`, { events: localEventsToPush }, {
+        timeout: 5000,
+        headers: {
+          Authorization: `Bearer ${authToken}`
+        }
+      });
       
       const maxPushedClock = localEventsToPush[localEventsToPush.length - 1].clock;
       db.runSync('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)', [pushKey, maxPushedClock.toString()]);
@@ -331,12 +355,26 @@ async function cleanUpOrphanedFiles() {
             validNames.add(parts[parts.length - 1]);
           }
         } else if (item.type === 'file') {
-          const fObj = JSON.parse(item.value);
-          const uri = ensureFileUri(fObj.uri, item.id);
-          if (uri && uri.startsWith('file://')) {
-            const parts = uri.split('/');
+          let fObj: any = {};
+          try {
+            fObj = JSON.parse(item.value);
+          } catch (e) {}
+
+          if (fObj.uri) {
+            const uri = ensureFileUri(fObj.uri, item.id);
+            if (uri && uri.startsWith('file://')) {
+              const parts = uri.split('/');
+              validNames.add(parts[parts.length - 1]);
+            }
+          }
+
+          // Desktop-synced files might not have a uri in fObj. Their file is stored by item.id.
+          const desktopUri = ensureFileUri(item.value, item.id);
+          if (desktopUri && desktopUri.startsWith('file://')) {
+            const parts = desktopUri.split('/');
             validNames.add(parts[parts.length - 1]);
           }
+
           if (fObj.artwork) {
             const artUri = ensureFileUri(fObj.artwork, item.id);
             if (artUri && artUri.startsWith('file://')) {
@@ -353,18 +391,13 @@ async function cleanUpOrphanedFiles() {
     const safeBase = base.endsWith('/') ? base : base + '/';
     const files = await FileSystem.readDirectoryAsync(safeBase);
     
-    const now = Date.now();
     for (const file of files) {
       if (file.startsWith('.') || validNames.has(file)) continue;
       
       const fileInfo = await FileSystem.getInfoAsync(safeBase + file);
       if (fileInfo.exists && !fileInfo.isDirectory) {
-        // Buffer of 60 seconds to prevent deleting files currently being uploaded/downloaded
-        const modTime = (fileInfo.modificationTime || 0) * 1000;
-        if (now - modTime > 60000 || !fileInfo.modificationTime) {
-          console.log(`[Sync Engine] Garbage Collector: Deleting orphaned file ${file}`);
-          await FileSystem.deleteAsync(safeBase + file, { idempotent: true }).catch(() => {});
-        }
+        console.log(`[Sync Engine] Garbage Collector: Deleting orphaned file ${file}`);
+        await FileSystem.deleteAsync(safeBase + file, { idempotent: true }).catch(() => {});
       }
     }
   } catch (err) {

@@ -99,6 +99,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
             setPairedDeviceId(desktopName);
             await saveSetting('is_paired', 'true');
             await saveSetting('paired_device_id', desktopName);
+            if (res.data.auth_token) {
+              await saveSetting('auth_token', res.data.auth_token);
+            }
             updateSyncStatus({ isPaired: true });
             connectKnownPeersWS();
             processSyncQueue().catch(console.error);
@@ -156,6 +159,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = () => {
               }
 
               await saveSetting('is_paired', 'false');
+              await saveSetting('auth_token', '');
               setIsPaired(false);
               setPairedDeviceId(null);
               updateSyncStatus({ isPaired: false });

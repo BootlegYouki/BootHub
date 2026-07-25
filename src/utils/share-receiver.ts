@@ -68,9 +68,33 @@ export const processSharedItem = async (parsed: ParsedShare): Promise<{ type: 'l
     if (parsed.type === 'photo') {
       const isSystemAsset = parsed.value.startsWith('ph://') || parsed.value.startsWith('assets-library://') || (parsed.value.startsWith('content://') && !parsed.value.includes('ImagePicker'));
       if (isSystemAsset) {
-        await addItem('photo', parsed.value);
-        const fileName = parsed.value.split('/').pop() || `photo_${Date.now()}.jpg`;
-        return { type: 'photo', label: fileName };
+        let actualSource = parsed.value;
+        let fileName = parsed.value.split('/').pop() || `photo_${Date.now()}.jpg`;
+        
+        if (parsed.value.startsWith('ph://')) {
+          const MediaLibrary = require('expo-media-library');
+          const assetId = parsed.value.slice(5);
+          try {
+            const assetInfo = await MediaLibrary.getAssetInfoAsync(assetId);
+            if (assetInfo && assetInfo.localUri) {
+              actualSource = assetInfo.localUri;
+              fileName = assetInfo.filename || `${assetId.replace(/[^a-zA-Z0-9]/g, '')}.jpg`;
+            }
+          } catch (e) {
+            console.warn('Failed to resolve ph:// URI in share receiver', e);
+          }
+        }
+        
+        const destinationUri = `${FileSystem.documentDirectory}${Date.now()}_${fileName}`;
+        try {
+          await FileSystem.copyAsync({ from: actualSource, to: destinationUri });
+          await addItem('photo', destinationUri);
+          return { type: 'photo', label: fileName };
+        } catch (e) {
+          // Fallback if copy fails
+          await addItem('photo', parsed.value);
+          return { type: 'photo', label: fileName };
+        }
       }
 
       const fileName = parsed.value === 'pasteboard:image' ? `photo_${Date.now()}.jpg` : (parsed.value.split('/').pop() || `photo_${Date.now()}.jpg`);

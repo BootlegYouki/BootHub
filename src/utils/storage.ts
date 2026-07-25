@@ -221,18 +221,25 @@ export const deleteItem = async (id: string): Promise<DumpItem[]> => {
   const target = db.getFirstSync<DumpItem>('SELECT type, value FROM items WHERE id = ?', [id]);
   if (!target) return await getItems();
   
-  const deleteFileFromDisk = async (value: string) => {
+  const deleteFileFromDisk = async (value: string, itemId: string) => {
     try {
-      const fileObj = JSON.parse(value);
-      if (fileObj.uri && fileObj.uri.startsWith('file://')) {
-        await FileSystem.deleteAsync(fileObj.uri, { idempotent: true });
-      }
-    } catch (err) {
+      const { ensureFileUri } = require('./helpers');
+      
+      // Try parsing as JSON for mobile-created files
       try {
-        if (value.startsWith('file://')) {
-          await FileSystem.deleteAsync(value, { idempotent: true });
+        const fileObj = JSON.parse(value);
+        if (fileObj.uri && fileObj.uri.startsWith('file://')) {
+          await FileSystem.deleteAsync(fileObj.uri, { idempotent: true });
         }
-      } catch {}
+      } catch (err) {}
+      
+      // Always try the resolved URI (for desktop-synced files)
+      const uri = ensureFileUri(value, itemId);
+      if (uri && uri.startsWith('file://')) {
+        await FileSystem.deleteAsync(uri, { idempotent: true });
+      }
+    } catch (e) {
+      console.error('[deleteItem] Failed to delete file from disk', e);
     }
   };
 
@@ -253,14 +260,14 @@ export const deleteItem = async (id: string): Promise<DumpItem[]> => {
     const childrenToDelete = getRecursiveChildren(allItems, id);
     for (const child of childrenToDelete) {
       if (child.type === 'file' || child.type === 'photo') {
-        await deleteFileFromDisk(child.value);
+        await deleteFileFromDisk(child.value, child.id);
       }
       appendEvent(child.id, 'ITEM_DELETED', {});
     }
     appendEvent(id, 'ITEM_DELETED', {});
   } else {
     if (target.type === 'file' || target.type === 'photo') {
-      await deleteFileFromDisk(target.value);
+      await deleteFileFromDisk(target.value, id);
     }
     appendEvent(id, 'ITEM_DELETED', {});
   }
