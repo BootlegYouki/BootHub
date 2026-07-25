@@ -128,6 +128,8 @@ export const FullscreenPhotoViewer: React.FC<FullscreenPhotoViewerProps> = ({
   // Mutable ref that always points to the latest handleCloseFullscreen.
   const handleCloseRef = useRef<() => void>(() => {});
 
+  const [imageLoaded, setImageLoaded] = useState(false);
+
   // Initialize transition targets
   useEffect(() => {
     if (!hasZoomedIn.current && activeFullscreenPhoto && startBounds) {
@@ -150,13 +152,14 @@ export const FullscreenPhotoViewer: React.FC<FullscreenPhotoViewerProps> = ({
       zoomPhase.value = 1;
       barBackgroundOpacity.value = 1;
 
+      setImageLoaded(false);
       setIsZooming('in');
     }
   }, [activeFullscreenPhotoIndex]);
 
-  // Trigger zoom-in animation only after the fullscreen overlay has mounted
+  // Trigger zoom-in animation only after the fullscreen overlay has mounted and image has loaded
   useEffect(() => {
-    if (isZooming === 'in') {
+    if (isZooming === 'in' && imageLoaded) {
       animationProgress.value = 0;
       controlsOpacity.value = 0;
       requestAnimationFrame(() => {
@@ -168,7 +171,7 @@ export const FullscreenPhotoViewer: React.FC<FullscreenPhotoViewerProps> = ({
         });
       });
     }
-  }, [isZooming]);
+  }, [isZooming, imageLoaded]);
 
   // Reset zoomPhase after the overlay has fully unmounted
   useEffect(() => {
@@ -496,6 +499,7 @@ export const FullscreenPhotoViewer: React.FC<FullscreenPhotoViewerProps> = ({
           style={{ width: '100%', height: '100%' }}
           contentFit="cover"
           transition={0}
+          onLoad={() => setImageLoaded(true)}
         />
       </Animated.View>
 
