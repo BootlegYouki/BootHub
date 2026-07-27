@@ -1,6 +1,25 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import { addItem } from './storage';
 
+const getUniqueDestinationUri = async (subfolder: 'images' | 'files', originalName: string): Promise<string> => {
+  const base = FileSystem.documentDirectory || '';
+  const safeBase = base.endsWith('/') ? base : base + '/';
+  const folderPath = `${safeBase}${subfolder}/`;
+  const sanitized = originalName.replace(/[^a-zA-Z0-9_\-\.\s]/g, '').trim() || 'unnamed';
+  
+  let targetUri = folderPath + sanitized;
+  let counter = 1;
+  const dotIdx = sanitized.lastIndexOf('.');
+  const baseName = dotIdx !== -1 ? sanitized.substring(0, dotIdx) : sanitized;
+  const extName = dotIdx !== -1 ? sanitized.substring(dotIdx) : '';
+  
+  while ((await FileSystem.getInfoAsync(targetUri)).exists) {
+    targetUri = `${folderPath}${baseName}_${counter}${extName}`;
+    counter++;
+  }
+  return targetUri;
+};
+
 export interface ParsedShare {
   type: 'link' | 'text' | 'photo' | 'file';
   value: string; // URL, text, or file path
@@ -85,8 +104,11 @@ export const processSharedItem = async (parsed: ParsedShare): Promise<{ type: 'l
           }
         }
         
-        const destinationUri = `${FileSystem.documentDirectory}${Date.now()}_${fileName}`;
+        const destinationUri = await getUniqueDestinationUri('images', fileName);
         try {
+          try {
+            await FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}images/`, { intermediates: true });
+          } catch (e) {}
           await FileSystem.copyAsync({ from: actualSource, to: destinationUri });
           await addItem('photo', destinationUri);
           return { type: 'photo', label: fileName };
@@ -98,7 +120,10 @@ export const processSharedItem = async (parsed: ParsedShare): Promise<{ type: 'l
       }
 
       const fileName = parsed.value === 'pasteboard:image' ? `photo_${Date.now()}.jpg` : (parsed.value.split('/').pop() || `photo_${Date.now()}.jpg`);
-      const destinationUri = `${FileSystem.documentDirectory}${Date.now()}_${fileName}`;
+      const destinationUri = await getUniqueDestinationUri('images', fileName);
+      try {
+        await FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}images/`, { intermediates: true });
+      } catch (e) {}
 
       if (parsed.value === 'pasteboard:image') {
         const Clipboard = require('expo-clipboard');
@@ -144,7 +169,10 @@ export const processSharedItem = async (parsed: ParsedShare): Promise<{ type: 'l
     if (parsed.type === 'file') {
       // Copy the file to our app's document directory
       const fileName = parsed.name || parsed.value.split('/').pop() || `file_${Date.now()}`;
-      const destinationUri = `${FileSystem.documentDirectory}${Date.now()}_${fileName}`;
+      const destinationUri = await getUniqueDestinationUri('files', fileName);
+      try {
+        await FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}files/`, { intermediates: true });
+      } catch (e) {}
       
       // Ensure source file has prefix
       let sourceUri = parsed.value;

@@ -84,6 +84,7 @@ import { AnimationLockProvider, useAnimationLock } from './src/context/animation
 import { handleCopyItem as clipboardHelper } from './src/utils/clipboard-utils';
 import { handleShareItem as shareHelper, handleBulkShare as bulkShareHelper } from './src/utils/share-utils';
 import * as SplashScreen from 'expo-splash-screen';
+import { initFilesystemSync } from './src/utils/filesystem-sync';
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 import { useAppData } from './src/hooks/use-app-data';
@@ -117,7 +118,15 @@ function MainApp() {
   // ─── Sync ─────────────────────────────────────────────────────────────────
   useSync();
 
+
+
   // ─── App readiness ────────────────────────────────────────────────────────
+  useEffect(() => {
+    initFilesystemSync().catch((err: any) => {
+      console.error('[App] Filesystem initialization/sync failed:', err);
+    });
+  }, []);
+
   useEffect(() => {
     if (fontsLoaded && dataLoaded && themeLoaded) {
       setIsAppReady(true);

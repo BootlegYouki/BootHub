@@ -383,7 +383,7 @@ function EditModeBar({
     editingItemId === 'temp-new-folder' ||
     items.find((x) => x.id === editingItemId)?.type === 'folder';
 
-  const isValueStep = editStep === 'value' && !isFolder;
+  const isValueStep = editStep === 'value' || isFolder;
 
   const placeholder = isFolder
     ? 'Name your folder...'

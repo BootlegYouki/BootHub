@@ -103,6 +103,12 @@ export const subscribeToStorage = (listener: () => void) => {
 
 export const notifyStorageListeners = () => {
   storageListeners.forEach((l) => l());
+  try {
+    const { syncDatabaseToFilesystem } = require('./filesystem-sync');
+    syncDatabaseToFilesystem().catch((err: any) => console.error('[Storage Sync] Failed to sync filesystem:', err));
+  } catch (e) {
+    console.error('[Storage Sync] Failed to load filesystem-sync:', e);
+  }
 };
 
 // Sync Triggers

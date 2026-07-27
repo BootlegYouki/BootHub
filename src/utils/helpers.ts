@@ -1,6 +1,7 @@
 import { Linking, Platform, Alert } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as MediaLibrary from 'expo-media-library';
+import * as SQLite from 'expo-sqlite';
 import type { DumpType } from './storage';
 
 export const formatBreakAll = (text: string) => {
@@ -150,14 +151,55 @@ export const ensureFileUri = (uri: string, entityId?: string) => {
   if (uri.startsWith('http://') || uri.startsWith('https://') || uri.startsWith('data:')) {
     return uri;
   }
-  if (uri.startsWith('file://') || uri.startsWith('ph://') || uri.startsWith('assets-library://')) {
+  if (uri.startsWith('ph://') || uri.startsWith('assets-library://')) {
     return uri;
   }
+  
+  const base = FileSystem.documentDirectory || FileSystem.cacheDirectory;
+  const safeBase = base?.endsWith('/') ? base : base + '/';
+  
+  let fileUri = uri;
+  try {
+    const parsed = JSON.parse(uri);
+    if (parsed.uri) {
+      fileUri = parsed.uri;
+    }
+  } catch {}
+  
+  if (fileUri.startsWith('file://')) {
+    const docIdx = fileUri.indexOf('/Documents/');
+    const cacheIdx = fileUri.indexOf('/Library/Caches/');
+    if (docIdx !== -1 || cacheIdx !== -1) {
+      if (docIdx !== -1) {
+        const relativePath = fileUri.substring(docIdx + '/Documents/'.length);
+        return safeBase + relativePath;
+      }
+      if (cacheIdx !== -1) {
+        const relativePath = fileUri.substring(cacheIdx + '/Library/Caches/'.length);
+        const cacheBase = FileSystem.cacheDirectory;
+        const safeCacheBase = cacheBase?.endsWith('/') ? cacheBase : cacheBase + '/';
+        return safeCacheBase + relativePath;
+      }
+    }
+  }
+  
   if (entityId) {
-    // If it doesn't start with file://, it's a remote file name (e.g. from Desktop).
-    // The sync engine downloads these to the document directory named as the entity ID.
-    const base = FileSystem.documentDirectory || FileSystem.cacheDirectory;
-    const safeBase = base?.endsWith('/') ? base : base + '/';
+    // Determine if photo or file using a direct synchronous query on the SQLite DB
+    let subfolder = '';
+    try {
+      const db = SQLite.openDatabaseSync('boothub_events.db');
+      const row = db.getFirstSync<{ type: string }>('SELECT type FROM items WHERE id = ?', [entityId]);
+      if (row) {
+        if (row.type === 'photo') {
+          subfolder = 'images/';
+        } else if (row.type === 'file') {
+          subfolder = 'files/';
+        }
+      }
+    } catch (e) {
+      console.error('[ensureFileUri] DB query failed', e);
+    }
+    
     let ext = '';
     try {
       const parsed = JSON.parse(uri);
@@ -169,10 +211,11 @@ export const ensureFileUri = (uri: string, entityId?: string) => {
       const match = uri.match(/(\.[a-zA-Z0-9]+)$/);
       ext = match ? match[1] : '';
     }
-    const fullPath = safeBase + entityId + ext;
-    // ensure file:// prefix on iOS for Expo Image
+    
+    const fullPath = safeBase + subfolder + entityId + ext;
     return fullPath.startsWith('file://') ? fullPath : `file://${fullPath}`;
   }
+  
   return uri;
 };
 

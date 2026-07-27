@@ -1,6 +1,8 @@
 import React, { useRef, useState } from 'react';
-import { View, StyleSheet, UIManager, findNodeHandle } from 'react-native';
+import { View, StyleSheet, UIManager, findNodeHandle, Platform } from 'react-native';
 import * as Sharing from 'expo-sharing';
+import * as IntentLauncher from 'expo-intent-launcher';
+import * as FileSystem from 'expo-file-system';
 import { Image } from 'expo-image';
 import {
   File,
@@ -130,14 +132,39 @@ const FileItem: React.FC<FileItemProps> = ({
   const handleOpenLocalFile = async () => {
     try {
       const fileUri = ensureFileUri(fileInfo.uri);
-      const isAvailable = await Sharing.isAvailableAsync();
-      if (isAvailable && fileUri) {
-        await Sharing.shareAsync(fileUri, {
-          mimeType: fileInfo.mimeType || undefined,
+      if (!fileUri) return;
+
+      if (Platform.OS === 'android') {
+        const contentUri = await FileSystem.getContentUriAsync(fileUri);
+        await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+          data: contentUri,
+          flags: 1, // FLAG_GRANT_READ_URI_PERMISSION
+          type: fileInfo.mimeType || '*/*',
         });
+      } else {
+        const isAvailable = await Sharing.isAvailableAsync();
+        if (isAvailable) {
+          await Sharing.shareAsync(fileUri, {
+            mimeType: fileInfo.mimeType || undefined,
+          });
+        }
       }
     } catch (e) {
       console.error('Failed to open local file:', e);
+      // Fallback for Android if no app can handle the intent
+      if (Platform.OS === 'android') {
+        try {
+          const fileUri = ensureFileUri(fileInfo.uri);
+          const isAvailable = await Sharing.isAvailableAsync();
+          if (isAvailable && fileUri) {
+            await Sharing.shareAsync(fileUri, {
+              mimeType: fileInfo.mimeType || undefined,
+            });
+          }
+        } catch (fallbackError) {
+          console.error('Fallback sharing also failed:', fallbackError);
+        }
+      }
     }
   };
 
