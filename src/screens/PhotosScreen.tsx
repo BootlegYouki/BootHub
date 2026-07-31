@@ -56,8 +56,10 @@ const PhotoItem: React.FC<PhotoItemProps> = ({
   const [uploadProgress, setUploadProgress] = useState<number>(fileProgressMap.get(item.id) || 0);
 
   useEffect(() => {
-    const unsubscribe = subscribeToFileProgress(() => {
-      setUploadProgress(fileProgressMap.get(item.id) || 0);
+    const unsubscribe = subscribeToFileProgress((changedItemId, progress) => {
+      if (changedItemId === item.id) {
+        setUploadProgress(progress);
+      }
     });
     return unsubscribe;
   }, [item.id]);

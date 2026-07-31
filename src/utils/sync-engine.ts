@@ -91,9 +91,9 @@ let currentSyncStatus: SyncStatus = {
 };
 
 export const fileProgressMap = new Map<string, number>();
-const fileProgressListeners = new Set<() => void>();
+const fileProgressListeners = new Set<(itemId: string, progress: number) => void>();
 
-export const subscribeToFileProgress = (fn: () => void) => {
+export const subscribeToFileProgress = (fn: (itemId: string, progress: number) => void) => {
   fileProgressListeners.add(fn);
   return () => {
     fileProgressListeners.delete(fn);
@@ -106,7 +106,7 @@ export const setFileProgress = (itemId: string, progress: number) => {
   } else {
     fileProgressMap.set(itemId, progress);
   }
-  fileProgressListeners.forEach((l) => l());
+  fileProgressListeners.forEach((l) => l(itemId, progress));
 };
 
 function notifyListeners() {
