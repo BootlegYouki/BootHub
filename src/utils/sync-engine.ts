@@ -28,10 +28,8 @@ async function connectWebSocket(peerAddress: string) {
 
   const wsUrl = `ws://${peerAddress}/ws?token=${encodeURIComponent(authToken)}`;
 
-  if (ws && activeWsUrl === wsUrl) {
-    if (ws.readyState === 0 || ws.readyState === 1) {
-      return;
-    }
+  if (ws && (ws.readyState === 0 || ws.readyState === 1)) {
+    return;
   }
 
   if (ws) {
@@ -83,7 +81,12 @@ async function connectWebSocket(peerAddress: string) {
   
   currentWs.onerror = (e) => {
     if (ws !== currentWs) return;
-    console.error('[Sync Engine] WebSocket error:', e);
+    const now = Date.now();
+    const lastErr = (currentWs as any)._lastErrTime || 0;
+    if (now - lastErr > 2000) {
+      (currentWs as any)._lastErrTime = now;
+      console.error('[Sync Engine] WebSocket error:', e);
+    }
   };
 }
 
@@ -494,7 +497,7 @@ export const processSyncQueue = async (): Promise<void> => {
                   const { resolveToLocalFileUri } = require('./helpers');
                   const uploadUri = await resolveToLocalFileUri(localUri);
                   
-                  const uploadTask = FileSystem.createUploadTask(
+                  await FileSystem.uploadAsync(
                     `${peerUrl}/files/${ev.entity_id}`,
                     uploadUri,
                     {
@@ -503,23 +506,8 @@ export const processSyncQueue = async (): Promise<void> => {
                       headers: {
                         Authorization: `Bearer ${authToken}`
                       }
-                    },
-                    (uploadProgress) => {
-                      if (uploadProgress.totalBytesExpectedToSend > 0) {
-                        const progress = uploadProgress.totalBytesSent / uploadProgress.totalBytesExpectedToSend;
-                        setFileProgress(ev.entity_id, progress);
-                        const now = Date.now();
-                        const lastSent = lastWsSendMap.get(ev.entity_id) || 0;
-                        if (now - lastSent > 150 || progress >= 1) {
-                          lastWsSendMap.set(ev.entity_id, now);
-                          if (ws && ws.readyState === 1) {
-                            ws.send(JSON.stringify({ type: 'FILE_PROGRESS', itemId: ev.entity_id, progress }));
-                          }
-                        }
-                      }
                     }
                   );
-                  await uploadTask.uploadAsync();
                   
                   setFileProgress(ev.entity_id, 1);
                   if (ws && ws.readyState === 1) {

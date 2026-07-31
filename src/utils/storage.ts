@@ -160,10 +160,10 @@ export const rebuildMaterializedView = (entityId: string) => {
     db.runSync(
       'INSERT OR REPLACE INTO items (id, type, label, value, folderId, syncState) VALUES (?, ?, ?, ?, ?, ?)',
       [
-        currentItem.id as string, 
-        currentItem.type as string, 
-        currentItem.label as string, 
-        currentItem.value as string, 
+        currentItem.id || '', 
+        currentItem.type || '', 
+        currentItem.label || '', 
+        currentItem.value || '', 
         currentItem.folderId || null, 
         'pending'
       ]
