@@ -11,6 +11,9 @@ let knownPeers = new Map<string, string>(); // name -> ip:port
 let ws: WebSocket | null = null;
 let wsReconnectTimeout: NodeJS.Timeout | null = null;
 
+let activeWsUrl: string | null = null;
+let lastWsSendMap = new Map<string, number>();
+
 async function connectWebSocket(peerAddress: string) {
   const isPairedRow = getDb().getFirstSync<{ value: string }>("SELECT value FROM config WHERE key = 'is_paired'");
   if (isPairedRow?.value !== 'true') {
@@ -23,22 +26,37 @@ async function connectWebSocket(peerAddress: string) {
     authToken = await getSetting('auth_token') || '';
   } catch (e) {}
 
+  const wsUrl = `ws://${peerAddress}/ws?token=${encodeURIComponent(authToken)}`;
+
+  if (ws && activeWsUrl === wsUrl) {
+    if (ws.readyState === 0 || ws.readyState === 1) {
+      return;
+    }
+  }
+
   if (ws) {
+    ws.onclose = null;
+    ws.onerror = null;
+    ws.onmessage = null;
+    ws.onopen = null;
     ws.close();
+    ws = null;
   }
   if (wsReconnectTimeout) {
     clearTimeout(wsReconnectTimeout);
+    wsReconnectTimeout = null;
   }
   
-  const wsUrl = `ws://${peerAddress}/ws?token=${encodeURIComponent(authToken)}`;
+  activeWsUrl = wsUrl;
   console.log(`[Sync Engine] Connecting WebSocket to ${wsUrl}`);
-  ws = new WebSocket(wsUrl);
+  const currentWs = new WebSocket(wsUrl);
+  ws = currentWs;
   
-  ws.onopen = () => {
+  currentWs.onopen = () => {
     console.log('[Sync Engine] WebSocket connected');
   };
   
-  ws.onmessage = (event) => {
+  currentWs.onmessage = (event) => {
     if (event.data === 'SYNC_NEEDED') {
       console.log('[Sync Engine] Received SYNC_NEEDED via WebSocket');
       processSyncQueue().catch(console.error);
@@ -51,9 +69,11 @@ async function connectWebSocket(peerAddress: string) {
     }
   };
   
-  ws.onclose = () => {
+  currentWs.onclose = () => {
+    if (ws !== currentWs) return;
     console.log('[Sync Engine] WebSocket closed, attempting to reconnect...');
     ws = null;
+    activeWsUrl = null;
     wsReconnectTimeout = setTimeout(() => {
       if (knownPeers.size > 0) {
         connectWebSocket(Array.from(knownPeers.values())[0]);
@@ -61,7 +81,8 @@ async function connectWebSocket(peerAddress: string) {
     }, 5000);
   };
   
-  ws.onerror = (e) => {
+  currentWs.onerror = (e) => {
+    if (ws !== currentWs) return;
     console.error('[Sync Engine] WebSocket error:', e);
   };
 }
@@ -151,11 +172,17 @@ export const closeRealtimeSync = (): void => {
   zeroconf.stop();
   knownPeers.clear();
   if (ws) {
+    ws.onclose = null;
+    ws.onerror = null;
+    ws.onmessage = null;
+    ws.onopen = null;
     ws.close();
     ws = null;
   }
+  activeWsUrl = null;
   if (wsReconnectTimeout) {
     clearTimeout(wsReconnectTimeout);
+    wsReconnectTimeout = null;
   }
 };
 
@@ -347,8 +374,13 @@ export const processSyncQueue = async (): Promise<void> => {
                       if (downloadProgress.totalBytesExpectedToWrite > 0) {
                         const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
                         setFileProgress(ev.entity_id, progress);
-                        if (ws && ws.readyState === WebSocket.OPEN) {
-                          ws.send(JSON.stringify({ type: 'FILE_PROGRESS', itemId: ev.entity_id, progress }));
+                        const now = Date.now();
+                        const lastSent = lastWsSendMap.get(ev.entity_id) || 0;
+                        if (now - lastSent > 150 || progress >= 1) {
+                          lastWsSendMap.set(ev.entity_id, now);
+                          if (ws && ws.readyState === 1) {
+                            ws.send(JSON.stringify({ type: 'FILE_PROGRESS', itemId: ev.entity_id, progress }));
+                          }
                         }
                       }
                     }
@@ -356,7 +388,7 @@ export const processSyncQueue = async (): Promise<void> => {
                   await downloadResumable.downloadAsync();
                   
                   setFileProgress(ev.entity_id, 1);
-                  if (ws && ws.readyState === WebSocket.OPEN) {
+                  if (ws && ws.readyState === 1) {
                     ws.send(JSON.stringify({ type: 'FILE_PROGRESS', itemId: ev.entity_id, progress: 1 }));
                   }
                   
@@ -476,8 +508,13 @@ export const processSyncQueue = async (): Promise<void> => {
                       if (uploadProgress.totalBytesExpectedToSend > 0) {
                         const progress = uploadProgress.totalBytesSent / uploadProgress.totalBytesExpectedToSend;
                         setFileProgress(ev.entity_id, progress);
-                        if (ws && ws.readyState === WebSocket.OPEN) {
-                          ws.send(JSON.stringify({ type: 'FILE_PROGRESS', itemId: ev.entity_id, progress }));
+                        const now = Date.now();
+                        const lastSent = lastWsSendMap.get(ev.entity_id) || 0;
+                        if (now - lastSent > 150 || progress >= 1) {
+                          lastWsSendMap.set(ev.entity_id, now);
+                          if (ws && ws.readyState === 1) {
+                            ws.send(JSON.stringify({ type: 'FILE_PROGRESS', itemId: ev.entity_id, progress }));
+                          }
                         }
                       }
                     }
@@ -485,7 +522,7 @@ export const processSyncQueue = async (): Promise<void> => {
                   await uploadTask.uploadAsync();
                   
                   setFileProgress(ev.entity_id, 1);
-                  if (ws && ws.readyState === WebSocket.OPEN) {
+                  if (ws && ws.readyState === 1) {
                     ws.send(JSON.stringify({ type: 'FILE_PROGRESS', itemId: ev.entity_id, progress: 1 }));
                   }
                 }
