@@ -34,7 +34,7 @@ import {
   Search,
   MoreHorizontal,
   FolderPlus,
-  Settings,
+  RefreshCw,
   Paperclip,
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -69,7 +69,7 @@ import { LinksScreen } from './src/screens/LinksScreen';
 import { TextsScreen } from './src/screens/TextsScreen';
 import { PhotosScreen, PhotoLayout } from './src/screens/PhotosScreen';
 import { FilesScreen } from './src/screens/FilesScreen';
-import { SettingsScreen } from './src/screens/SettingsScreen';
+import { SyncDrawer } from './src/components/sync-drawer';
 import { PhotoPickerSheet } from './src/components/photo-picker-sheet';
 import { TabButton } from './src/components/tab-button';
 import { ContextMenuOverlay } from './src/components/context-menu-overlay';
@@ -173,6 +173,10 @@ function MainApp() {
   const [isMoveDrawerOpen, setIsMoveDrawerOpen] = useState(false);
   const [isMoveDrawerMounted, setIsMoveDrawerMounted] = useState(false);
   const [moveDrawerItems, setMoveDrawerItems] = useState<DumpItem[]>([]);
+
+  // ─── Sync Drawer ──────────────────────────────────────────────────────────
+  const [isSyncDrawerOpen, setIsSyncDrawerOpen] = useState(false);
+  const syncDrawerProgressAnim = useRef(new RNAnimated.Value(0)).current;
 
   // ─── Context menu ─────────────────────────────────────────────────────────
   const [contextMenuPhoto, setContextMenuPhoto] = useState<{ item: DumpItem; bounds: PhotoLayout } | null>(null);
@@ -786,17 +790,17 @@ function MainApp() {
 
   const settingsButton = (
     <Pressable
-      onPress={() => setActiveView('settings')}
+      onPress={() => setIsSyncDrawerOpen(true)}
       style={({ pressed }) => [
         styles.themeToggleBtn,
         {
           borderColor: colors.primary,
           backgroundColor:
-            activeView === 'settings' ? colors.primary + '25' : pressed ? colors.primary + '25' : 'transparent',
+            isSyncDrawerOpen ? colors.primary + '25' : pressed ? colors.primary + '25' : 'transparent',
         },
       ]}
     >
-      <Settings size={16} color={colors.primary} />
+      <RefreshCw size={16} color={colors.primary} />
     </Pressable>
   );
 
@@ -861,8 +865,8 @@ function MainApp() {
             </View>
           </View>
 
-          {activeView === 'settings' ? (
-            <SettingsScreen />
+          {false ? (
+            null
           ) : (
             <>
               <View
@@ -1170,6 +1174,23 @@ function MainApp() {
             <FolderPickerSheet items={items} activeTab={activeTab} movingItems={moveDrawerItems} onCancel={handleCancelMoveDrawer} onMove={handleConfirmMove} />
           </TuiDrawer>
         )}
+
+        {/* Sync drawer */}
+        <TuiDrawer 
+          visible={isSyncDrawerOpen} 
+          onClose={() => setIsSyncDrawerOpen(false)} 
+          title="Sync Device" 
+          progressAnim={syncDrawerProgressAnim}
+          onBackdropPress={() => {
+            if (Keyboard.metrics()) {
+              Keyboard.dismiss();
+            } else {
+              setIsSyncDrawerOpen(false);
+            }
+          }}
+        >
+          <SyncDrawer visible={isSyncDrawerOpen} onClose={() => setIsSyncDrawerOpen(false)} />
+        </TuiDrawer>
 
         {/* Context menu */}
         {contextMenuPhoto && (

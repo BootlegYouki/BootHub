@@ -46,7 +46,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemScheme = useColorScheme();
-  const [themeMode, setThemeModeState] = useState<ThemeMode>('system');
+  const [themeMode, setThemeModeState] = useState<ThemeMode>('dark');
   const [accentTheme, setAccentThemeState] = useState<AccentTheme>('classic');
   const [themeLoaded, setThemeLoaded] = useState(false);
 
@@ -58,6 +58,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const savedAccent = await AsyncStorage.getItem('accent_theme');
         
         if (savedMode) setThemeModeState(savedMode as ThemeMode);
+        else setThemeModeState('dark');
         if (savedAccent) setAccentThemeState(savedAccent as AccentTheme || 'classic');
       } catch (e) {
         console.error('Failed to load theme preferences', e);

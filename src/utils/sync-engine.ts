@@ -90,6 +90,25 @@ let currentSyncStatus: SyncStatus = {
   lastSynced: null,
 };
 
+export const fileProgressMap = new Map<string, number>();
+const fileProgressListeners = new Set<() => void>();
+
+export const subscribeToFileProgress = (fn: () => void) => {
+  fileProgressListeners.add(fn);
+  return () => {
+    fileProgressListeners.delete(fn);
+  };
+};
+
+export const setFileProgress = (itemId: string, progress: number) => {
+  if (progress >= 1) {
+    fileProgressMap.delete(itemId);
+  } else {
+    fileProgressMap.set(itemId, progress);
+  }
+  fileProgressListeners.forEach((l) => l());
+};
+
 function notifyListeners() {
   syncStatusListeners.forEach((l) => l({ ...currentSyncStatus }));
 }
@@ -327,6 +346,7 @@ export const processSyncQueue = async (): Promise<void> => {
                     (downloadProgress) => {
                       if (downloadProgress.totalBytesExpectedToWrite > 0) {
                         const progress = downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite;
+                        setFileProgress(ev.entity_id, progress);
                         if (ws && ws.readyState === WebSocket.OPEN) {
                           ws.send(JSON.stringify({ type: 'FILE_PROGRESS', itemId: ev.entity_id, progress }));
                         }
@@ -335,6 +355,7 @@ export const processSyncQueue = async (): Promise<void> => {
                   );
                   await downloadResumable.downloadAsync();
                   
+                  setFileProgress(ev.entity_id, 1);
                   if (ws && ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({ type: 'FILE_PROGRESS', itemId: ev.entity_id, progress: 1 }));
                   }
@@ -428,18 +449,45 @@ export const processSyncQueue = async (): Promise<void> => {
             try {
               const parsed = JSON.parse(ev.payload);
               if (parsed.type === 'photo' || parsed.type === 'file') {
-                const localUri = parsed.value;
-                if (localUri.startsWith('file://') || localUri.startsWith('ph://')) {
+                let localUri = parsed.value;
+                if (parsed.type === 'file') {
+                  try {
+                    const fileObj = JSON.parse(parsed.value);
+                    localUri = fileObj.uri;
+                  } catch (e) {}
+                }
+                
+                if (localUri && (localUri.startsWith('file://') || localUri.startsWith('ph://'))) {
                   console.log(`[Sync Engine] Uploading local file for ${ev.entity_id}...`);
                   const { resolveToLocalFileUri } = require('./helpers');
                   const uploadUri = await resolveToLocalFileUri(localUri);
-                  await FileSystem.uploadAsync(`${peerUrl}/files/${ev.entity_id}`, uploadUri, {
-                    httpMethod: 'POST',
-                    uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-                    headers: {
-                      Authorization: `Bearer ${authToken}`
+                  
+                  const uploadTask = FileSystem.createUploadTask(
+                    `${peerUrl}/files/${ev.entity_id}`,
+                    uploadUri,
+                    {
+                      httpMethod: 'POST',
+                      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+                      headers: {
+                        Authorization: `Bearer ${authToken}`
+                      }
+                    },
+                    (uploadProgress) => {
+                      if (uploadProgress.totalBytesExpectedToSend > 0) {
+                        const progress = uploadProgress.totalBytesSent / uploadProgress.totalBytesExpectedToSend;
+                        setFileProgress(ev.entity_id, progress);
+                        if (ws && ws.readyState === WebSocket.OPEN) {
+                          ws.send(JSON.stringify({ type: 'FILE_PROGRESS', itemId: ev.entity_id, progress }));
+                        }
+                      }
                     }
-                  });
+                  );
+                  await uploadTask.uploadAsync();
+                  
+                  setFileProgress(ev.entity_id, 1);
+                  if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'FILE_PROGRESS', itemId: ev.entity_id, progress: 1 }));
+                  }
                 }
               }
             } catch (e) {

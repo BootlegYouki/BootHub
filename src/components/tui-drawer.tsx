@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, Modal, Pressable, Animated, Dimensions, Keyboard, Easing, PanResponder } from 'react-native';
+import { View, StyleSheet, Modal, Pressable, Animated, Dimensions, Keyboard, Easing, PanResponder, Platform } from 'react-native';
+import Reanimated, { useAnimatedKeyboard, useAnimatedStyle } from 'react-native-reanimated';
 import { useTheme } from '../theme/theme-provider';
 import { TuiText } from './tui-text';
 
@@ -15,6 +16,7 @@ const SPRING_CONFIG_OPEN = {
 interface TuiDrawerProps {
   visible: boolean;
   onClose: () => void;
+  onBackdropPress?: () => void;
   title: string;
   children: React.ReactNode;
   keyboardOffset?: number;
@@ -24,6 +26,7 @@ interface TuiDrawerProps {
 export const TuiDrawer: React.FC<TuiDrawerProps> = ({
   visible,
   onClose,
+  onBackdropPress,
   title,
   children,
   keyboardOffset = 0,
@@ -34,6 +37,13 @@ export const TuiDrawer: React.FC<TuiDrawerProps> = ({
   const [cardWidth, setCardWidth] = useState(0);
   const [cardHeight, setCardHeight] = useState(300);
   const [legendWidth, setLegendWidth] = useState(0);
+
+  const keyboard = useAnimatedKeyboard();
+  const keyboardAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: -keyboard.height.value }],
+    };
+  });
 
   const activeAnim = useRef(progressAnim || new Animated.Value(0)).current;
   const nudgeAnim = useRef(new Animated.Value(0)).current;
@@ -161,9 +171,9 @@ export const TuiDrawer: React.FC<TuiDrawerProps> = ({
           ]}
         />
         {/* Tap backdrop to close */}
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={onBackdropPress || onClose} />
         
-        <View style={styles.drawerKeyboardAvoidingView}>
+        <Reanimated.View style={[styles.drawerKeyboardAvoidingView, keyboardAnimatedStyle]}>
           <Animated.View
             onLayout={(e) => {
               setCardWidth(e.nativeEvent.layout.width);
@@ -216,7 +226,7 @@ export const TuiDrawer: React.FC<TuiDrawerProps> = ({
               {children}
             </View>
           </Animated.View>
-        </View>
+        </Reanimated.View>
       </View>
     </Modal>
   );

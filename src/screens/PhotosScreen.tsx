@@ -11,6 +11,7 @@ import { TuiText } from '../components/tui-text';
 import { DumpItem } from '../utils/storage';
 import { useTheme } from '../theme/theme-provider';
 import { ensureFileUri } from '../utils/helpers';
+import { fileProgressMap, subscribeToFileProgress } from '../utils/sync-engine';
 import { FolderItem } from '../components/folder-item';
 import { useFolderNavigation, getFolderDetails } from '../utils/folder-navigation';
 import { FolderHeader } from '../components/folder-header';
@@ -52,7 +53,14 @@ const PhotoItem: React.FC<PhotoItemProps> = ({
   tappingRef,
 }) => {
   const { colors, isDark } = useTheme();
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadProgress, setUploadProgress] = useState<number>(fileProgressMap.get(item.id) || 0);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToFileProgress(() => {
+      setUploadProgress(fileProgressMap.get(item.id) || 0);
+    });
+    return unsubscribe;
+  }, [item.id]);
 
   useEffect(() => {
     if (item.syncState !== 'pending') {
@@ -164,6 +172,11 @@ const PhotoItem: React.FC<PhotoItemProps> = ({
           />
         )}
       </View>
+      {uploadProgress > 0 && uploadProgress < 1 && (
+        <View style={[styles.progressBarContainer, { backgroundColor: colors.primary + '30' }]}>
+          <View style={[styles.progressBar, { width: `${uploadProgress * 100}%`, backgroundColor: colors.primary }]} />
+        </View>
+      )}
     </AnimatedPressable>
   );
 };

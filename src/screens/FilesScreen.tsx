@@ -18,6 +18,7 @@ import { TuiText } from '../components/tui-text';
 import { DumpItem } from '../utils/storage';
 import { useTheme } from '../theme/theme-provider';
 import { formatBytes, ensureFileUri } from '../utils/helpers';
+import { fileProgressMap, subscribeToFileProgress } from '../utils/sync-engine';
 import { BaseFolderScreen, FolderScreenProps, FolderItemProps } from '../components/base-folder-screen';
 
 type FilesScreenProps = FolderScreenProps;
@@ -110,6 +111,20 @@ const FileItem: React.FC<FileItemProps> = ({
 }) => {
   const { colors, isDark } = useTheme();
   const itemRef = useRef<View>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(fileProgressMap.get(item.id) || 0);
+
+  React.useEffect(() => {
+    const unsubscribe = subscribeToFileProgress(() => {
+      setUploadProgress(fileProgressMap.get(item.id) || 0);
+    });
+    return unsubscribe;
+  }, [item.id]);
+
+  React.useEffect(() => {
+    if (item.syncState !== 'pending') {
+      setUploadProgress(0);
+    }
+  }, [item.id, item.syncState]);
 
   // Parse file metadata from item.value JSON
   let fileInfo: any = { uri: '', name: 'unknown_file', size: 0, mimeType: '' };
@@ -192,6 +207,7 @@ const FileItem: React.FC<FileItemProps> = ({
         }
         onPress={isSelectionMode ? () => toggleSelect(item.id) : handleOpenLocalFile}
         onLongPress={!isSelectionMode && !isEditing ? handleLongPress : undefined}
+        progress={uploadProgress > 0 && uploadProgress < 1 ? uploadProgress : undefined}
       >
         <View pointerEvents="none" style={styles.fileRow}>
           <View style={[styles.iconBox, { borderColor: colors.primary, overflow: 'hidden' }]}>

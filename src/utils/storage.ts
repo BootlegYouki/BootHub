@@ -205,9 +205,36 @@ export const saveItems = async (items: DumpItem[]): Promise<void> => {}; // depr
 export const addItem = async (type: DumpType, value: string, folderId?: string): Promise<DumpItem[]> => {
   const label = formatSyncTimestamp();
   let itemLabel = label;
-  if (type === 'folder') {
+  let finalValue = value;
+  
+  if (type === 'file' || type === 'folder') {
     try {
-      itemLabel = JSON.parse(value).name || label;
+      const parsed = JSON.parse(value);
+      let name = parsed.name || label;
+      
+      const query = folderId 
+        ? `SELECT id, value FROM items WHERE type = ? AND folderId = ?`
+        : `SELECT id, value FROM items WHERE type = ? AND folderId IS NULL`;
+        
+      const siblings = db.getAllSync<{id: string, value: string}>(query, folderId ? [type, folderId] : [type]);
+      
+      const existing = siblings.find(s => {
+         try {
+            return JSON.parse(s.value).name === name;
+         } catch { return false; }
+      });
+      
+      if (existing) {
+         const payload = {
+           type,
+           label: itemLabel,
+           value: finalValue,
+           folderId: folderId || null
+         };
+         appendEvent(existing.id, 'ITEM_UPDATED', payload);
+         return getItems();
+      }
+      
     } catch {}
   }
   
@@ -215,7 +242,7 @@ export const addItem = async (type: DumpType, value: string, folderId?: string):
   const payload = {
     type,
     label: itemLabel,
-    value,
+    value: finalValue,
     ...(folderId ? { folderId } : {})
   };
   
