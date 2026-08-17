@@ -5,9 +5,9 @@ import { TuiText } from './tui-text';
 import { TuiButton } from './tui-button';
 import {
   subscribeToSyncStatus, SyncStatus, initializeRealtimeSync,
-  closeRealtimeSync, processSyncQueue, updateSyncStatus, getKnownPeers, connectKnownPeersWS
+  closeRealtimeSync, processSyncQueue, updateSyncStatus, getKnownPeers, connectKnownPeersWS, forceFullResync
 } from '../utils/sync-engine';
-import { getSetting, saveSetting } from '../utils/storage';
+import { getSetting, saveSetting, getDb } from '../utils/storage';
 import axios from 'axios';
 
 interface SyncDrawerProps {
@@ -97,13 +97,23 @@ export const SyncDrawer: React.FC<SyncDrawerProps> = ({ visible, onClose }) => {
 
           if (res.data && res.data.success) {
             const desktopName = res.data.device_name || 'Desktop PC';
+            const serverUuid = res.data.device_id;
             setIsPaired(true);
             setPairedDeviceId(desktopName);
             await saveSetting('is_paired', 'true');
             await saveSetting('paired_device_id', desktopName);
+            if (serverUuid) {
+              await saveSetting('paired_server_uuid', serverUuid);
+            }
             if (res.data.auth_token) {
               await saveSetting('auth_token', res.data.auth_token);
             }
+            // Clear old sync cursors on fresh pairing so all items sync
+            try {
+              const db = getDb();
+              db.runSync("DELETE FROM config WHERE key LIKE 'sync_pull_%' OR key LIKE 'sync_push_%'");
+            } catch (e) {}
+
             updateSyncStatus({ isPaired: true });
             connectKnownPeersWS();
             processSyncQueue().catch(console.error);
@@ -160,7 +170,14 @@ export const SyncDrawer: React.FC<SyncDrawerProps> = ({ visible, onClose }) => {
               }
 
               await saveSetting('is_paired', 'false');
+              await saveSetting('paired_device_id', '');
+              await saveSetting('paired_server_uuid', '');
               await saveSetting('auth_token', '');
+              try {
+                const db = getDb();
+                db.runSync("DELETE FROM config WHERE key LIKE 'sync_pull_%' OR key LIKE 'sync_push_%'");
+              } catch (e) {}
+
               setIsPaired(false);
               setPairedDeviceId(null);
               updateSyncStatus({ isPaired: false });
@@ -181,6 +198,20 @@ export const SyncDrawer: React.FC<SyncDrawerProps> = ({ visible, onClose }) => {
       onClose(); // Optional: close drawer after clicking sync
     } catch (err: any) {
       console.error('Manual sync execution failed:', err);
+      updateSyncStatus({
+        isSyncing: false,
+        error: 'Sync failed: ' + (err.message || String(err)),
+      });
+    }
+  };
+
+  const handleFullResync = async () => {
+    updateSyncStatus({ isSyncing: true, error: null });
+    try {
+      await forceFullResync();
+      Alert.alert('Full Sync Complete', 'All local items have been sent to desktop.');
+    } catch (err: any) {
+      console.error('Full resync failed:', err);
       updateSyncStatus({
         isSyncing: false,
         error: 'Sync failed: ' + (err.message || String(err)),
@@ -224,6 +255,16 @@ export const SyncDrawer: React.FC<SyncDrawerProps> = ({ visible, onClose }) => {
                 Disconnect
               </TuiButton>
             </View>
+          </View>
+
+          <View style={{ marginTop: 4 }}>
+            <TuiButton
+              onPress={handleFullResync}
+              variant="outline"
+              disabled={syncStatus.isSyncing}
+            >
+              Force Full Resync
+            </TuiButton>
           </View>
         </View>
       ) : (

@@ -221,9 +221,10 @@ export const processSyncQueue = async (): Promise<void> => {
     const peerUrl = `http://${peerAddress}`;
     
     // 1. Request remote events since last pull
-    const pullKey = `sync_pull_${peerAddress}`;
+    const pairedServerUuid = (await getSetting('paired_server_uuid')) || peerAddress;
+    const pullKey = `sync_pull_${pairedServerUuid}`;
     const pullRow = db.getFirstSync<{value: string}>('SELECT value FROM config WHERE key = ?', [pullKey]);
-    const lastPullClock = pullRow ? parseInt(pullRow.value, 10) : 0;
+    let lastPullClock = pullRow ? parseInt(pullRow.value, 10) : 0;
     
     let authToken = await getSetting('auth_token') || '';
 
@@ -470,9 +471,14 @@ export const processSyncQueue = async (): Promise<void> => {
     }
     
     // 3. Send our local events to remote
-    const pushKey = `sync_push_${peerAddress}`;
+    const pushKey = `sync_push_${pairedServerUuid}`;
     const pushRow = db.getFirstSync<{value: string}>('SELECT value FROM config WHERE key = ?', [pushKey]);
-    const lastPushClock = pushRow ? parseInt(pushRow.value, 10) : 0;
+    let lastPushClock = pushRow ? parseInt(pushRow.value, 10) : 0;
+    
+    // If remote desktop is a fresh install (0 events) or clock was reset, send all local events
+    if (remoteMaxClock === 0 && lastPushClock > 0) {
+      lastPushClock = 0;
+    }
     
     const localEventsToPush = db.getAllSync<SyncEvent>('SELECT * FROM events WHERE clock > ? ORDER BY clock ASC', [lastPushClock]);
     if (localEventsToPush.length > 0) {
@@ -655,3 +661,8 @@ async function cleanUpOrphanedFiles() {
   }
 }
 
+export const forceFullResync = async (): Promise<void> => {
+  const db = getDb();
+  db.runSync("DELETE FROM config WHERE key LIKE 'sync_pull_%' OR key LIKE 'sync_push_%'");
+  await processSyncQueue();
+};
